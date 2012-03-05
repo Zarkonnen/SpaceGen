@@ -1,0 +1,8 @@
+build.xml
+build
+dist
+manifest.mf
+nbproject
+release
+test
+lib/*
