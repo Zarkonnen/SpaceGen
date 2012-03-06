@@ -3,7 +3,7 @@ package com.zarkonnen.spacegen;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class Civ {
+public class Civ {	
 	ArrayList<SentientType> fullMembers = new ArrayList<SentientType>();
 	Government govt;
 	ArrayList<Planet> colonies = new ArrayList<Planet>();
@@ -12,18 +12,22 @@ public class Civ {
 	int resources = 0;
 	int science = 0;
 	int military = 0;
+	int techLevel = 1;
 	String name;
+	int birthYear;
 	
 	public Diplomacy.Outcome relation(Civ c) {
 		if (!relations.containsKey(c)) { relations.put(c, Diplomacy.Outcome.PEACE); }
 		return relations.get(c);
 	}
 
-	public Civ(SentientType st, Planet home, Government govt, int resources, ArrayList<Civ> historicals) {
+	public Civ(int year, SentientType st, Planet home, Government govt, int resources, ArrayList<Civ> historicals) {
 		this.govt = govt;
 		this.fullMembers.add(st);
 		this.colonies.add(home);
 		this.resources = resources;
+		this.birthYear = year;
+		home.owner = this;
 		updateName(historicals);
 	}
 	
@@ -31,6 +35,14 @@ public class Civ {
 		int sum = 0;
 		for (Planet col : colonies) { sum += col.population(); }
 		return sum;
+	}
+	
+	public ArrayList<Planet> fullColonies() {
+		ArrayList<Planet> fcs = new ArrayList<Planet>();
+		for (Planet col : colonies) {
+			if (col.population() > 0) { fcs.add(col); }
+		}
+		return fcs;
 	}
 	
 	public Planet largestColony() {

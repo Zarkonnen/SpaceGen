@@ -20,7 +20,7 @@ public class SpaceGen {
 	
 	public static void main(String[] args) {
 		SpaceGen sg = new SpaceGen(args.length > 1 ? Long.parseLong(args[1]) : System.currentTimeMillis());
-		int ticks = args.length > 0 ? Integer.parseInt(args[0]) : 1000;
+		int ticks = args.length > 0 ? Integer.parseInt(args[0]) : 300;
 		for (int t = 0; t < ticks; t++) {
 			sg.tick();
 		}
@@ -42,8 +42,11 @@ public class SpaceGen {
 	}
 	
 	public boolean checkCivDoom(Civ c) {
-		if (c.colonies.isEmpty()) {
+		if (c.fullColonies().isEmpty()) {
 			l("The $name collapses.", c);
+			for (Planet out : new ArrayList<Planet>(c.colonies)) {
+				out.deCiv(year, null, "during the collapse of the " + c.name);
+			}
 			return true;
 		}
 		if (c.colonies.size() == 1 && c.colonies.get(0).population() == 1) {
@@ -68,7 +71,10 @@ public class SpaceGen {
 		}
 		hadCivs = !civs.isEmpty();
 		
-		for (Planet planet : planets) {
+		planets: for (Planet planet : planets) {
+			if ((planet.population() > 12 || (planet.population() > 7 && p(10)) && planet.pollution < 4)) {
+				planet.pollution++;
+			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
 				int roll = d(6);
 				if (roll < planet.pollution) {
@@ -82,25 +88,62 @@ public class SpaceGen {
 					}
 				}
 				if (pop.size <= 0) {
-					planet.dePop(pop, year, null, "from the effects of pollution");
+					planet.dePop(pop, year, null, "from the effects of pollution", null);
 					l("$sname have died out on $pname!", pop.type, planet);
+					continue planets;
+				}
+				for (Plague plague : new ArrayList<Plague>(planet.plagues)) {
+					if (plague.affects.contains(pop.type)) {
+						if (d(12) < plague.lethality) {
+							pop.size--;
+							if (pop.size <= 0) {
+								planet.dePop(pop, year, null, "from the " + plague.name, new Plague(plague));
+								l("The $sname on $pname have been wiped out by the " + plague.name + "!", pop.type, planet);
+							}
+						}
+					} else {
+						if (d(20) < plague.mutationRate) {
+							plague.affects.add(pop.type);
+							l("The " + plague.name + " mutates to affect $name", pop.type);
+						}
+					}
+				}
+			}
+			
+			for (Plague plague : new ArrayList<Plague>(planet.plagues)) {
+				if (d(12) < plague.curability) {
+					planet.plagues.remove(plague);
+					l(plague.name + " has been eradicated on $name.", planet);
+				} else {
+					if (d(12) < plague.transmissivity) {
+						Planet target = pick(planets);
+						boolean canJump = false;
+						for (Population pop : target.inhabitants) {
+							if (plague.affects.contains(pop.type)) {
+								canJump = true;
+							}
+						}
+						if (canJump) {
+							boolean match = false;
+							for (Plague p2 : target.plagues) {
+								if (p2.name.equals(plague.name)) {
+									for (SentientType st : plague.affects) {
+										if (!p2.affects.contains(st)) { p2.affects.add(st); }
+										match = true;
+									}
+								}
+							}
+							if (!match) {
+								target.plagues.add(new Plague(plague));
+							}
+						}
+					}
 				}
 			}
 		}
 		
 		// TICK CIVS
 		for (Civ c : new ArrayList<Civ>(civs)) {
-			/*
-			 * A. Pollution: add a pollution marker on each colony with a population larger than 5.
-B. Population growth/shrinkage: Roll a d6 for each colony. Add one population on a roll of 5 or 6. Remove one population if the roll is less than the amount of pollution.
-C. Gather resources: gain 1 resource per colony and 2 per mining outpost.
-D. Perform civ activity as indicated by sentient type. (If funds available.)
-E. Perform civ activity as indicated by government. (If funds available.)
-F. Add research points from science outposts. If the number of points is greater than or equal to 12, roll on the research results table.
-G. Roll on the events table as indicated by the civilisation's size.
-H. If at war, launch an attack against each enemy. Roll a d6. On a 5 or 6, re-encounter the enemy, which may result in peace.
-I. If a civilisation is reduced to population 1, it gets downgraded to a sentient.
-			 */
 			int newRes = 1;
 			int newSci = 1;
 			for (Planet col : new ArrayList<Planet>(c.colonies)) {
@@ -131,6 +174,35 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			pick(c.govt.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
+			
+			if (p(3)) {
+				int evtTypeRoll = d(6);
+				boolean good;
+				boolean bad;
+				int civAge = year - c.birthYear;
+				if (civAge < 5) {
+					good = evtTypeRoll <= 5;
+					bad = false;
+				} else if (civAge < 17) {
+					good = evtTypeRoll >= 4;
+					bad = evtTypeRoll == 1;
+				} else if (civAge < 25) {
+					good = evtTypeRoll == 6;
+					bad = evtTypeRoll < 3;
+				} else {
+					good = evtTypeRoll == 6;
+					bad = evtTypeRoll < 5;
+				}
+
+				if (good) {
+					pick(GoodCivEvent.values()).invoke(c, this);
+				}
+				if (checkCivDoom(c)) { civs.remove(c); continue; }
+				if (bad) {
+					pick(BadCivEvent.values()).invoke(c, this);
+				}
+				if (checkCivDoom(c)) { civs.remove(c); continue; }
+			}
 		}
 		
 		
@@ -162,7 +234,7 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 				}
 			}
 			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.pollution);
-			if (p.evoPoints > p.evoNeeded && p(50) && p.pollution < 2) {
+			if (p.evoPoints > p.evoNeeded && p(30) && p.pollution < 2) {
 				p.evoPoints -= p.evoNeeded;
 				if (!p.habitable) {
 					p.habitable = true;
@@ -175,7 +247,7 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 							Population starter = pick(p.inhabitants);
 							starter.size++;
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + "!", starter.type, p);
-							Civ c = new Civ(starter.type, p, g, d(3), historicalCivs);
+							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivs);
 							historicalCivs.add(c);
 							civs.add(c);
 							p.owner = c;
@@ -195,6 +267,27 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 							}
 						}
 					}
+				}
+			}
+		}
+		
+		// Erosion
+		for (Planet p : planets) {
+			for (Stratum s : new ArrayList<Stratum>(p.strata)) {
+				int sAge = year - s.time() + 1;
+				if (p(5000 / sAge + 600)) {
+					p.strata.remove(s);
+				}
+			}
+		}
+		
+		for (Planet p : planets) {
+			if (p.owner != null) {
+				if (!p.owner.colonies.contains(p)) {
+					System.out.println("OMG BBQ WTF");
+				}
+				if (!civs.contains(p.owner)) {
+					System.out.println("OMG BBQ WTF");
 				}
 			}
 		}

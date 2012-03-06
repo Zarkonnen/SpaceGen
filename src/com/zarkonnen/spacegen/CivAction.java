@@ -1,7 +1,6 @@
 package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 
 public enum CivAction {
@@ -16,6 +15,7 @@ public enum CivAction {
 				Diplomacy.Outcome outcome = Diplomacy.meet(actor, p.owner, sg);
 				rep.append(outcome.desc(p.owner, actor.relation(p.owner))).append(" ");
 				if (outcome == Diplomacy.Outcome.UNION) {
+					sg.civs.remove(p.owner);
 					Government newGovt = sg.pick(new Government[] { actor.govt, p.owner.govt });
 					actor.govt = newGovt;
 					actor.colonies.addAll(p.owner.colonies);
@@ -25,6 +25,9 @@ public enum CivAction {
 						if (!actor.fullMembers.contains(st)) {
 							actor.fullMembers.add(st);
 						}
+					}
+					for (Planet c : p.owner.colonies) {
+						c.owner = actor;
 					}
 					HashMap<Civ, Diplomacy.Outcome> newRels = new HashMap<Civ, Diplomacy.Outcome>();
 					for (Civ c : sg.civs) {
@@ -42,7 +45,6 @@ public enum CivAction {
 					actor.relations = newRels;
 					actor.updateName(sg.historicalCivs);
 					rep.append("The two civilizations combine into the ").append(actor.name).append(". ");
-					sg.civs.remove(p.owner);
 					return;
 				} else {
 					actor.relations.put(p.owner, outcome);
@@ -58,11 +60,12 @@ public enum CivAction {
 						case BRAIN_PARASITE:
 							victimP = sg.pick(actor.colonies);
 							int stolenResources = actor.resources / actor.colonies.size();
-							Civ newCiv = new Civ(SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivs);
+							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivs);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
 							victimP.owner = newCiv;
 							actor.colonies.remove(victimP);
 							sg.civs.add(newCiv);
+							sg.historicalCivs.add(newCiv);
 							newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 							actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 							return;
@@ -81,7 +84,7 @@ public enum CivAction {
 							} else {
 								Population victimPop = sg.pick(victimP.inhabitants);
 								if (victimPop.size == 1) {
-									victimP.dePop(victimPop, sg.year, null, "predation by an ultravore");
+									victimP.dePop(victimPop, sg.year, null, "predation by an ultravore", null);
 								} else {
 									victimPop.size--;
 								}
@@ -103,9 +106,9 @@ public enum CivAction {
 						rep.append(seo.desc.replace("$a", pop.type.name)).append(" ");
 						switch (seo) {
 							case EXTERMINATE:
-								int kills = sg.d(3);
+								int kills = sg.d(3) + 1;
 								if (kills >= pop.size) {
-									p.dePop(pop, sg.year, null, "a campaign of extermination by " + actor.name);
+									p.dePop(pop, sg.year, null, "a campaign of extermination by " + actor.name, null);
 									rep.append("and wipe them out. ");
 								} else {
 									pop.size -= kills;
@@ -113,21 +116,23 @@ public enum CivAction {
 								}
 								break;
 							case EXTERMINATE_FAIL:
-								Civ newCiv = new Civ(pop.type, p, Government.REPUBLIC, 1, sg.historicalCivs);
+								Civ newCiv = new Civ(sg.year, pop.type, p, Government.REPUBLIC, 1, sg.historicalCivs);
 								pop.size++;
 								actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 								newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 								sg.civs.add(newCiv);
+								sg.historicalCivs.add(newCiv);
 								rep.append(", but their campaign fails disastrously. The local ").append(pop.type.name).append(" steal their technology and establish themselves as the ").append(newCiv.name).append(".");
 								return;
 							case GIVE_FULL_MEMBERSHIP:
 								if (!actor.fullMembers.contains(pop.type)) {
 									actor.fullMembers.add(pop.type);
 								}
+								actor.updateName(sg.historicalCivs);
 								// INTENTIONAL FALLTHROUGH!!!
 							case SUBJUGATE:
 								p.owner = actor;
-								actor.colonies.add(p);
+								if (!actor.colonies.contains(p)) { actor.colonies.add(p); }
 								break;
 						}
 					}
@@ -138,16 +143,31 @@ public enum CivAction {
 					Stratum stratum = p.strata.get(p.strata.size() - stratNum - 1);
 					if (sg.p(3 + stratNum)) {
 						if (stratum instanceof Fossil) {
-							rep.append("They discover ").append(stratum.toString().toLowerCase()).append(" ");
+							rep.append("They discover: ").append(stratum.toString()).append(" ");
 							actor.science++;
 						}
 						if (stratum instanceof Remnant) {
-							rep.append("They discover ").append(stratum.toString().toLowerCase()).append(" ");
+							rep.append("They discover: ").append(stratum.toString()).append(" ");
 							actor.resources++;
 							actor.science++;
+							Remnant r = (Remnant) stratum;
+							Planet homeP = actor.largestColony();
+							if (r.plague != null && sg.d(6) < r.plague.transmissivity) {
+								boolean affects = false;
+								for (Population pop : homeP.inhabitants) {
+									if (r.plague.affects.contains(pop.type)) {
+										affects = true;
+									}
+								}
+								
+								if (affects) {
+									homeP.plagues.add(new Plague(r.plague));
+									rep.append(" Unfortunately, they catch the ").append(r.plague.name).append(" from their exploration of the ancient tombs, infecting ").append(homeP.name).append(" upon their return.");
+								}
+							}
 						}
 						if (stratum instanceof Ruin) {
-							rep.append("They discover ").append(stratum.toString().toLowerCase()).append(" ");
+							rep.append("They discover: ").append(stratum.toString()).append(" ");
 							Ruin ruin = (Ruin) stratum;
 							switch (ruin.structure.type) {
 								case MILITARY_BASE:
@@ -188,8 +208,9 @@ public enum CivAction {
 				if (p.owner != null) { continue; }
 				// Who shall the colonists be?
 				
-				rep.append("The ").append(actor.name).append(" colonizes ").append(p.name).append(". ");
-				if (!p.inhabitants.isEmpty()) { rep.append("Of the natives of that planet, "); }
+				rep.append("The ").append(actor.name).append(" colonise ").append(p.name).append(". ");
+				boolean ne = false;
+				if (!p.inhabitants.isEmpty()) { rep.append("Of the natives of that planet, "); ne = true; }
 				boolean first = true;
 				for (Population nativeP : new ArrayList<Population>(p.inhabitants)) {
 					if (!first) {
@@ -203,7 +224,7 @@ public enum CivAction {
 					switch (seo) {
 						case EXTERMINATE:
 						case EXTERMINATE_FAIL:
-							p.deCiv(sg.year, null, "through the actions of the " + actor.name);
+							p.dePop(nativeP, sg.year, null, "through the actions of the " + actor.name, null);
 							rep.append(" are exterminated");
 							break;
 						case IGNORE:
@@ -222,6 +243,7 @@ public enum CivAction {
 
 					first = false;
 				}
+				if (ne) { rep.append("."); }
 				actor.resources -= 6;
 				p.owner = actor;
 				actor.colonies.add(p);
@@ -270,11 +292,11 @@ public enum CivAction {
 	BUILD_WARSHIPS() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.resources < 2) { return; }
-			int res = Math.min(actor.resources, sg.d(6) + 1);
+			if (actor.resources < 3) { return; }
+			int res = Math.min(actor.resources, sg.d(6) + 2);
 			actor.resources -= res;
 			actor.military += res;
-			rep.append("The ").append(actor.name).append(" constructs a fleet of ").append(res).append(" warships.");
+			//rep.append("The ").append(actor.name).append(" constructs a fleet of ").append(res).append(" warships.");
 		}
 	},
 	BUILD_CONSTRUCTION() {
@@ -305,7 +327,7 @@ public enum CivAction {
 			}
 			actor.resources -= 5;
 			p.structures.add(new Structure(st, actor, sg.year));
-			rep.append("The ").append(actor.name).append(" build a ").append(st.name).append(" on ").append(p.name).append(".");
+			//rep.append("The ").append(actor.name).append(" build a ").append(st.name).append(" on ").append(p.name).append(".");
 			return;
 		}
 	}

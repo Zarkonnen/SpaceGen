@@ -13,14 +13,36 @@ public class Planet {
 	ArrayList<PlanetSpecial> specials = new ArrayList<PlanetSpecial>();
 	ArrayList<SpecialLifeform> lifeforms = new ArrayList<SpecialLifeform>();
 	ArrayList<Population> inhabitants = new ArrayList<Population>();
+	ArrayList<Artefact> artefacts = new ArrayList<Artefact>();
 	Civ owner;
 	ArrayList<Structure> structures = new ArrayList<Structure>();
+	ArrayList<Plague> plagues = new ArrayList<Plague>();
 	
 	ArrayList<Stratum> strata = new ArrayList<Stratum>();
 	
-	public void dePop(Population pop, int time, Cataclysm cat, String reason) {
-		strata.add(new Remnant(pop, time, cat, reason));
+	public void dePop(Population pop, int time, Cataclysm cat, String reason, Plague plague) {
+		strata.add(new Remnant(pop, time, cat, reason, plague));
 		inhabitants.remove(pop);
+		lp: for (Plague p : new ArrayList<Plague>(plagues)) {
+			for (Population p2 : inhabitants) {
+				if (p.affects.contains(p2.type)) {
+					continue lp;
+				}
+			}
+			plagues.remove(p);
+		}
+	}
+	
+	void darkAge(int time) {
+		for (Structure s : structures) {
+			strata.add(new Ruin(s, time, null, "during the collapse of the " + owner.name));
+		}
+		structures.clear();
+		for (Artefact a : artefacts) {
+			strata.add(new LostArtefact("lost", time, a));
+		}
+		
+		owner = null;
 	}
 	
 	public void deCiv(int time, Cataclysm cat, String reason) {
@@ -28,11 +50,16 @@ public class Planet {
 		owner.colonies.remove(this);
 		owner = null;
 		for (Population p : new ArrayList<Population>(inhabitants)) {
-			dePop(p, time, cat, reason);
+			dePop(p, time, cat, reason, null);
 		}
 		for (Structure s : structures) {
-			strata.add(new Ruin(s, time, cat));
+			strata.add(new Ruin(s, time, cat, reason));
 		}
+		structures.clear();
+		for (Artefact a : artefacts) {
+			strata.add(new LostArtefact("buried", time, a));
+		}
+		artefacts.clear();
 		structures.clear();
 	}
 	
@@ -42,13 +69,15 @@ public class Planet {
 		for (SpecialLifeform slf : lifeforms) {
 			strata.add(new Fossil(slf, time, cat));
 		}
+		plagues.clear();
 		lifeforms.clear();
 		habitable = false;
 	}
 	
 	public Planet(Random r) {
 		this.name = getName(Math.abs(r.nextInt()));
-		this.evoNeeded = 12000 + (r.nextInt(3) == 0 ? 0 : 10000000);
+		this.evoNeeded = 15000 + (r.nextInt(3) == 0 ? 0 : 1000000);
+		this.evoPoints = -evoNeeded;
 	}
 	
 	public boolean has(StructureType st) {
@@ -110,6 +139,9 @@ public class Planet {
 		}
 		for (Structure s : structures) {
 			sb.append("A ").append(s).append("\n");
+		}
+		for (Artefact art : artefacts) {
+			sb.append("A ").append(art).append("\n");
 		}
 		for (PlanetSpecial ps : specials) {
 			sb.append(ps.explanation).append("\n");
