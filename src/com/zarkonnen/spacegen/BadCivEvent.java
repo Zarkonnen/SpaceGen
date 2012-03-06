@@ -1,7 +1,6 @@
 package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 
 public enum BadCivEvent {
@@ -18,6 +17,18 @@ public enum BadCivEvent {
 					}
 				}	
 				if (nRebels > col.population() / 2) {
+					if (actor.has(ArtefactType.Device.MIND_CONTROL_DEVICE)) {
+						rep.append("A slave revolt on ").append(col.name).append(" is quickly suppressed using the mind control device of the ").append(actor.name).append(".");
+						return;
+					}
+					if (actor.has(ArtefactType.Device.VIRTUAL_REALITY_MATRIX)) {
+						rep.append("A slave revolt on ").append(col.name).append(" fizzles out when the virtual reality matrix of the ").append(actor.name).append(" is adjusted.");
+						return;
+					}
+					if (actor.has(ArtefactType.Device.PLANET_DESTROYER)) {
+						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of the planet destroyer wielded by the ").append(actor.name).append(".");
+						return;
+					}
 					int resTaken = actor.resources / actor.colonies.size();
 					int milTaken = actor.military / actor.colonies.size();
 					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg.historicalCivs);
@@ -167,6 +178,7 @@ public enum BadCivEvent {
 	},
 	PLAGUE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
+			if (actor.fullColonies().isEmpty()) { return; }
 			Planet p = sg.pick(actor.fullColonies());
 			Plague plague = new Plague(sg);
 			plague.affects.add(sg.pick(p.inhabitants).type);
@@ -176,6 +188,9 @@ public enum BadCivEvent {
 	},
 	STARVATION() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
+			if (actor.has(ArtefactType.Device.UNIVERSAL_NUTRIENT)) {
+				return;
+			}
 			Planet p = sg.pick(actor.fullColonies());
 			int deaths = 0;
 			for (Population pop : new ArrayList<Population>(p.inhabitants)) {

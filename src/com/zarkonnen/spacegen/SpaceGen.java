@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
@@ -20,9 +16,18 @@ public class SpaceGen {
 	
 	public static void main(String[] args) {
 		SpaceGen sg = new SpaceGen(args.length > 1 ? Long.parseLong(args[1]) : System.currentTimeMillis());
-		int ticks = args.length > 0 ? Integer.parseInt(args[0]) : 300;
+		int ticks = args.length > 0 ? Integer.parseInt(args[0]) : sg.r.nextInt(400) + 120;
+		int wait = 0;
 		for (int t = 0; t < ticks; t++) {
 			sg.tick();
+			if (sg.civs.size() >= 3) {
+				wait++;
+				if (wait > 20) {
+					break;
+				}
+			} else {
+				wait = 0;
+			}
 		}
 		sg.l("");
 		sg.l("");
@@ -35,7 +40,7 @@ public class SpaceGen {
 		r = new Random(seed);
 		int np = 6 + d(4, 6);
 		for (int i = 0; i < np; i++) {
-			Planet p = new Planet(r);
+			Planet p = new Planet(r, this);
 			l(p.name);
 			planets.add(p);
 		}
@@ -148,10 +153,21 @@ public class SpaceGen {
 			int newRes = 1;
 			int newSci = 1;
 			for (Planet col : new ArrayList<Planet>(c.colonies)) {
+				if (c.has(ArtefactType.Device.UNIVERSAL_ANTIDOTE)) {
+					for (Plague p : col.plagues) {
+						l("The " + p.name + " on $pname is cured by the universal antidote.");
+					}
+					col.plagues.clear();
+				}
 				if (col.population() > 7 || (col.population() > 4 && p(3))) {
 					col.evoPoints = 0;
 					col.pollution++;
 					//l("Overcrowding on $name leads to increased pollution.", col);
+				}
+				if (c.has(ArtefactType.Device.MIND_READER) && p(4)) {
+					for (Population pop : col.inhabitants) { 
+						pop.size++;
+					}
 				}
 				if (col.population() == 0 && !col.isOutpost()) {
 					col.deCiv(year, null, "");
@@ -168,6 +184,11 @@ public class SpaceGen {
 			
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			
+			if (c.has(ArtefactType.Device.MASTER_COMPUTER)) {
+				newRes += 3;
+				newSci += 3;
+			}
+			
 			c.resources += newRes;
 			
 			SentientType lead = pick(c.fullMembers);
@@ -175,6 +196,14 @@ public class SpaceGen {
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			pick(c.govt.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
+			
+			c.science += newSci;
+			
+			if (c.science > c.nextBreakthrough) {
+				if (Science.advance(c, this)) { continue; }
+				c.science -= c.nextBreakthrough;
+				c.nextBreakthrough *= 2;
+			}
 			
 			if (p(3)) {
 				int evtTypeRoll = d(6);
@@ -249,8 +278,8 @@ public class SpaceGen {
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
 							starter.size++;
-							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + "!", starter.type, p);
 							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivs);
+							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + ", the " + c.name + ".", starter.type, p);
 							historicalCivs.add(c);
 							civs.add(c);
 							p.owner = c;
@@ -278,8 +307,25 @@ public class SpaceGen {
 		for (Planet p : planets) {
 			for (Stratum s : new ArrayList<Stratum>(p.strata)) {
 				int sAge = year - s.time() + 1;
-				if (p(5000 / sAge + 600)) {
-					p.strata.remove(s);
+				if (s instanceof Fossil) {
+					if (p(12000 / sAge + 800)) {
+						p.strata.remove(s);
+					}
+				}
+				if (s instanceof LostArtefact) {
+					if (p(8000 / sAge + 300)) {
+						p.strata.remove(s);
+					}
+				}
+				if (s instanceof Remnant) {
+					if (p(4000 / sAge + 400)) {
+						p.strata.remove(s);
+					}
+				}
+				if (s instanceof Ruin) {
+					if (p(2500 / sAge + 250)) {
+						p.strata.remove(s);
+					}
 				}
 			}
 		}

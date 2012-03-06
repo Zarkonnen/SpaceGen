@@ -1,5 +1,6 @@
 package com.zarkonnen.spacegen;
 
+import com.zarkonnen.spacegen.ArtefactType.Device;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -12,9 +13,49 @@ public class Civ {
 	int resources = 0;
 	int science = 0;
 	int military = 0;
+	int weapLevel = 0;
 	int techLevel = 1;
 	String name;
 	int birthYear;
+	int nextBreakthrough = 6;
+	
+	public ArrayList<Planet> reachables(SpaceGen sg) {
+		int range = 3 + techLevel * techLevel;
+		if (has(ArtefactType.Device.TELEPORT_GATE)) { range = 10000; }
+		ArrayList<Planet> ir = new ArrayList<Planet>();
+		for (Planet p : sg.planets) {
+			int closestR = 100000;
+			for (Planet c : colonies) {
+				int dist = (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y);
+				closestR = Math.min(dist, closestR);
+			}
+			if (closestR <= range) {
+				ir.add(p);
+			}
+		}
+		return ir;
+	}
+	
+	public boolean has(ArtefactType at) {
+		for (Planet c : colonies) {
+			for (Artefact a : c.artefacts) {
+				if (a.type == at) { return true; }
+			}
+		}
+		return false;
+	}
+	
+	Artefact use(ArtefactType at) {
+		for (Planet c : colonies) {
+			for (Artefact a : c.artefacts) {
+				if (a.type == at) {
+					c.artefacts.remove(a);
+					return a;
+				}
+			}
+		}
+		return new Artefact(13, this, at, "mysterious " + at.getName() + "");
+	}
 	
 	public Diplomacy.Outcome relation(Civ c) {
 		if (!relations.containsKey(c)) { relations.put(c, Diplomacy.Outcome.PEACE); }

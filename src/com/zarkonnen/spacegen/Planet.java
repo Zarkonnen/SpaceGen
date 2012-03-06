@@ -4,6 +4,13 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Planet {
+	static final String[] P_NAMES = {
+		"Taranis", "Krantor", "Mycon", "Urbon", "Metatron", "Autorog", "Pastinakos", "Orra",
+		"Hylon", "Wotan", "Erebus", "Regor", "Sativex", "Vim", "Freia", "Tabernak", "Helmettepol",
+		"Lumen", "Atria", "Bal", "Orgus", "Hylus", "Jurvox", "Kalamis", "Ziggurat", "Xarlan",
+		"Chroma", "Nid", "Mera"
+	};
+	
 	public final String name;
 	
 	int pollution;
@@ -19,6 +26,8 @@ public class Planet {
 	ArrayList<Plague> plagues = new ArrayList<Plague>();
 	
 	ArrayList<Stratum> strata = new ArrayList<Stratum>();
+	int x;
+	int y;
 	
 	public void dePop(Population pop, int time, Cataclysm cat, String reason, Plague plague) {
 		strata.add(new Remnant(pop, time, cat, reason, plague));
@@ -41,7 +50,28 @@ public class Planet {
 		for (Artefact a : artefacts) {
 			strata.add(new LostArtefact("lost", time, a));
 		}
+		artefacts.clear();
 		
+		owner = null;
+	}
+	
+	public void transcend(int time) {
+		if (owner == null) { return; }
+		for (Population p : new ArrayList<Population>(inhabitants)) {
+			strata.add(new Remnant(p, time));
+		}
+		inhabitants.clear();
+		for (Structure s : structures) {
+			strata.add(new Ruin(s, time, null, "after the transcendence of the " + owner.name));
+		}
+		structures.clear();
+		for (Artefact a : artefacts) {
+			strata.add(new LostArtefact("lost and buried when the " + owner.name + " transcended", time, a));
+		}
+		artefacts.clear();
+		structures.clear();
+		plagues.clear();
+		owner.colonies.remove(this);
 		owner = null;
 	}
 	
@@ -74,10 +104,18 @@ public class Planet {
 		habitable = false;
 	}
 	
-	public Planet(Random r) {
+	public Planet(Random r, SpaceGen sg) {
 		this.name = getName(Math.abs(r.nextInt()));
 		this.evoNeeded = 15000 + (r.nextInt(3) == 0 ? 0 : 1000000);
 		this.evoPoints = -evoNeeded;
+		lp: while (true) {
+			x = r.nextInt(10);
+			y = r.nextInt(10);
+			for (Planet p : sg.planets) {
+				if (p.x == x && p.y == y) { continue lp; }
+			}
+			break;
+		}
 	}
 	
 	public boolean has(StructureType st) {
@@ -88,6 +126,9 @@ public class Planet {
 	}
 	
 	static String getName(int p) {
+		if (p % 2 == 0) {
+			return P_NAMES[p % P_NAMES.length] + new String[] { " I", " II", " III", " IV", " V", " VI" }[(p / 77 + 3) % 6]; 
+		}
 		return new String(new char[] {
 			(char) ('A' + (p + 5) % 7),
 			new char[] {'u','e','y','o','i'}[(p + 2) % 5],
@@ -136,6 +177,10 @@ public class Planet {
 			for (Population p : inhabitants) {
 				sb.append(p).append("\n");
 			}
+		}
+		if (!plagues.isEmpty()) { sb.append("Plagues:\n"); }
+		for (Plague pl : plagues) {
+			sb.append(pl.desc()).append("\n");
 		}
 		for (Structure s : structures) {
 			sb.append("A ").append(s).append("\n");

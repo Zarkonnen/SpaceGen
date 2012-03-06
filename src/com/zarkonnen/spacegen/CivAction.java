@@ -8,7 +8,7 @@ public enum CivAction {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			// Pick a planet to explore.
-			Planet p = sg.pick(sg.planets);
+			Planet p = sg.pick(actor.reachables(sg));
 			if (p.owner != null && p.owner != actor) {
 				// They meet a civ.
 				rep.append("The ").append(actor.name).append(" send a delegation to ").append(p.name).append(". ");
@@ -47,10 +47,15 @@ public enum CivAction {
 					rep.append("The two civilizations combine into the ").append(actor.name).append(". ");
 					return;
 				} else {
-					actor.relations.put(p.owner, outcome);
-					p.owner.relations.put(actor, outcome);
+					if (actor.relation(p.owner) != outcome) {
+						actor.relations.put(p.owner, outcome);
+						p.owner.relations.put(actor, outcome);
+					} else {
+						rep.delete(0, rep.length());
+					}
 				}
 			} else {
+				boolean major = false;
 				rep.append("The ").append(actor.name).append(" explore ").append(p.name).append(". ");
 				String base = rep.toString();
 				// The wildlife.
@@ -72,15 +77,19 @@ public enum CivAction {
 						case PHARMACEUTICALS:
 							rep.append("The expedition encounters plants with useful pharmaceutical properties. ");
 							actor.science += 4;
+							major = true;
 							break;
 						case SHAPE_SHIFTER:
 							// todo, needs wandering monsters
 							break;
 						case ULTRAVORE:
 							victimP = sg.pick(actor.colonies);
-							if (victimP.population() < 2 || sg.p(12)) {
-								rep.append("The expedition captures an ultravore. The science of the ").append(actor.name).append(" fashions it into a living weapon of war. ");
-								// qqDPS actually give them the weapon
+							if (victimP.population() < 2 || sg.p(3)) {
+								if (sg.p(6)) {
+									rep.append("The expedition captures an ultravore. The science of the ").append(actor.name).append(" fashions it into a living weapon of war. ");
+									actor.largestColony().artefacts.add(new Artefact(sg.year, actor, ArtefactType.Device.LIVING_WEAPON, ArtefactType.Device.LIVING_WEAPON.create(actor, sg)));
+									major = true;
+								}
 							} else {
 								Population victimPop = sg.pick(victimP.inhabitants);
 								if (victimPop.size == 1) {
@@ -98,21 +107,22 @@ public enum CivAction {
 				// The locals.
 				if (p.owner == null) {
 					for (Population pop : new ArrayList<Population>(p.inhabitants)) {
+						major = true;
 						if (pop.type == SentientType.DEEP_DWELLERS) {
 							rep.append("They remain unaware of the Deep Dweller culture far beneath. ");
 							continue;
 						}
 						SentientEncounterOutcome seo = sg.pick(actor.govt.encounterOutcomes);
-						rep.append(seo.desc.replace("$a", pop.type.name)).append(" ");
+						rep.append(seo.desc.replace("$a", pop.type.name));
 						switch (seo) {
 							case EXTERMINATE:
 								int kills = sg.d(3) + 1;
 								if (kills >= pop.size) {
 									p.dePop(pop, sg.year, null, "a campaign of extermination by " + actor.name, null);
-									rep.append("and wipe them out. ");
+									rep.append(" and wipe them out. ");
 								} else {
 									pop.size -= kills;
-									rep.append(", killing ").append(kills).append(" billion.");
+									rep.append(", killing ").append(kills).append(" billion. ");
 								}
 								break;
 							case EXTERMINATE_FAIL:
@@ -163,6 +173,7 @@ public enum CivAction {
 								if (affects) {
 									homeP.plagues.add(new Plague(r.plague));
 									rep.append(" Unfortunately, they catch the ").append(r.plague.name).append(" from their exploration of the ancient tombs, infecting ").append(homeP.name).append(" upon their return.");
+									major = true;
 								}
 							}
 						}
@@ -183,10 +194,55 @@ public enum CivAction {
 									break;
 							}
 						}
+						if (stratum instanceof LostArtefact) {
+							LostArtefact la = (LostArtefact) stratum;
+							if (la.artefact.type == ArtefactType.Device.STASIS_CAPSULE) {
+								if (!sg.civs.contains(la.artefact.creator)) {
+									rep.append("They open a stasis capsule from the ").append(la.artefact.creator.name).append(", which arises once more!");
+									sg.civs.add(la.artefact.creator);
+									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
+									la.artefact.creator.resources = 10;
+									la.artefact.creator.military = 10;
+									if (p.owner != null) {
+										p.owner.relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
+										la.artefact.creator.relations.put(p.owner, Diplomacy.Outcome.WAR);
+										p.owner.colonies.remove(p);
+									}
+									la.artefact.creator.colonies.clear();
+									la.artefact.creator.colonies.add(p);
+									p.owner = la.artefact.creator;
+									boolean inserted = false;
+									for (Population pop : p.inhabitants) {
+										if (pop.type == la.artefact.st) {
+											pop.size += 3;
+											inserted = true;
+											break;
+										}
+									}
+									if (!inserted) {
+										p.inhabitants.add(new Population(la.artefact.st, 3));
+									}
+									return;
+								}
+								continue;
+							}
+							if (la.artefact.type == ArtefactType.Device.MIND_ARCHIVE) {
+								rep.append("They encounter a mind archive of the ").append(la.artefact.creator.name).append(" which brings them new knowledge and wisdom. ");
+								major = true;
+								actor.techLevel = Math.max(actor.techLevel, la.artefact.creatorTechLevel);
+								continue;
+							}
+							
+							rep.append("They recover: ").append(stratum).append(" ");
+							major = true;
+							p.strata.remove(stratum);
+							sg.pick(actor.colonies).artefacts.add(la.artefact);
+							stratNum--;
+						}
 					}
 				}
 				
-				if (rep.toString().equals(base)) {
+				if (!major || rep.toString().equals(base)) {
 					rep.delete(0, rep.length());
 				}
 			}
@@ -203,7 +259,7 @@ public enum CivAction {
 			if (srcP.population() <= 1) { return; }
 			for (int tries = 0; tries < 20; tries++) {
 				// Pick a planet to colonise.
-				Planet p = sg.pick(sg.planets);
+				Planet p = sg.pick(actor.reachables(sg));
 				if (!p.habitable) { continue; }
 				if (p.owner != null) { continue; }
 				// Who shall the colonists be?
@@ -243,7 +299,7 @@ public enum CivAction {
 
 					first = false;
 				}
-				if (ne) { rep.append("."); }
+				if (ne) { rep.append(". "); }
 				actor.resources -= 6;
 				p.owner = actor;
 				actor.colonies.add(p);
@@ -325,7 +381,7 @@ public enum CivAction {
 		if (actor.resources < 5) { return; }
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.
-			Planet p = sg.pick(sg.planets);
+			Planet p = sg.pick(actor.reachables(sg));
 			if ((p.owner != null || !p.inhabitants.isEmpty()) && p.owner != actor) { continue; }
 			
 			if (p.has(st)) { continue; }

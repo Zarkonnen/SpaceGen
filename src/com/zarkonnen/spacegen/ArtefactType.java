@@ -15,7 +15,7 @@ public interface ArtefactType {
 			String ret = "";
 			switch (this) {
 				case STATUE:
-					ret = ret + ""; break;
+					ret = "statue of"; break;
 				case PAINTING:
 					ret = "painting of"; break;
 				case HOLOGRAM:
@@ -55,6 +55,41 @@ public interface ArtefactType {
 				default:
 					return ret + " space kittens";
 			}
+		}
+	}
+	
+	public static enum Device implements ArtefactType {
+		TELEPORT_GATE("Teleport Gate"),
+		PLANET_DESTROYER("Planet Destroyer"),
+		MIND_CONTROL_DEVICE("Mind Control Device"),
+		MIND_READER("Mind Reader"),
+		MASTER_COMPUTER("Master Computer"),
+		YOUTH_SERUM("Youth Serum"),
+		STASIS_CAPSULE("Stasis Capsule"),
+		TIME_MACHINE("Time Machine"),
+		UPLIFT_DEVICE("Uplift Device"),
+		LIVING_WEAPON("Living Weapon"),
+		MIND_ARCHIVE("Mind Archive"),
+		UNIVERSAL_NUTRIENT("Universal Nutrient"),
+		VIRTUAL_REALITY_MATRIX("Virtual Reality Matrix"),
+		UNIVERSAL_ANTIDOTE("Universal Antidote"),
+		ARTIFICIAL_PLAGUE("Artificial Plague"),
+		KILLER_MEME("Killer Meme"),
+		UNIVERSAL_COMPUTER_VIRUS("Universal Computer Virus");
+		
+		final String name;
+
+		private Device(String name) {
+			this.name = name;
+		}
+		
+		@Override
+		public String getName() {
+			return name;
+		}
+
+		String create(Civ actor, SpaceGen sg) {
+			return name;
 		}
 	}
 	
