@@ -12,9 +12,11 @@ public class SpaceGen {
 	ArrayList<String> log = new ArrayList<String>();
 	ArrayList<Planet> planets = new ArrayList<Planet>();
 	ArrayList<Civ> civs = new ArrayList<Civ>();
+	ArrayList<Civ> historicalCivs = new ArrayList<Civ>();
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
+	int age = 1;
 	
 	public static void main(String[] args) {
 		SpaceGen sg = new SpaceGen(args.length > 1 ? Long.parseLong(args[1]) : System.currentTimeMillis());
@@ -22,6 +24,9 @@ public class SpaceGen {
 		for (int t = 0; t < ticks; t++) {
 			sg.tick();
 		}
+		sg.l("");
+		sg.l("");
+		sg.describe();
 	}
 
 	public SpaceGen(long seed) {
@@ -55,10 +60,11 @@ public class SpaceGen {
 		year++;
 		yearAnnounced = false;
 		if (!hadCivs && !civs.isEmpty()) {
-			l("WE ENTER AN AGE OF CIVILISATION");
+			l("WE ENTER THE " + Names.nth(age).toUpperCase() + " AGE OF CIVILISATION");
 		}
 		if (hadCivs && civs.isEmpty()) {
-			l("WE ENTER AN AGE OF DARKNESS");
+			age++;
+			l("WE ENTER THE " + Names.nth(age).toUpperCase() + " AGE OF DARKNESS");
 		}
 		hadCivs = !civs.isEmpty();
 		
@@ -94,22 +100,20 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 						}
 					}
 					if (p.size <= 0) {
-						col.inhabitants.remove(p);
+						col.dePop(p, year, null);
 						l("$sname have died out on $pname!", p.type, col);
 					}
 				}
 				if (col.population() == 0 && !col.isOutpost()) {
-					col.owner = null;
-					col.structures.clear();
-					c.colonies.remove(col);
+					col.deCiv(year, null);
 				} else {
 					if (col.population() > 0) {
 						newRes++;
 						if (col.lifeforms.contains(SpecialLifeform.VAST_HERDS)) { newRes++; }
 					}
 					if (col.specials.contains(PlanetSpecial.GEM_WORLD)) { newRes++; }
-					if (col.structures.contains(Structure.MINING_BASE)) { newRes += 2; }
-					if (col.structures.contains(Structure.SCIENCE_LABS)) { newSci += 2; }
+					if (col.has(StructureType.MINING_BASE)) { newRes += 2; }
+					if (col.has(StructureType.SCIENCE_LAB)) { newSci += 2; }
 				}
 			}
 			
@@ -125,16 +129,11 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 		for (Planet p : planets) {
 			if (p.habitable && p(500)) {
 				Cataclysm c = pick(Cataclysm.values());
-				p.evoPoints = 0;
+				Civ civ = p.owner;
 				l(c.desc, p);
-				p.lifeforms.clear();
-				p.inhabitants.clear();
-				p.structures.clear();
-				p.habitable = false;
-				if (p.owner != null) {
-					Civ civ = p.owner;
-					p.owner.colonies.remove(p);
-					p.owner = null;
+				p.deLive(year, c);
+				
+				if (civ != null) {
 					if (checkCivDoom(civ)) { civs.remove(civ); }
 				}
 				continue;
@@ -165,8 +164,9 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 							// Do the civ thing.
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
-							l("The $sname on $pname achieve spaceflight and organise as a " + g.name + "!", starter.type, p);
-							Civ c = new Civ(starter.type, p, g, d(3));
+							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + "!", starter.type, p);
+							Civ c = new Civ(starter.type, p, g, d(3), historicalCivs);
+							historicalCivs.add(c);
 							civs.add(c);
 							p.owner = c;
 						}
@@ -190,6 +190,13 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 		}
 	}
 	
+	public void describe() {
+		for (Planet p : planets) {
+			l(p.fullDesc());
+			l("");
+		}
+	}
+	
 	final <T> T pick(ArrayList<T> ts) {
 		return ts.get(r.nextInt(ts.size()));
 	}
@@ -207,11 +214,11 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 	}
 	
 	final void l(String s, Civ st) {
-		l(s.replace("$name", st.name()));
+		l(s.replace("$name", st.name));
 	}
 	
 	final void l(String s, Civ st, Planet p) {
-		l(s.replace("$cname", st.name()).replace("$pname", p.name));
+		l(s.replace("$cname", st.name).replace("$pname", p.name));
 	}
 	
 	final void l(String s, SentientType st, Planet p) {

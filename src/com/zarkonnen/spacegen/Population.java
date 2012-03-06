@@ -8,4 +8,9 @@ public class Population {
 		this.type = type;
 		this.size = size;
 	}
+	
+	@Override
+	public String toString() {
+		return size + " billion " + type.name;
+	}
 }

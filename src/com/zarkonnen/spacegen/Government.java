@@ -5,23 +5,29 @@ import static com.zarkonnen.spacegen.CivAction.*;
 public enum Government {
 	DICTATORSHIP(
 			"Military Dictatorship",
+			"Empire",
 			EXPLORE_PLANET, EXPLORE_PLANET, COLONISE_PLANET, BUILD_SCIENCE_OUTPOST, BUILD_MINING_BASE, BUILD_MILITARY_BASE, BUILD_MILITARY_BASE, BUILD_MILITARY_BASE, DO_RESEARCH, BUILD_WARSHIPS, BUILD_WARSHIPS, BUILD_WARSHIPS, BUILD_CONSTRUCTION),
 	THEOCRACY(
 			"Theocracy",
+			"Church",
 			EXPLORE_PLANET, COLONISE_PLANET, COLONISE_PLANET, COLONISE_PLANET, BUILD_MINING_BASE, BUILD_MILITARY_BASE, BUILD_MILITARY_BASE, BUILD_WARSHIPS, BUILD_CONSTRUCTION, BUILD_CONSTRUCTION),
 	FEUDAL_STATE(
 			"Feudal State",
+			"Kingdom",
 			EXPLORE_PLANET, COLONISE_PLANET, COLONISE_PLANET, BUILD_MINING_BASE, BUILD_MILITARY_BASE, DO_RESEARCH, BUILD_WARSHIPS, BUILD_WARSHIPS, BUILD_CONSTRUCTION),
 	REPUBLIC(
 			"Republic",
+			"Republic",
 			EXPLORE_PLANET, COLONISE_PLANET, BUILD_MINING_BASE, BUILD_MINING_BASE, BUILD_MILITARY_BASE, BUILD_SCIENCE_OUTPOST, DO_RESEARCH, BUILD_WARSHIPS, BUILD_CONSTRUCTION, BUILD_CONSTRUCTION);
 	
-	final String name;
+	final String typeName;
+	final String title;
 	final CivAction[] behaviour;
 
-	private Government(String name, CivAction... behaviour) {
-		this.name = name;
+	private Government(String name, String title, CivAction... behaviour) {
+		this.typeName = name;
 		this.behaviour = behaviour;
+		this.title = title;
 	}
 	
 	

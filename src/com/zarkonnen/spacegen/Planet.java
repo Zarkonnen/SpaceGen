@@ -15,8 +15,45 @@ public class Planet {
 	Civ owner;
 	ArrayList<Structure> structures = new ArrayList<Structure>();
 	
+	ArrayList<Stratum> strata = new ArrayList<Stratum>();
+	
+	public void dePop(Population pop, int time, Cataclysm cat) {
+		strata.add(new Remnant(pop, time, cat));
+		inhabitants.remove(pop);
+	}
+	
+	public void deCiv(int time, Cataclysm cat) {
+		if (owner == null) { return; }
+		owner.colonies.remove(this);
+		owner = null;
+		for (Population p : new ArrayList<Population>(inhabitants)) {
+			dePop(p, time, cat);
+		}
+		for (Structure s : structures) {
+			strata.add(new Ruin(s, time, cat));
+		}
+		structures.clear();
+	}
+	
+	public void deLive(int time, Cataclysm cat) {
+		deCiv(time, cat);
+		evoPoints = 0;
+		for (SpecialLifeform slf : lifeforms) {
+			strata.add(new Fossil(slf, time, cat));
+		}
+		lifeforms.clear();
+		habitable = false;
+	}
+	
 	public Planet(Random r) {
 		this.name = getName(Math.abs(r.nextInt()));
+	}
+	
+	public boolean has(StructureType st) {
+		for (Structure s : structures) {
+			if (s.type == st) { return true; }
+		}
+		return false;
 	}
 	
 	static String getName(int p) {
@@ -30,9 +67,9 @@ public class Planet {
 	}
 	
 	boolean isOutpost() {
-		return	structures.contains(Structure.MILITARY_BASE) ||
-				structures.contains(Structure.SCIENCE_LABS) ||
-				structures.contains(Structure.MINING_BASE);
+		return	has(StructureType.MILITARY_BASE) ||
+				has(StructureType.SCIENCE_LAB) ||
+				has(StructureType.MINING_BASE);
 	}
 
 	int population() {
@@ -41,5 +78,50 @@ public class Planet {
 			sum += p.size;
 		}
 		return sum;
+	}
+	
+	
+	public String fullDesc() {
+		StringBuilder sb = new StringBuilder(name.toUpperCase() + "\n");
+		sb.append("A ").append(habitable ? "life-bearing " : "barren ").append("planet");
+		if (owner != null) {
+			sb.append(" of the ").append(owner.name);
+		}
+		sb.append(".\n");
+		if (pollution > 0) {
+			sb.append("It is ");
+			switch (pollution) {
+				case 1: sb.append("a little"); break;
+				case 2: sb.append("slightly"); break;
+				case 3: sb.append("somewhat"); break;
+				case 4: sb.append("heavily"); break;
+				case 5: sb.append("very heavily"); break;
+				default: sb.append("incredibly"); break;
+			}
+			sb.append(" polluted.\n");
+		}
+		if (inhabitants.size() > 0) {
+			sb.append("It is populated by:\n");
+			for (Population p : inhabitants) {
+				sb.append(p).append("\n");
+			}
+		}
+		for (PlanetSpecial ps : specials) {
+			sb.append(ps.explanation).append("\n");
+		}
+		if (!lifeforms.isEmpty()) {
+			sb.append("Lifeforms of note:\n");
+		}
+		for (SpecialLifeform ps : lifeforms) {
+			sb.append(ps.name).append(": ").append(ps.desc).append("\n");
+		}
+		if (!strata.isEmpty()) {
+			sb.append("Strata:\n");
+			for (int i = strata.size() - 1; i >= 0; i--) {
+				sb.append(strata.get(i)).append("\n");
+			}
+		}
+		
+		return sb.toString();
 	}
 }
