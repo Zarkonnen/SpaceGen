@@ -33,7 +33,7 @@ public class SpaceGen {
 		l("IN THE BEGINNING, ALL WAS DARK.");
 		l("THEN, PLANETS BEGAN TO FORM:");
 		r = new Random(seed);
-		int np = 5 + d(3, 6);
+		int np = 6 + d(4, 6);
 		for (int i = 0; i < np; i++) {
 			Planet p = new Planet(r);
 			l(p.name);
@@ -68,6 +68,26 @@ public class SpaceGen {
 		}
 		hadCivs = !civs.isEmpty();
 		
+		for (Planet planet : planets) {
+			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
+				int roll = d(6);
+				if (roll < planet.pollution) {
+					//l("Pollution kills a billion $sname on $pname.", pop.type, planet);
+					planet.pollution--;
+					pop.size--;
+				} else {
+					if (roll == 6 || (pop.type == SentientType.ANTOIDS && roll > 2) || (planet.owner != null && roll == 5)) {
+						pop.size++;
+						//l("The population of $sname on $pname has grown by a billion.", pop.type, planet);
+					}
+				}
+				if (pop.size <= 0) {
+					planet.dePop(pop, year, null, "from the effects of pollution");
+					l("$sname have died out on $pname!", pop.type, planet);
+				}
+			}
+		}
+		
 		// TICK CIVS
 		for (Civ c : new ArrayList<Civ>(civs)) {
 			/*
@@ -84,28 +104,13 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 			int newRes = 1;
 			int newSci = 1;
 			for (Planet col : new ArrayList<Planet>(c.colonies)) {
-				if (col.population() > 6) {
+				if (col.population() > 7 || (col.population() > 4 && p(3))) {
+					col.evoPoints = 0;
 					col.pollution++;
-					l("Overcrowding on $name leads to increased pollution.", col);
-				}
-				for (Population p : new ArrayList<Population>(col.inhabitants)) {
-					int roll = d(6);
-					if (roll < col.pollution) {
-						l("Pollution kills a billion $sname on $pname.", p.type, col);
-						p.size--;
-					} else {
-						if (roll == 6 || p.type == SentientType.ANTOIDS) {
-							p.size++;
-							l("The population of $sname on $pname has grown by a billion.", p.type, col);
-						}
-					}
-					if (p.size <= 0) {
-						col.dePop(p, year, null);
-						l("$sname have died out on $pname!", p.type, col);
-					}
+					//l("Overcrowding on $name leads to increased pollution.", col);
 				}
 				if (col.population() == 0 && !col.isOutpost()) {
-					col.deCiv(year, null);
+					col.deCiv(year, null, "");
 				} else {
 					if (col.population() > 0) {
 						newRes++;
@@ -119,8 +124,12 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 			
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			
+			c.resources += newRes;
+			
 			SentientType lead = pick(c.fullMembers);
 			pick(lead.behaviour).invoke(c, this);
+			if (checkCivDoom(c)) { civs.remove(c); continue; }
+			pick(c.govt.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 		}
 		
@@ -131,7 +140,7 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 				Cataclysm c = pick(Cataclysm.values());
 				Civ civ = p.owner;
 				l(c.desc, p);
-				p.deLive(year, c);
+				p.deLive(year, c, null);
 				
 				if (civ != null) {
 					if (checkCivDoom(civ)) { civs.remove(civ); }
@@ -152,9 +161,9 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 					l(ps.announcement, p);
 				}
 			}
-			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6);
-			if (p.evoPoints > 12000 && p(100)) {
-				p.evoPoints -= 12000;
+			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.pollution);
+			if (p.evoPoints > p.evoNeeded && p(50) && p.pollution < 2) {
+				p.evoPoints -= p.evoNeeded;
 				if (!p.habitable) {
 					p.habitable = true;
 					l("Life arises on $name", p);
@@ -164,6 +173,7 @@ I. If a civilisation is reduced to population 1, it gets downgraded to a sentien
 							// Do the civ thing.
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
+							starter.size++;
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + "!", starter.type, p);
 							Civ c = new Civ(starter.type, p, g, d(3), historicalCivs);
 							historicalCivs.add(c);

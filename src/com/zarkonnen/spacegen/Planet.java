@@ -9,6 +9,7 @@ public class Planet {
 	int pollution;
 	boolean habitable;
 	int evoPoints;
+	int evoNeeded;
 	ArrayList<PlanetSpecial> specials = new ArrayList<PlanetSpecial>();
 	ArrayList<SpecialLifeform> lifeforms = new ArrayList<SpecialLifeform>();
 	ArrayList<Population> inhabitants = new ArrayList<Population>();
@@ -17,17 +18,17 @@ public class Planet {
 	
 	ArrayList<Stratum> strata = new ArrayList<Stratum>();
 	
-	public void dePop(Population pop, int time, Cataclysm cat) {
-		strata.add(new Remnant(pop, time, cat));
+	public void dePop(Population pop, int time, Cataclysm cat, String reason) {
+		strata.add(new Remnant(pop, time, cat, reason));
 		inhabitants.remove(pop);
 	}
 	
-	public void deCiv(int time, Cataclysm cat) {
+	public void deCiv(int time, Cataclysm cat, String reason) {
 		if (owner == null) { return; }
 		owner.colonies.remove(this);
 		owner = null;
 		for (Population p : new ArrayList<Population>(inhabitants)) {
-			dePop(p, time, cat);
+			dePop(p, time, cat, reason);
 		}
 		for (Structure s : structures) {
 			strata.add(new Ruin(s, time, cat));
@@ -35,8 +36,8 @@ public class Planet {
 		structures.clear();
 	}
 	
-	public void deLive(int time, Cataclysm cat) {
-		deCiv(time, cat);
+	public void deLive(int time, Cataclysm cat, String reason) {
+		deCiv(time, cat, reason);
 		evoPoints = 0;
 		for (SpecialLifeform slf : lifeforms) {
 			strata.add(new Fossil(slf, time, cat));
@@ -47,6 +48,7 @@ public class Planet {
 	
 	public Planet(Random r) {
 		this.name = getName(Math.abs(r.nextInt()));
+		this.evoNeeded = 12000 + (r.nextInt(3) == 0 ? 0 : 10000000);
 	}
 	
 	public boolean has(StructureType st) {
@@ -105,6 +107,9 @@ public class Planet {
 			for (Population p : inhabitants) {
 				sb.append(p).append("\n");
 			}
+		}
+		for (Structure s : structures) {
+			sb.append("A ").append(s).append("\n");
 		}
 		for (PlanetSpecial ps : specials) {
 			sb.append(ps.explanation).append("\n");
