@@ -31,7 +31,7 @@ public class War {
 			return;
 		}
 		if (actor.has(ArtefactType.Device.KILLER_MEME)) {
-			sg.l("The $name use their memetic weapon against the " + target.owner.name + ".");
+			sg.l("The $name use their memetic weapon against the " + target.owner.name + ".", actor);
 			BadCivEvent.MASS_HYSTERIA.invoke(target.owner, sg);
 			target.strata.add(new LostArtefact("forgotten", sg.year, actor.use(ArtefactType.Device.KILLER_MEME)));
 			return;

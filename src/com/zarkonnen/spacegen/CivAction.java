@@ -63,6 +63,7 @@ public enum CivAction {
 					Planet victimP = null;
 					switch (slf) {
 						case BRAIN_PARASITE:
+							if (!sg.p(3)) { break; }
 							victimP = sg.pick(actor.colonies);
 							int stolenResources = actor.resources / actor.colonies.size();
 							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivs);
