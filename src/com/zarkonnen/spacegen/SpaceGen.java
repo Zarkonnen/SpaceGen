@@ -144,6 +144,7 @@ public class SpaceGen {
 		
 		// TICK CIVS
 		for (Civ c : new ArrayList<Civ>(civs)) {
+			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			int newRes = 1;
 			int newSci = 1;
 			for (Planet col : new ArrayList<Planet>(c.colonies)) {
@@ -203,6 +204,8 @@ public class SpaceGen {
 				}
 				if (checkCivDoom(c)) { civs.remove(c); continue; }
 			}
+			
+			War.doWar(c, this);
 		}
 		
 		

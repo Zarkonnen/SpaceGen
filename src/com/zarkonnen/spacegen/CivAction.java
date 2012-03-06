@@ -141,7 +141,7 @@ public enum CivAction {
 				// The strata.
 				for (int stratNum = 0; stratNum < p.strata.size(); stratNum++) {
 					Stratum stratum = p.strata.get(p.strata.size() - stratNum - 1);
-					if (sg.p(3 + stratNum)) {
+					if (sg.p(4 + stratNum * 2)) {
 						if (stratum instanceof Fossil) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
 							actor.science++;
@@ -257,7 +257,15 @@ public enum CivAction {
 				if (srcPop.size == 1) {
 					srcP.inhabitants.remove(srcPop);
 				}
-				p.inhabitants.add(new Population(srcPop.type, 1));
+				boolean inserted = false;
+				for (Population pop : p.inhabitants) {
+					if (pop.type == srcPop.type) {
+						pop.size++;
+						inserted = true;
+						break;
+					}
+				}
+				if (!inserted) { p.inhabitants.add(new Population(srcPop.type, 1)); }
 				return;
 			}
 		}

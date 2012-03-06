@@ -22,8 +22,9 @@ public enum GoodCivEvent {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			Planet col = sg.pick(actor.fullColonies());
 			ArtefactType.Art art = sg.pick(ArtefactType.Art.values());
-			rep.append("Artists on ").append(col.name).append(" create a ").append(art.getName()).append(". ");
-			col.artefacts.add(new Artefact(sg.year, actor, art, art.create(actor, sg)));
+			String artDesc = art.create(actor, sg);
+			rep.append("Artists on ").append(col.name).append(" create a ").append(artDesc).append(". ");
+			col.artefacts.add(new Artefact(sg.year, actor, art, artDesc));
 		}
 	},
 	POPULATION_BOOM() {

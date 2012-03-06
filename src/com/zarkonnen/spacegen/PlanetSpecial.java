@@ -37,7 +37,10 @@ public enum PlanetSpecial {
 			"Ice Planet: Nearly the entire planet is covered in a thick sheet of ice."),
 	PERIODICAL_DARKNESS(
 			"Due to an accident of orbital mechanics, every 13 years, $name is plunged into total darkness.",
-			"Periodical Darkness: Every thirteen years, the orbit of this planet synchronizes with that of a planet closer to its stars, causing a night that lasts for weeks.");
+			"Periodical Darkness: Every thirteen years, the orbit of this planet synchronizes with that of a planet closer to its stars, causing a night that lasts for weeks."),
+	HUGE_PLAINS(
+			"Vast empty plains form on $name.",
+			"Vast Empty Plains: Brown, dusty and featureless, their monotony is broken only by the occasional rivulet around which cluster many flying animals.");
 	
 	final String announcement;
 	final String explanation;
