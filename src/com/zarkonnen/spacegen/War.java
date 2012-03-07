@@ -53,7 +53,7 @@ public class War {
 		
 		int attack = actor.military * (2 + (actor.techLevel + 2 * actor.weapLevel));
 		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.owner.techLevel + 2 * target.owner.weapLevel) : 0);
-		if (target.has(SentientType.URSOIDS.specialStructure)) {
+		if (target.has(SentientType.Base.URSOIDS.specialStructure)) {
 			defence += 4;
 		}
 		int attackRoll = sg.d(attack, 6);
@@ -66,7 +66,7 @@ public class War {
 					sg.l("The $cname attack $pname and use their planet destroyer to turn it into a lifeless cinder.", actor, target);
 					return;
 				}
-				if (target.has(SentientType.DEEP_DWELLERS.specialStructure)) {
+				if (target.has(SentientType.Base.DEEP_DWELLERS.specialStructure)) {
 					for (Structure st : new ArrayList<Structure>(target.structures)) {
 						if (sg.p(3)) {
 							target.strata.add(new Ruin(st, sg.year, null, "through orbital bombardment by the " + actor.name));

@@ -25,10 +25,10 @@ public class Remnant implements Stratum {
 	@Override
 	public String toString() {
 		if (transcended) {
-			return "Remnants of a culture of " + remnant.type.name + " that transcended the bounds " +
+			return "Remnants of a culture of " + remnant.type.getName() + " that transcended the bounds " +
 					"of this universe in " + collapseTime + ".";
 		}
-		return "Remnants of a culture of " + remnant.type.name + " that collapsed " +
+		return "Remnants of a culture of " + remnant.type.getName() + " that collapsed " +
 				(cat == null ? reason : "due to a " + cat.name) + " in " + collapseTime + "." + 
 				(plague != null ? " The " + plague.desc() + ", slumbers in their corpses." : "");
 	}

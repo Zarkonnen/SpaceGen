@@ -11,6 +11,6 @@ public class Population {
 	
 	@Override
 	public String toString() {
-		return size + " billion " + type.name;
+		return size + " billion " + type.getName();
 	}
 }

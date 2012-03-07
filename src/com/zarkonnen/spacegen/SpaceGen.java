@@ -82,14 +82,19 @@ public class SpaceGen {
 				planet.pollution++;
 			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
+				if (planet.owner == null && p(100)) {
+					SentientType nst = pop.type.mutate(this);
+					l("The $sname on $pname mutate into " + nst.getName() + ".", pop.type, planet);
+					pop.type = nst;
+				}
 				int roll = d(6);
 				if (roll < planet.pollution) {
 					//l("Pollution kills a billion $sname on $pname.", pop.type, planet);
 					planet.pollution--;
 					pop.size--;
 				} else {
-					if (roll == 6 || (pop.type == SentientType.ANTOIDS && roll > 3) || (planet.owner != null && roll == 5) ||
-						(planet.has(SentientType.ANTOIDS.specialStructure) && roll > 2))
+					if (roll == 6 || (pop.type.base == SentientType.Base.ANTOIDS && roll > 3) || (planet.owner != null && roll == 5) ||
+						(planet.has(SentientType.Base.ANTOIDS.specialStructure) && roll > 2))
 					{
 						pop.size++;
 						//l("The population of $sname on $pname has grown by a billion.", pop.type, planet);
@@ -182,8 +187,8 @@ public class SpaceGen {
 					if (col.specials.contains(PlanetSpecial.GEM_WORLD)) { newRes++; }
 					if (col.has(StructureType.Standard.MINING_BASE)) { newRes += 1; }
 					if (col.has(StructureType.Standard.SCIENCE_LAB)) { newSci += 2; }
-					if (col.has(SentientType.PARASITES.specialStructure)) { newSci += 2; }
-					if (col.has(SentientType.TROLLOIDS.specialStructure)) { newSci += 2; }
+					if (col.has(SentientType.Base.PARASITES.specialStructure)) { newSci += 2; }
+					if (col.has(SentientType.Base.TROLLOIDS.specialStructure)) { newSci += 2; }
 				}
 			}
 			
@@ -197,7 +202,7 @@ public class SpaceGen {
 			c.resources += newRes;
 			
 			SentientType lead = pick(c.fullMembers);
-			pick(lead.behaviour).invoke(c, this);
+			pick(lead.base.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			pick(c.govt.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
@@ -237,9 +242,12 @@ public class SpaceGen {
 					pick(BadCivEvent.values()).invoke(c, this);
 				}
 				
-				if (c.fullMembers.contains(SentientType.TERRANS) && p(8)) {
-					GoodCivEvent.SPAWN_ADVENTURER.invoke(c, this);
+				for (SentientType st : c.fullMembers) {
+					if (st.base == SentientType.Base.HUMANOIDS && p(8)) {
+						GoodCivEvent.SPAWN_ADVENTURER.invoke(c, this);
+					}
 				}
+				
 				
 				if (checkCivDoom(c)) { civs.remove(c); continue; }
 			}
@@ -303,7 +311,7 @@ public class SpaceGen {
 					} else {
 						if (p(3)) {
 							// Sentient!
-							SentientType st = pick(SentientType.values());
+							SentientType st = SentientType.invent(this);
 							l("Sentient $sname arise on $pname.", st, p);
 							p.inhabitants.add(new Population(st, 2 + d(1)));
 						} else {
@@ -394,7 +402,7 @@ public class SpaceGen {
 	}
 	
 	final void l(String s, SentientType st) {
-		l(s.replace("$name", st.name));
+		l(s.replace("$name", st.getName()));
 	}
 	
 	final void l(String s, Civ st) {
@@ -406,7 +414,7 @@ public class SpaceGen {
 	}
 	
 	final void l(String s, SentientType st, Planet p) {
-		l(s.replace("$sname", st.name).replace("$pname", p.name));
+		l(s.replace("$sname", st.getName()).replace("$pname", p.name));
 	}
 	
 	final void l(String s, SpecialLifeform slf, Planet p) {

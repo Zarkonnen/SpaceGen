@@ -66,7 +66,9 @@ public class Civ {
 
 	public Civ(int year, SentientType st, Planet home, Government govt, int resources, ArrayList<String> historicals) {
 		this.govt = govt;
-		this.fullMembers.add(st);
+		if (st != null) {
+			this.fullMembers.add(st);
+		}
 		this.colonies.add(home);
 		this.resources = resources;
 		this.birthYear = year;
@@ -109,7 +111,7 @@ public class Civ {
 					n += ", ";
 				}
 			}
-			n += fullMembers.get(i).name;
+			n += fullMembers.get(i).getName();
 		}
 		return n;
 	}
@@ -182,13 +184,13 @@ public class Civ {
 		}}
 		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
 			if (!fullMembers.contains(e.getKey())) { continue; }
-			sb.append(e.getValue()).append(" billion ").append(e.getKey().name).append(". ");
-			sb.append(e.getKey().desc).append("\n");
+			sb.append(e.getValue()).append(" billion ").append(e.getKey().getName()).append(". ");
+			sb.append(e.getKey().getDesc()).append("\n");
 		}
 		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
 			if (fullMembers.contains(e.getKey())) { continue; }
-			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().name).append(". ");
-			sb.append(e.getKey().desc).append("\n");
+			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().getName()).append(". ");
+			sb.append(e.getKey().getDesc()).append("\n");
 		}
 		HashSet<Device> devices = new HashSet<Device>();
 		for (Planet c : colonies) { for (Artefact a : c.artefacts) {

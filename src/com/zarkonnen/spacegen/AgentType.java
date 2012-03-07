@@ -26,14 +26,14 @@ public enum AgentType {
 				} else {
 					int attack = a.fleet * 4;
 					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.owner.techLevel + 2 * a.p.owner.weapLevel) : 0);
-					if (a.p.has(SentientType.URSOIDS.specialStructure)) {
+					if (a.p.has(SentientType.Base.URSOIDS.specialStructure)) {
 						defence += 4;
 					}
 					int attackRoll = sg.d(attack, 6);
 					int defenceRoll = sg.d(defence, 6);
 					Planet target = a.p;
 					if (attackRoll > defenceRoll) {
-						if (target.has(SentientType.DEEP_DWELLERS.specialStructure)) {
+						if (target.has(SentientType.Base.DEEP_DWELLERS.specialStructure)) {
 							for (Structure st : new ArrayList<Structure>(target.structures)) {
 								if (sg.p(3)) {
 									target.strata.add(new Ruin(st, sg.year, null, "through orbital bombardment by the pirate " + a.name));
@@ -206,7 +206,7 @@ public enum AgentType {
 				if (sg.p(6)) {
 					Population victim = sg.pick(a.p.inhabitants);
 					if (victim.size == 1) {
-						sg.l("Shape-shifters devour the last remaining " + victim.type.name + " on " + a.p.name + ".");
+						sg.l("Shape-shifters devour the last remaining " + victim.type.getName() + " on " + a.p.name + ".");
 						a.p.dePop(victim, sg.year, null, "through predation by shape-shifters", null);
 					} else {
 						victim.size--;
@@ -237,7 +237,7 @@ public enum AgentType {
 				if (a.p.population() > 1) {
 					Population victim = sg.pick(a.p.inhabitants);
 					if (victim.size == 1) {
-						sg.l("A billion " + victim.type.name + " on " + a.p.name + " are devoured by ultravores.");
+						sg.l("A billion " + victim.type.getName() + " on " + a.p.name + " are devoured by ultravores.");
 						a.p.dePop(victim, sg.year, null, "through predation by ultravores", null);
 					} else {
 						victim.size--;

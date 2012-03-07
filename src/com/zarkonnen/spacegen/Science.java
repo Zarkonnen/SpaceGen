@@ -39,11 +39,11 @@ public class Science {
 			case 4:
 				for (Planet p : sg.planets) {
 					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
-						SentientType st = sg.pick(SentientType.values());
+						SentientType st = SentientType.invent(sg);
 						p.inhabitants.add(new Population(st, 3));
 						p.owner = actor;
 						actor.colonies.add(p);
-						sg.l("The $cname uplift the local " + st.name + " on $pname and incorporate the planet into their civilisation.", actor, p);
+						sg.l("The $cname uplift the local " + st.getName() + " on $pname and incorporate the planet into their civilisation.", actor, p);
 						return false;
 					}
 				}

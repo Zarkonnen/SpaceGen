@@ -37,7 +37,7 @@ public class Plague {
 					desc += ", ";
 				}
 			}
-			desc += affects.get(i).name;
+			desc += affects.get(i).getName();
 		}
 		return desc;
 	}

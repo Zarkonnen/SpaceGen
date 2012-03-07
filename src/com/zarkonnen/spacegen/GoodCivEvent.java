@@ -53,8 +53,9 @@ public enum GoodCivEvent {
 	},
 	SPAWN_ADVENTURER() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
+			if (actor.colonies.isEmpty()) { return; }
 			SentientType st = sg.pick(actor.fullMembers);
-			String name = "Captain " + sg.pick(st.nameStarts) + sg.pick(st.nameEnds);
+			String name = "Captain " + sg.pick(st.base.nameStarts) + sg.pick(st.base.nameEnds);
 			Planet p = sg.pick(actor.colonies);
 			rep.append(name).append(", space adventurer, blasts off from ").append(p.name).append(".");
 			Agent ag = new Agent(AgentType.ADVENTURER, sg.year, name);

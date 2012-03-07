@@ -29,7 +29,7 @@ public enum BadCivEvent {
 						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of the planet destroyer wielded by the ").append(actor.name).append(".");
 						return;
 					}
-					if (col.has(SentientType.CATOIDS.specialStructure)) {
+					if (col.has(SentientType.Base.CATOIDS.specialStructure)) {
 						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of torture pits of the ").append(actor.name).append(".");
 						return;
 					}
@@ -147,7 +147,7 @@ public enum BadCivEvent {
 			}
 			if (bigPlanets.size() > 1) {
 				Collections.shuffle(bigPlanets, sg.r);
-				Civ newCiv = new Civ(sg.year, SentientType.ANTOIDS, bigPlanets.get(0), sg.pick(Government.values()), actor.resources / 2, sg.historicalCivNames);
+				Civ newCiv = new Civ(sg.year, null, bigPlanets.get(0), sg.pick(Government.values()), actor.resources / 2, sg.historicalCivNames);
 				newCiv.fullMembers.clear();
 				newCiv.military = actor.military / 2;
 				actor.military -= newCiv.military;
@@ -218,7 +218,7 @@ public enum BadCivEvent {
 	SPAWN_PIRATE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			SentientType st = sg.pick(actor.fullMembers);
-			String name = sg.pick(Names.COLORS) + st.pSuffix;
+			String name = sg.pick(Names.COLORS) + st.base.pSuffix;
 			Planet p = sg.pick(actor.colonies);
 			rep.append("The pirate ").append(name).append(" establishes ").append(sg.coin() ? "himself" : "herself").append(" on ").append(p.name).append(".");
 			Agent ag = new Agent(AgentType.PIRATE, sg.year, name);

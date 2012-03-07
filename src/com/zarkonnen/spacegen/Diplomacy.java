@@ -76,8 +76,8 @@ public class Diplomacy {
 	}
 	
 	public static Outcome meet(Civ a, Civ b, SpaceGen sg) {
-		if (a.fullMembers.get(0) == SentientType.URSOIDS ||
-			b.fullMembers.get(0) == SentientType.URSOIDS)
+		if (a.fullMembers.get(0).base == SentientType.Base.URSOIDS ||
+			b.fullMembers.get(0).base == SentientType.Base.URSOIDS)
 		{
 			return WAR;
 		}

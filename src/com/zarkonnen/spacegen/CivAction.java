@@ -67,7 +67,7 @@ public enum CivAction {
 							if (!sg.p(3)) { break; }
 							victimP = sg.pick(actor.colonies);
 							int stolenResources = actor.resources / actor.colonies.size();
-							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
+							Civ newCiv = new Civ(sg.year, SentientType.genParasites(), victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
 							victimP.owner = newCiv;
 							actor.colonies.remove(victimP);
@@ -114,12 +114,12 @@ public enum CivAction {
 				if (p.owner == null) {
 					for (Population pop : new ArrayList<Population>(p.inhabitants)) {
 						major = true;
-						if (pop.type == SentientType.DEEP_DWELLERS) {
+						if (pop.type.base == SentientType.Base.DEEP_DWELLERS) {
 							rep.append("They remain unaware of the Deep Dweller culture far beneath. ");
 							continue;
 						}
 						SentientEncounterOutcome seo = sg.pick(actor.govt.encounterOutcomes);
-						rep.append(seo.desc.replace("$a", pop.type.name));
+						rep.append(seo.desc.replace("$a", pop.type.getName()));
 						switch (seo) {
 							case EXTERMINATE:
 								int kills = sg.d(3) + 1;
@@ -138,7 +138,7 @@ public enum CivAction {
 								newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 								sg.civs.add(newCiv);
 								sg.historicalCivNames.add(newCiv.name);
-								rep.append(", but their campaign fails disastrously. The local ").append(pop.type.name).append(" steal their technology and establish themselves as the ").append(newCiv.name).append(".");
+								rep.append(", but their campaign fails disastrously. The local ").append(pop.type.getName()).append(" steal their technology and establish themselves as the ").append(newCiv.name).append(".");
 								return;
 							case GIVE_FULL_MEMBERSHIP:
 								if (!actor.fullMembers.contains(pop.type)) {
@@ -427,7 +427,7 @@ public enum CivAction {
 	void buildColonyStructure(StructureType st, Civ actor, SpaceGen sg, StringBuilder rep) {
 		if (actor.resources < 8) { return; }
 		if (sg.p(3)) {
-			st = sg.pick(actor.fullMembers).specialStructure;
+			st = sg.pick(sg.pick(actor.fullMembers).specialStructures);
 		}
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.

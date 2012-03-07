@@ -51,7 +51,7 @@ public interface ArtefactType {
 				case 2:
 					return ret + " cheese";
 				case 3:
-					return ret + " " + sg.pick(actor.fullMembers).name;
+					return ret + " " + sg.pick(actor.fullMembers).getName();
 				default:
 					return ret + " space kittens";
 			}
