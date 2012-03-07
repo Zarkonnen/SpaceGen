@@ -13,6 +13,9 @@ public class LostArtefact implements Stratum {
 	
 	@Override
 	public String toString() {
+		if (artefact.type == ArtefactType.PIRATE_TOMB || artefact.type == ArtefactType.ADVENTURER_TOMB) {
+			return "The " + artefact + ", buried in " + lostTime + ".";
+		}
 		return "A " + artefact + ", " + status + " in " + lostTime + ".";
 	}
 

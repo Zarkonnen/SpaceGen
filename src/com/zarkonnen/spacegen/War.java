@@ -52,7 +52,7 @@ public class War {
 		Civ enemy = target.owner;
 		
 		int attack = actor.military * (2 + (actor.techLevel + 2 * actor.weapLevel));
-		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (actor.techLevel + 2 * actor.weapLevel) : 0);
+		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.owner.techLevel + 2 * target.owner.weapLevel) : 0);
 		if (target.has(SentientType.URSOIDS.specialStructure)) {
 			defence += 4;
 		}

@@ -58,6 +58,21 @@ public interface ArtefactType {
 		}
 	}
 	
+	public static ArtefactType PIRATE_HOARD = new ArtefactType() {
+		@Override
+		public String getName() { return "Pirate Hoard"; }
+	};
+	
+	public static ArtefactType PIRATE_TOMB = new ArtefactType() {
+		@Override
+		public String getName() { return "Pirate Tomb"; }
+	};
+	
+	public static ArtefactType ADVENTURER_TOMB = new ArtefactType() {
+		@Override
+		public String getName() { return "Tomb"; }
+	};
+	
 	public static enum Device implements ArtefactType {
 		TELEPORT_GATE("Teleport Gate"),
 		PLANET_DESTROYER("Planet Destroyer"),

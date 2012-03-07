@@ -82,25 +82,29 @@ public enum CivAction {
 							major = true;
 							break;
 						case SHAPE_SHIFTER:
-							// todo, needs wandering monsters
+							if (sg.p(3)) {
+								major = true;
+								victimP = sg.pick(actor.colonies);
+								rep.append("Shape-shifters impersonate the crew of the expedition. Upon their return to ").append(victimP.name).append(" they merge into the population.");
+								Agent ag = new Agent(AgentType.SHAPE_SHIFTER, sg.year, "Pack of Shape-Shifters");
+								ag.p = victimP;
+								sg.agents.add(ag);
+							}
 							break;
 						case ULTRAVORE:
 							victimP = sg.pick(actor.colonies);
-							if (victimP.population() < 2 || sg.p(3)) {
-								if (sg.p(6)) {
+							if (victimP.population() < 2 || sg.coin()) {
+								if (sg.p(10)) {
 									rep.append("The expedition captures an ultravore. The science of the ").append(actor.name).append(" fashions it into a living weapon of war. ");
 									actor.largestColony().artefacts.add(new Artefact(sg.year, actor, ArtefactType.Device.LIVING_WEAPON, ArtefactType.Device.LIVING_WEAPON.create(actor, sg)));
 									major = true;
 								}
 							} else {
-								Population victimPop = sg.pick(victimP.inhabitants);
-								if (victimPop.size == 1) {
-									victimP.dePop(victimPop, sg.year, null, "predation by an ultravore", null);
-								} else {
-									victimPop.size--;
-								}
-								rep.append("An ultravore stows away on the expedition's ship. Upon their return to ").append(victimP.name).append(" it escapes and multiplies, killing a billion ").append(victimPop.type.name).append(". ");
-								return;
+								major = true;
+								rep.append("An ultravore stows away on the expedition's ship. Upon their return to ").append(victimP.name).append(" it escapes and multiplies.");
+								Agent ag = new Agent(AgentType.ULTRAVORES, sg.year, "Hunting Pack of Ultravores");
+								ag.p = victimP;
+								sg.agents.add(ag);
 							}
 							break;
 					}
@@ -205,6 +209,13 @@ public enum CivAction {
 						}
 						if (stratum instanceof LostArtefact) {
 							LostArtefact la = (LostArtefact) stratum;
+							if (la.artefact.type == ArtefactType.PIRATE_TOMB || la.artefact.type == ArtefactType.PIRATE_HOARD || la.artefact.type == ArtefactType.ADVENTURER_TOMB) {
+								rep.append("They loot the ").append(la.artefact.desc).append(". ");
+								actor.resources += la.artefact.specialValue;
+								p.strata.remove(stratum);
+								stratNum--;
+								return;
+							}
 							if (la.artefact.type == ArtefactType.Device.STASIS_CAPSULE) {
 								if (!sg.civs.contains(la.artefact.creator)) {
 									rep.append("They open a stasis capsule from the ").append(la.artefact.creator.name).append(", which arises once more!");

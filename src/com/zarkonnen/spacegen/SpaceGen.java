@@ -9,6 +9,7 @@ public class SpaceGen {
 	ArrayList<Planet> planets = new ArrayList<Planet>();
 	ArrayList<Civ> civs = new ArrayList<Civ>();
 	ArrayList<String> historicalCivNames = new ArrayList<String>();
+	ArrayList<Agent> agents = new ArrayList<Agent>();
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
@@ -235,10 +236,21 @@ public class SpaceGen {
 				if (bad) {
 					pick(BadCivEvent.values()).invoke(c, this);
 				}
+				
+				if (c.fullMembers.contains(SentientType.TERRANS) && p(8)) {
+					GoodCivEvent.SPAWN_ADVENTURER.invoke(c, this);
+				}
+				
 				if (checkCivDoom(c)) { civs.remove(c); continue; }
 			}
 			
 			War.doWar(c, this);
+		}
+		
+		
+		// TICK AGENTS
+		for (Agent a : new ArrayList<Agent>(agents)) {
+			a.type.behave(a, this);
 		}
 		
 		
@@ -328,8 +340,18 @@ public class SpaceGen {
 					}
 				}
 				if (s instanceof Ruin) {
-					if (p(2500 / sAge + 250)) {
-						p.strata.remove(s);
+					Ruin ruin = (Ruin) s;
+					if (ruin.structure.type == StructureType.Standard.MILITARY_BASE ||
+						ruin.structure.type == StructureType.Standard.MINING_BASE ||
+						ruin.structure.type == StructureType.Standard.SCIENCE_LAB)
+					{
+						if (p(1500 / sAge + 200)) {
+							p.strata.remove(s);
+						}
+					} else {
+						if (p(3000 / sAge + 300)) {
+							p.strata.remove(s);
+						}
 					}
 				}
 			}
@@ -338,10 +360,10 @@ public class SpaceGen {
 		for (Planet p : planets) {
 			if (p.owner != null) {
 				if (!p.owner.colonies.contains(p)) {
-					System.out.println("OMG BBQ WTF");
+					System.out.println("OMG BBQ WTF A");
 				}
 				if (!civs.contains(p.owner)) {
-					System.out.println("OMG BBQ WTF");
+					System.out.println("OMG BBQ WTF B");
 				}
 			}
 		}

@@ -50,7 +50,21 @@ public enum GoodCivEvent {
 			actor.updateName(sg.historicalCivNames);
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
 		}
-	};
+	},
+	SPAWN_ADVENTURER() {
+		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
+			SentientType st = sg.pick(actor.fullMembers);
+			String name = "Captain " + sg.pick(st.nameStarts) + sg.pick(st.nameEnds);
+			Planet p = sg.pick(actor.colonies);
+			rep.append(name).append(", space adventurer, blasts off from ").append(p.name).append(".");
+			Agent ag = new Agent(AgentType.ADVENTURER, sg.year, name);
+			ag.fleet = 2 + sg.d(6);
+			ag.resources = sg.d(6);
+			ag.originator = actor;
+			ag.st = st;
+			sg.agents.add(ag);
+		}
+	},;
 	// SPAWN_ADVENTURER
 	// SPAWN_PRIVATEER
 	
