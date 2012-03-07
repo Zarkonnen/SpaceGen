@@ -52,7 +52,10 @@ public class War {
 		Civ enemy = target.owner;
 		
 		int attack = actor.military * (2 + (actor.techLevel + 2 * actor.weapLevel));
-		int defence = target.population() + (target.has(StructureType.MILITARY_BASE) ? 5 * (actor.techLevel + 2 * actor.weapLevel) : 0);
+		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (actor.techLevel + 2 * actor.weapLevel) : 0);
+		if (target.has(SentientType.URSOIDS.specialStructure)) {
+			defence += 4;
+		}
 		int attackRoll = sg.d(attack, 6);
 		int defenceRoll = sg.d(defence, 6);
 		if (attackRoll > defenceRoll) {
@@ -61,6 +64,16 @@ public class War {
 				if (actor.has(ArtefactType.Device.PLANET_DESTROYER)) {
 					target.deLive(sg.year, null, "when the planet was scoured by a superweapon of the " + actor.name);
 					sg.l("The $cname attack $pname and use their planet destroyer to turn it into a lifeless cinder.", actor, target);
+					return;
+				}
+				if (target.has(SentientType.DEEP_DWELLERS.specialStructure)) {
+					for (Structure st : new ArrayList<Structure>(target.structures)) {
+						if (sg.p(3)) {
+							target.strata.add(new Ruin(st, sg.year, null, "through orbital bombardment by the " + actor.name));
+							target.structures.remove(st);
+						}
+					}
+					sg.l("The $cname attack $pname, a colony of the " + enemy.name + ", and subject it to orbital bombardment. Its inhabitats hide in the dome built deep in the planet's crust and escape harm.", actor, target);
 					return;
 				}
 				int deaths = 0;
@@ -88,33 +101,39 @@ public class War {
 			} else {
 				if (actor.has(ArtefactType.Device.MIND_CONTROL_DEVICE)) {
 					sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ", using their mind control device to gain control of the planet from orbit.", actor, target);
-					target.owner.colonies.remove(target);
-					target.owner = actor;
-					actor.colonies.add(target);
-					return;
-				}
-				for (Structure st : new ArrayList<Structure>(target.structures)) {
-					if (sg.p(4)) {
-						target.strata.add(new Ruin(st, sg.year, null, "during the invasion of the " + actor.name));
-						target.structures.remove(st);
-					}
-				}
-				if (target.population() > 0) {
-					int deaths = 0;
-					for (Population pop : new ArrayList<Population>(target.inhabitants)) {
-						int pd = sg.d(pop.size - pop.size / 2);
-						if (pd >= target.population()) { pd = 1; }
-						if (pd >= target.population()) { break; }
-						if (pd >= pop.size) {
-							target.dePop(pop, sg.year, null, "during the invasion of the " + actor.name, null);
-						} else {
-							pop.size -= pd;
-						}
-						deaths += pd;
-					}
-					sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ", killing " + deaths + " billion in the process.", actor, target);
 				} else {
-					sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ".", actor, target);
+					for (Structure st : new ArrayList<Structure>(target.structures)) {
+						if (sg.p(4)) {
+							target.strata.add(new Ruin(st, sg.year, null, "during the invasion of the " + actor.name));
+							target.structures.remove(st);
+						}
+					}
+					if (target.population() > 0) {
+						int deaths = 0;
+						for (Population pop : new ArrayList<Population>(target.inhabitants)) {
+							int pd = sg.d(pop.size - pop.size / 2);
+							if (pd >= target.population()) { pd = 1; }
+							if (pd >= target.population()) { break; }
+							if (pd >= pop.size) {
+								target.dePop(pop, sg.year, null, "during the invasion of the " + actor.name, null);
+							} else {
+								pop.size -= pd;
+							}
+							deaths += pd;
+						}
+						if (deaths > 0) {
+							sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ", killing " + deaths + " billion in the process.", actor, target);
+						} else {
+							sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ".", actor, target);
+						}
+					} else {
+						sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ".", actor, target);
+					}
+				}
+				
+				for (Artefact a : target.artefacts) {
+					if (!(a.type instanceof ArtefactType.Device)) { continue; }
+					sg.l("The $cname gain control of the " + a.type.getName() + " on $pname.", actor, target);
 				}
 				
 				target.owner.colonies.remove(target);

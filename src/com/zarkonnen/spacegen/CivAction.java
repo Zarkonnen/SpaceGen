@@ -10,30 +10,31 @@ public enum CivAction {
 			// Pick a planet to explore.
 			Planet p = sg.pick(actor.reachables(sg));
 			if (p.owner != null && p.owner != actor) {
+				Civ other = p.owner;
 				// They meet a civ.
 				rep.append("The ").append(actor.name).append(" send a delegation to ").append(p.name).append(". ");
-				Diplomacy.Outcome outcome = Diplomacy.meet(actor, p.owner, sg);
-				rep.append(outcome.desc(p.owner, actor.relation(p.owner))).append(" ");
+				Diplomacy.Outcome outcome = Diplomacy.meet(actor, other, sg);
+				rep.append(outcome.desc(other, actor.relation(other))).append(" ");
 				if (outcome == Diplomacy.Outcome.UNION) {
-					sg.civs.remove(p.owner);
-					Government newGovt = sg.pick(new Government[] { actor.govt, p.owner.govt });
+					sg.civs.remove(other);
+					Government newGovt = sg.pick(new Government[] { actor.govt, other.govt });
 					actor.govt = newGovt;
-					actor.colonies.addAll(p.owner.colonies);
-					actor.resources += p.owner.resources;
-					actor.science += p.owner.science;
-					for (SentientType st : p.owner.fullMembers) {
+					actor.colonies.addAll(other.colonies);
+					for (Planet c : other.colonies) {
+						c.owner = actor;
+					}
+					actor.resources += other.resources;
+					actor.science += other.science;
+					for (SentientType st : other.fullMembers) {
 						if (!actor.fullMembers.contains(st)) {
 							actor.fullMembers.add(st);
 						}
 					}
-					for (Planet c : p.owner.colonies) {
-						c.owner = actor;
-					}
 					HashMap<Civ, Diplomacy.Outcome> newRels = new HashMap<Civ, Diplomacy.Outcome>();
 					for (Civ c : sg.civs) {
-						if (c == actor || c == p.owner) { continue; }
+						if (c == actor || c == other) { continue; }
 						if (actor.relation(c) == Diplomacy.Outcome.WAR ||
-							p.owner.relation(c) == Diplomacy.Outcome.WAR)
+							other.relation(c) == Diplomacy.Outcome.WAR)
 						{
 							newRels.put(c, Diplomacy.Outcome.WAR);
 							c.relations.put(actor, Diplomacy.Outcome.WAR);
@@ -43,13 +44,13 @@ public enum CivAction {
 						}
 					}
 					actor.relations = newRels;
-					actor.updateName(sg.historicalCivs);
+					actor.updateName(sg.historicalCivNames);
 					rep.append("The two civilizations combine into the ").append(actor.name).append(". ");
 					return;
 				} else {
-					if (actor.relation(p.owner) != outcome) {
-						actor.relations.put(p.owner, outcome);
-						p.owner.relations.put(actor, outcome);
+					if (actor.relation(other) != outcome) {
+						actor.relations.put(other, outcome);
+						other.relations.put(actor, outcome);
 					} else {
 						rep.delete(0, rep.length());
 					}
@@ -66,12 +67,12 @@ public enum CivAction {
 							if (!sg.p(3)) { break; }
 							victimP = sg.pick(actor.colonies);
 							int stolenResources = actor.resources / actor.colonies.size();
-							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivs);
+							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
 							victimP.owner = newCiv;
 							actor.colonies.remove(victimP);
 							sg.civs.add(newCiv);
-							sg.historicalCivs.add(newCiv);
+							sg.historicalCivNames.add(newCiv.name);
 							newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 							actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 							return;
@@ -123,29 +124,31 @@ public enum CivAction {
 									rep.append(" and wipe them out. ");
 								} else {
 									pop.size -= kills;
-									rep.append(", killing ").append(kills).append(" billion. ");
+									rep.append(", killing ").append(kills).append(" billion.");
 								}
 								break;
 							case EXTERMINATE_FAIL:
-								Civ newCiv = new Civ(sg.year, pop.type, p, Government.REPUBLIC, 1, sg.historicalCivs);
+								Civ newCiv = new Civ(sg.year, pop.type, p, Government.REPUBLIC, 1, sg.historicalCivNames);
 								pop.size++;
 								actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 								newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 								sg.civs.add(newCiv);
-								sg.historicalCivs.add(newCiv);
+								sg.historicalCivNames.add(newCiv.name);
 								rep.append(", but their campaign fails disastrously. The local ").append(pop.type.name).append(" steal their technology and establish themselves as the ").append(newCiv.name).append(".");
 								return;
 							case GIVE_FULL_MEMBERSHIP:
 								if (!actor.fullMembers.contains(pop.type)) {
 									actor.fullMembers.add(pop.type);
+									actor.updateName(sg.historicalCivNames);
+									rep.append(" They now call themselves the ").append(actor.name).append(".");
 								}
-								actor.updateName(sg.historicalCivs);
 								// INTENTIONAL FALLTHROUGH!!!
 							case SUBJUGATE:
 								p.owner = actor;
 								if (!actor.colonies.contains(p)) { actor.colonies.add(p); }
 								break;
 						}
+						rep.append(" ");
 					}
 				}
 				
@@ -181,18 +184,23 @@ public enum CivAction {
 						if (stratum instanceof Ruin) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
 							Ruin ruin = (Ruin) stratum;
-							switch (ruin.structure.type) {
-								case MILITARY_BASE:
-									actor.military++;
-									actor.science++;
-									actor.resources++;
-									break;
-								case SCIENCE_LAB:
-									actor.science += 3;
-									break;
-								case MINING_BASE:
-									actor.resources += 5;
-									break;
+							if (ruin.structure.type instanceof StructureType.Standard) {
+								switch ((StructureType.Standard) ruin.structure.type) {
+									case MILITARY_BASE:
+										actor.military++;
+										actor.science++;
+										actor.resources++;
+										break;
+									case SCIENCE_LAB:
+										actor.science += 3;
+										break;
+									case MINING_BASE:
+										actor.resources += 5;
+										break;
+									default:
+										actor.resources += 2;
+										break;
+								}
 							}
 						}
 						if (stratum instanceof LostArtefact) {
@@ -223,6 +231,9 @@ public enum CivAction {
 									if (!inserted) {
 										p.inhabitants.add(new Population(la.artefact.st, 3));
 									}
+									la.artefact.creator.birthYear = sg.year;
+									p.strata.remove(stratum);
+									stratNum--;
 									return;
 								}
 								continue;
@@ -269,6 +280,7 @@ public enum CivAction {
 				boolean ne = false;
 				if (!p.inhabitants.isEmpty()) { rep.append("Of the natives of that planet, "); ne = true; }
 				boolean first = true;
+				boolean updNeeded = false;
 				for (Population nativeP : new ArrayList<Population>(p.inhabitants)) {
 					if (!first) {
 						rep.append(", ");
@@ -277,6 +289,7 @@ public enum CivAction {
 						}
 					}
 					rep.append("the ").append(nativeP);
+					
 					SentientEncounterOutcome seo = sg.pick(actor.govt.encounterOutcomes);
 					switch (seo) {
 						case EXTERMINATE:
@@ -292,15 +305,18 @@ public enum CivAction {
 							rep.append(" are given full membership in the ").append(actor.name);
 							if (!actor.fullMembers.contains(nativeP.type)) {
 								actor.fullMembers.add(nativeP.type);
+								updNeeded = true;
 							}
 							break;
 					}
 
-					actor.updateName(sg.historicalCivs);
-
 					first = false;
 				}
 				if (ne) { rep.append(". "); }
+				if (updNeeded) {
+					actor.updateName(sg.historicalCivNames);
+					rep.append(" They now call themselves the ").append(actor.name).append(".");
+				}
 				actor.resources -= 6;
 				p.owner = actor;
 				actor.colonies.add(p);
@@ -330,19 +346,19 @@ public enum CivAction {
 	BUILD_SCIENCE_OUTPOST() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			buildOutpost(StructureType.SCIENCE_LAB, actor, sg, rep);
+			buildOutpost(StructureType.Standard.SCIENCE_LAB, actor, sg, rep);
 		}
 	},
 	BUILD_MILITARY_BASE() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			buildOutpost(StructureType.MILITARY_BASE, actor, sg, rep);
+			buildOutpost(StructureType.Standard.MILITARY_BASE, actor, sg, rep);
 		}
 	},
 	BUILD_MINING_BASE() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			buildOutpost(StructureType.MINING_BASE, actor, sg, rep);
+			buildOutpost(StructureType.Standard.MINING_BASE, actor, sg, rep);
 		}
 	},
 	DO_RESEARCH() {
@@ -367,7 +383,7 @@ public enum CivAction {
 	BUILD_CONSTRUCTION() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			buildColonyStructure(sg.pick(StructureType.COLONY_ONLY), actor, sg, rep);
+			buildColonyStructure(sg.pick(StructureType.Standard.COLONY_ONLY), actor, sg, rep);
 		}
 	};
 	
@@ -399,6 +415,9 @@ public enum CivAction {
 	
 	void buildColonyStructure(StructureType st, Civ actor, SpaceGen sg, StringBuilder rep) {
 		if (actor.resources < 8) { return; }
+		if (sg.p(3)) {
+			st = sg.pick(actor.fullMembers).specialStructure;
+		}
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.
 			Planet p = sg.pick(actor.colonies);
@@ -410,7 +429,7 @@ public enum CivAction {
 			}
 			actor.resources -= 8;
 			p.structures.add(new Structure(st, actor, sg.year));
-			rep.append("The ").append(actor.name).append(" build a ").append(st.name).append(" on ").append(p.name).append(".");
+			rep.append("The ").append(actor.name).append(" build a ").append(st.getName()).append(" on ").append(p.name).append(".");
 			return;
 		}
 	}

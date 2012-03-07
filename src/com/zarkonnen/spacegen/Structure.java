@@ -13,6 +13,6 @@ public class Structure {
 
 	@Override
 	public String toString() {
-		return type.name + ", built by the " + builders.name + " in " + buildTime;
+		return type.getName() + ", built by the " + builders.name + " in " + buildTime;
 	}
 }

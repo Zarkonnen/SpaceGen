@@ -67,7 +67,6 @@ public interface ArtefactType {
 		YOUTH_SERUM("Youth Serum"),
 		STASIS_CAPSULE("Stasis Capsule"),
 		TIME_MACHINE("Time Machine"),
-		UPLIFT_DEVICE("Uplift Device"),
 		LIVING_WEAPON("Living Weapon"),
 		MIND_ARCHIVE("Mind Archive"),
 		UNIVERSAL_NUTRIENT("Universal Nutrient"),

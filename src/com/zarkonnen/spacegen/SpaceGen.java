@@ -8,7 +8,7 @@ public class SpaceGen {
 	ArrayList<String> log = new ArrayList<String>();
 	ArrayList<Planet> planets = new ArrayList<Planet>();
 	ArrayList<Civ> civs = new ArrayList<Civ>();
-	ArrayList<Civ> historicalCivs = new ArrayList<Civ>();
+	ArrayList<String> historicalCivNames = new ArrayList<String>();
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
@@ -87,7 +87,9 @@ public class SpaceGen {
 					planet.pollution--;
 					pop.size--;
 				} else {
-					if (roll == 6 || (pop.type == SentientType.ANTOIDS && roll > 2) || (planet.owner != null && roll == 5)) {
+					if (roll == 6 || (pop.type == SentientType.ANTOIDS && roll > 3) || (planet.owner != null && roll == 5) ||
+						(planet.has(SentientType.ANTOIDS.specialStructure) && roll > 2))
+					{
 						pop.size++;
 						//l("The population of $sname on $pname has grown by a billion.", pop.type, planet);
 					}
@@ -150,12 +152,12 @@ public class SpaceGen {
 		// TICK CIVS
 		for (Civ c : new ArrayList<Civ>(civs)) {
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
-			int newRes = 1;
+			int newRes = 0;
 			int newSci = 1;
 			for (Planet col : new ArrayList<Planet>(c.colonies)) {
 				if (c.has(ArtefactType.Device.UNIVERSAL_ANTIDOTE)) {
 					for (Plague p : col.plagues) {
-						l("The " + p.name + " on $pname is cured by the universal antidote.");
+						l("The " + p.name + " on $name is cured by the universal antidote.", col);
 					}
 					col.plagues.clear();
 				}
@@ -177,15 +179,17 @@ public class SpaceGen {
 						if (col.lifeforms.contains(SpecialLifeform.VAST_HERDS)) { newRes++; }
 					}
 					if (col.specials.contains(PlanetSpecial.GEM_WORLD)) { newRes++; }
-					if (col.has(StructureType.MINING_BASE)) { newRes += 2; }
-					if (col.has(StructureType.SCIENCE_LAB)) { newSci += 2; }
+					if (col.has(StructureType.Standard.MINING_BASE)) { newRes += 1; }
+					if (col.has(StructureType.Standard.SCIENCE_LAB)) { newSci += 2; }
+					if (col.has(SentientType.PARASITES.specialStructure)) { newSci += 2; }
+					if (col.has(SentientType.TROLLOIDS.specialStructure)) { newSci += 2; }
 				}
 			}
 			
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			
 			if (c.has(ArtefactType.Device.MASTER_COMPUTER)) {
-				newRes += 3;
+				newRes += 2;
 				newSci += 3;
 			}
 			
@@ -278,9 +282,9 @@ public class SpaceGen {
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
 							starter.size++;
-							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivs);
+							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivNames);
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + ", the " + c.name + ".", starter.type, p);
-							historicalCivs.add(c);
+							historicalCivNames.add(c.name);
 							civs.add(c);
 							p.owner = c;
 						}
@@ -313,6 +317,7 @@ public class SpaceGen {
 					}
 				}
 				if (s instanceof LostArtefact) {
+					if (((LostArtefact) s).artefact.type == ArtefactType.Device.STASIS_CAPSULE) { continue; }
 					if (p(8000 / sAge + 300)) {
 						p.strata.remove(s);
 					}
@@ -343,6 +348,11 @@ public class SpaceGen {
 	}
 	
 	public void describe() {
+		for (Civ c : civs) {
+			l(c.fullDesc(this));
+			l("");
+		}
+		
 		for (Planet p : planets) {
 			l(p.fullDesc());
 			l("");

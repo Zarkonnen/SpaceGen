@@ -3,6 +3,8 @@ package com.zarkonnen.spacegen;
 import com.zarkonnen.spacegen.ArtefactType.Device;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class Civ {	
 	ArrayList<SentientType> fullMembers = new ArrayList<SentientType>();
@@ -62,7 +64,7 @@ public class Civ {
 		return relations.get(c);
 	}
 
-	public Civ(int year, SentientType st, Planet home, Government govt, int resources, ArrayList<Civ> historicals) {
+	public Civ(int year, SentientType st, Planet home, Government govt, int resources, ArrayList<String> historicals) {
 		this.govt = govt;
 		this.fullMembers.add(st);
 		this.colonies.add(home);
@@ -112,16 +114,100 @@ public class Civ {
 		return n;
 	}
 
-	final void updateName(ArrayList<Civ> historicals) {
+	final void updateName(ArrayList<String> historicals) {
 		int nth = 0;
-		lp: while (true) {
+		while (true) {
 			nth++;
 			String n = genName(nth);
-			for (Civ c : historicals) {
-				if (c.name.equals(n)) { continue lp; }
-			}
+			if (historicals.contains(n)) { continue; }
 			name = n;
 			break;
 		}
+	}
+	
+	public String fullDesc(SpaceGen sg) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("THE ").append(name.toUpperCase()).append(":\n");
+		int age = sg.year - birthYear;
+		if (age < 3) {
+			sb.append("A recently emerged");
+		} else if (age < 8) {
+			sb.append("A young");
+		} else if (age < 16) {
+			sb.append("A well-established");
+		} else if (age < 30) {
+			sb.append("A declining");
+		} else if (age < 50) {
+			sb.append("A crumbling");
+		} else {
+			sb.append("An ancient");
+		}
+		if (resources < 2) {
+			sb.append(", dirt poor");
+		} else if (resources < 4) {
+			sb.append(", impoverished");
+		} else if (resources < 16) {
+			
+		} else if (resources < 25) {
+			sb.append(", wealthy");
+		} else {
+			sb.append(", fantastically wealthy");
+		}
+		
+		if (techLevel < 2) {
+			sb.append(", primitive");
+		} else if (techLevel < 4) {
+			
+		} else if (techLevel < 7) {
+			sb.append(", advanced");
+		} else {
+			sb.append(", highly advanced");
+		}
+		
+		sb.append(" ").append(govt.title).append(" of ");
+		if (colonies.size() == 1) {
+			sb.append("a single planet, ").append(colonies.get(0).name);
+		} else {
+			sb.append(colonies.size()).append(" planets");
+		}
+		sb.append(", with ").append(population()).append(" billion inhabitants.\n");
+		sb.append("Major populations:\n");
+		HashMap<SentientType, Integer> pops = new HashMap<SentientType, Integer>();
+		for (Planet c : colonies) { for (Population pop : c.inhabitants) {
+			if (!pops.containsKey(pop.type)) {
+				pops.put(pop.type, pop.size);
+			} else {
+				pops.put(pop.type, pops.get(pop.type) + pop.size);
+			}
+		}}
+		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
+			if (!fullMembers.contains(e.getKey())) { continue; }
+			sb.append(e.getValue()).append(" billion ").append(e.getKey().name).append(". ");
+			sb.append(e.getKey().desc).append("\n");
+		}
+		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
+			if (fullMembers.contains(e.getKey())) { continue; }
+			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().name).append(". ");
+			sb.append(e.getKey().desc).append("\n");
+		}
+		HashSet<Device> devices = new HashSet<Device>();
+		for (Planet c : colonies) { for (Artefact a : c.artefacts) {
+			if (a.type instanceof Device) {
+				devices.add((Device) a.type);
+			}
+		}}
+		for (Device d : devices) {
+			sb.append("It controls a ").append(d.getName()).append(".\n");
+		}
+		for (Civ other : sg.civs) {
+			if (other == this) { continue; }
+			if (relation(other) == Diplomacy.Outcome.WAR) {
+				sb.append("It is at war with the ").append(other.name).append(".\n");
+			} else {
+				sb.append("It is at peace with the ").append(other.name).append(".\n");
+			}
+		}
+		
+		return sb.toString();
 	}
 }

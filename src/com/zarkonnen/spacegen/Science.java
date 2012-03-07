@@ -26,7 +26,7 @@ public class Science {
 				break;
 			case 3:
 				for (Planet p : sg.planets) {
-					if (!p.habitable) {
+					if (!p.habitable && p.owner == null) {
 						p.habitable = true;
 						p.inhabitants.add(new Population(actor.fullMembers.get(0), 1));
 						p.owner = actor;
@@ -37,10 +37,21 @@ public class Science {
 				}
 				// INTENTIONAL FALLTHROUGH
 			case 4:
+				for (Planet p : sg.planets) {
+					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
+						SentientType st = sg.pick(SentientType.values());
+						p.inhabitants.add(new Population(st, 3));
+						p.owner = actor;
+						actor.colonies.add(p);
+						sg.l("The $cname uplift the local " + st.name + " on $pname and incorporate the planet into their civilisation.", actor, p);
+						return false;
+					}
+				}
 			case 5:
+			case 6:
 				ArrayList<Planet> cands = new ArrayList<Planet>();
 				for (Planet p : actor.colonies) {
-					if (p.has(StructureType.SCIENCE_LAB)) {
+					if (p.has(StructureType.Standard.SCIENCE_LAB)) {
 						cands.add(p);
 					}
 				}

@@ -47,7 +47,7 @@ public enum GoodCivEvent {
 				}
 			}}
 			actor.govt = Government.REPUBLIC;
-			actor.updateName(sg.historicalCivs);
+			actor.updateName(sg.historicalCivNames);
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
 		}
 	};

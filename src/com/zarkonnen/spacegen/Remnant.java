@@ -30,7 +30,7 @@ public class Remnant implements Stratum {
 		}
 		return "Remnants of a culture of " + remnant.type.name + " that collapsed " +
 				(cat == null ? reason : "due to a " + cat.name) + " in " + collapseTime + "." + 
-				(plague != null ? " The " + plague.name + " slumbers in their corpses." : "");
+				(plague != null ? " The " + plague.desc() + ", slumbers in their corpses." : "");
 	}
 
 	@Override

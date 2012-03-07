@@ -29,9 +29,13 @@ public enum BadCivEvent {
 						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of the planet destroyer wielded by the ").append(actor.name).append(".");
 						return;
 					}
+					if (col.has(SentientType.CATOIDS.specialStructure)) {
+						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of torture pits of the ").append(actor.name).append(".");
+						return;
+					}
 					int resTaken = actor.resources / actor.colonies.size();
 					int milTaken = actor.military / actor.colonies.size();
-					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg.historicalCivs);
+					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg.historicalCivNames);
 					actor.colonies.remove(col);
 					actor.resources -= resTaken;
 					actor.military -= milTaken;
@@ -45,7 +49,7 @@ public enum BadCivEvent {
 						}
 					}
 					sg.civs.add(newCiv);
-					sg.historicalCivs.add(newCiv);
+					sg.historicalCivNames.add(newCiv.name);
 					rep.append("Slaves on ").append(col.name).append(" revolt, killing their oppressors and declaring the Free ").append(newCiv.name).append(".");
 					return;
 				}
@@ -78,7 +82,7 @@ public enum BadCivEvent {
 			actor.fullMembers.clear();
 			actor.fullMembers.add(rulers);
 			actor.govt = Government.DICTATORSHIP;
-			actor.updateName(sg.historicalCivs);
+			actor.updateName(sg.historicalCivNames);
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
 		}
 	},
@@ -89,7 +93,7 @@ public enum BadCivEvent {
 			}
 			String oldName = actor.name;
 			actor.govt = Government.THEOCRACY;
-			actor.updateName(sg.historicalCivs);
+			actor.updateName(sg.historicalCivNames);
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
 		}
 	},
@@ -143,7 +147,7 @@ public enum BadCivEvent {
 			}
 			if (bigPlanets.size() > 1) {
 				Collections.shuffle(bigPlanets, sg.r);
-				Civ newCiv = new Civ(sg.year, SentientType.ANTOIDS, bigPlanets.get(0), sg.pick(Government.values()), actor.resources / 2, sg.historicalCivs);
+				Civ newCiv = new Civ(sg.year, SentientType.ANTOIDS, bigPlanets.get(0), sg.pick(Government.values()), actor.resources / 2, sg.historicalCivNames);
 				newCiv.fullMembers.clear();
 				newCiv.military = actor.military / 2;
 				actor.military -= newCiv.military;
@@ -167,11 +171,11 @@ public enum BadCivEvent {
 					if (sg.coin()) { newCiv.colonies.add(c); c.owner = newCiv; }
 				}
 				actor.colonies.removeAll(newCiv.colonies);
-				newCiv.updateName(sg.historicalCivs);
+				newCiv.updateName(sg.historicalCivNames);
 				newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 				actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 				sg.civs.add(newCiv);
-				sg.historicalCivs.add(newCiv);
+				sg.historicalCivNames.add(newCiv.name);
 				rep.append("The ").append(newCiv.name).append(" secedes from the ").append(actor.name).append(", leading to a civil war!");
 			}
 		}

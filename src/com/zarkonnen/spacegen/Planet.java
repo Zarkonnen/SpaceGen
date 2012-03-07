@@ -139,9 +139,9 @@ public class Planet {
 	}
 	
 	boolean isOutpost() {
-		return	has(StructureType.MILITARY_BASE) ||
-				has(StructureType.SCIENCE_LAB) ||
-				has(StructureType.MINING_BASE);
+		return	has(StructureType.Standard.MILITARY_BASE) ||
+				has(StructureType.Standard.SCIENCE_LAB) ||
+				has(StructureType.Standard.MINING_BASE);
 	}
 
 	int population() {
