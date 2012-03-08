@@ -15,6 +15,9 @@ public enum CivAction {
 				rep.append("The ").append(actor.name).append(" send a delegation to ").append(p.name).append(". ");
 				Diplomacy.Outcome outcome = Diplomacy.meet(actor, other, sg);
 				rep.append(outcome.desc(other, actor.relation(other))).append(" ");
+				if (outcome == Diplomacy.Outcome.UNION && (actor.has(SentientType.Base.PARASITES) || p.owner.has(SentientType.Base.PARASITES))) {
+					outcome = Diplomacy.Outcome.PEACE;
+				}
 				if (outcome == Diplomacy.Outcome.UNION) {
 					sg.civs.remove(other);
 					Government newGovt = sg.pick(new Government[] { actor.govt, other.govt });

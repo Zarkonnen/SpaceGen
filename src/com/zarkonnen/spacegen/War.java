@@ -60,7 +60,7 @@ public class War {
 		int defenceRoll = sg.d(defence, 6);
 		if (attackRoll > defenceRoll) {
 			actor.military -= sg.d(actor.military / 6 + 1);
-			if (sg.d(6) < actor.govt.bombardP) {
+			if (sg.d(6) < actor.govt.bombardP || target.owner.has(SentientType.Base.PARASITES)) {
 				if (actor.has(ArtefactType.Device.PLANET_DESTROYER)) {
 					target.deLive(sg.year, null, "when the planet was scoured by a superweapon of the " + actor.name);
 					sg.l("The $cname attack $pname and use their planet destroyer to turn it into a lifeless cinder.", actor, target);
@@ -99,6 +99,8 @@ public class War {
 					sg.l("The $cname attack $pname, a colony of the " + enemy.name + ", and subject it to orbital bombardment, killing " + deaths + " billion.", actor, target);
 				}
 			} else {
+				actor.resources += enemy.resources / enemy.colonies.size() / 2;
+				enemy.resources -= enemy.resources / enemy.colonies.size();
 				if (actor.has(ArtefactType.Device.MIND_CONTROL_DEVICE)) {
 					sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ", using their mind control device to gain control of the planet from orbit.", actor, target);
 				} else {

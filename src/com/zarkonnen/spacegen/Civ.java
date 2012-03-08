@@ -1,6 +1,7 @@
 package com.zarkonnen.spacegen;
 
 import com.zarkonnen.spacegen.ArtefactType.Device;
+import com.zarkonnen.spacegen.SentientType.Base;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -216,5 +217,10 @@ public class Civ {
 		}
 		
 		return sb.toString();
+	}
+
+	boolean has(Base base) {
+		for (SentientType st : fullMembers) { if (st.base == base) { return true; } }
+		return false;
 	}
 }

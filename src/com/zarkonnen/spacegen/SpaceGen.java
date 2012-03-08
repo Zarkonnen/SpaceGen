@@ -377,6 +377,13 @@ public class SpaceGen {
 				}
 			}
 		}
+		for (Civ c : civs) {
+			for (Planet col : c.colonies) {
+				if (col.owner != c) {
+					System.out.println("OMG BBQ WTF C");
+				}
+			}
+		}
 	}
 	
 	public void describe() {

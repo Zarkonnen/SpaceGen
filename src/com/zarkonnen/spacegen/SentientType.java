@@ -106,6 +106,8 @@ public class SentientType {
 		st2.postfix = postfix;
 		st2.cyborg = cyborg;
 		st2.personality = personality;
+		st2.evolvedLoc = evolvedLoc;
+		st2.creators = creators;
 		st2.goal = goal;
 		st2.birth = birth;
 		
