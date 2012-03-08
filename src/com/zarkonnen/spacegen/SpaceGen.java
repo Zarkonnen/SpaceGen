@@ -340,7 +340,7 @@ public class SpaceGen {
 				}
 				if (s instanceof LostArtefact) {
 					if (((LostArtefact) s).artefact.type == ArtefactType.Device.STASIS_CAPSULE) { continue; }
-					if (p(8000 / sAge + 300)) {
+					if (p(10000 / sAge + 500)) {
 						p.strata.remove(s);
 					}
 				}
@@ -355,7 +355,7 @@ public class SpaceGen {
 						ruin.structure.type == StructureType.Standard.MINING_BASE ||
 						ruin.structure.type == StructureType.Standard.SCIENCE_LAB)
 					{
-						if (p(1500 / sAge + 200)) {
+						if (p(1000 / sAge + 150)) {
 							p.strata.remove(s);
 						}
 					} else {

@@ -25,8 +25,15 @@ public interface ArtefactType {
 				case HYMN:
 					ret = "hymn about"; break;
 			}
-			switch (sg.d(4)) {
+			switch (sg.d(6)) {
 				case 0:
+				case 1:
+					if (!sg.agents.isEmpty()) {
+						Agent a = sg.pick(sg.agents);
+						return ret + " " + a.name;
+					}
+					// fallthru!
+				case 2:
 					switch (actor.govt) {
 						case DICTATORSHIP:
 							return ret + " the Emperor of the " + actor.name;
@@ -37,7 +44,7 @@ public interface ArtefactType {
 						case THEOCRACY:
 							return ret + " the Autarch of the " + actor.name;
 					}
-				case 1:
+				case 3:
 					switch (actor.govt) {
 						case DICTATORSHIP:
 							return ret + " the Empress of the " + actor.name;
@@ -48,9 +55,9 @@ public interface ArtefactType {
 						case THEOCRACY:
 							return ret + " the Autarch of the " + actor.name;
 					}
-				case 2:
+				case 4:
 					return ret + " cheese";
-				case 3:
+				case 5:
 					return ret + " " + sg.pick(actor.fullMembers).getName();
 				default:
 					return ret + " space kittens";
