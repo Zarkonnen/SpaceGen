@@ -70,6 +70,11 @@ public interface ArtefactType {
 		public String getName() { return "Block of Time Ice"; }
 	};
 	
+	public static ArtefactType WRECK = new ArtefactType() {
+		@Override
+		public String getName() { return "Spaceship Wrech"; }
+	};
+	
 	public static ArtefactType PIRATE_HOARD = new ArtefactType() {
 		@Override
 		public String getName() { return "Pirate Hoard"; }

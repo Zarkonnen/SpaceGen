@@ -70,7 +70,7 @@ public class Science {
 					"Soj'r", "Monad", "Lun'hod", "Mar'er", "P'neer", "Dyad", "Triad"
 				}));
 				probe.target = target;
-				probe.timer = 10 + sg.d(50);
+				probe.timer = 8 + sg.d(25);
 				probe.originator = actor;
 				sg.l("The $name launch a space probe called " + probe.name + " to explore the galaxy.", actor);
 				sg.agents.add(probe);

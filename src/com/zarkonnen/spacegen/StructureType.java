@@ -1,6 +1,6 @@
 package com.zarkonnen.spacegen;
 
-public interface StructureType {
+public interface StructureType {	
 	static enum Standard implements StructureType {
 		MILITARY_BASE("military base"),
 		MINING_BASE("mining base"),

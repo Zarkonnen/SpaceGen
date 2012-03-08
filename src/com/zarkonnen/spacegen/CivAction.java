@@ -93,7 +93,7 @@ public enum CivAction {
 								ag.p = victimP;
 								sg.agents.add(ag);
 							}
-							break;
+							return;
 						case ULTRAVORE:
 							victimP = sg.pick(actor.colonies);
 							if (victimP.population() < 2 || sg.coin()) {
@@ -108,6 +108,7 @@ public enum CivAction {
 								Agent ag = new Agent(AgentType.ULTRAVORES, sg.year, "Hunting Pack of Ultravores");
 								ag.p = victimP;
 								sg.agents.add(ag);
+								return;
 							}
 							break;
 					}
@@ -256,6 +257,13 @@ public enum CivAction {
 								rep.append("They encounter a mind archive of the ").append(la.artefact.creator.name).append(" which brings them new knowledge and wisdom. ");
 								major = true;
 								actor.techLevel = Math.max(actor.techLevel, la.artefact.creatorTechLevel);
+								continue;
+							}
+							if (la.artefact.type == ArtefactType.WRECK) {
+								rep.append("They recover: ").append(stratum).append(" ");
+								p.strata.remove(stratum);
+								actor.resources += 3;
+								stratNum--;
 								continue;
 							}
 							

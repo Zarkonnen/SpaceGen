@@ -32,6 +32,7 @@ public class Artefact {
 	public String toString() {
 		if (creatorName != null) { return desc + " created by " + creatorName + " in " + created; }
 		if (creator == null) { return desc; }
+		if (type == ArtefactType.WRECK) { return desc; }
 		return desc + " created by the " + creator.name + " in " + created;
 	}
 }

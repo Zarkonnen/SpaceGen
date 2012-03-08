@@ -114,9 +114,9 @@ public class SpaceGen {
 					pop.size++;
 					l("The skull pile on $pname excites the local $sname into a sexual frenzy.", pop.type, planet);
 				}
-				if (pop.size > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(8)) {
+				if (pop.size > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
 					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
-					if (p(3) && planet.owner != null) {
+					if (planet.owner != null) {
 						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
 						planet.structures.add(new Structure(StructureType.Standard.SKULL_PILE, planet.owner, year));
 					}
@@ -263,13 +263,6 @@ public class SpaceGen {
 					pick(BadCivEvent.values()).invoke(c, this);
 				}
 				
-				for (SentientType st : c.fullMembers) {
-					if (st.base == SentientType.Base.HUMANOIDS && p(8)) {
-						GoodCivEvent.SPAWN_ADVENTURER.invoke(c, this);
-					}
-				}
-				
-				
 				if (checkCivDoom(c)) { civs.remove(c); continue; }
 			}
 			
@@ -279,7 +272,14 @@ public class SpaceGen {
 		
 		// TICK AGENTS
 		for (Agent a : new ArrayList<Agent>(agents)) {
+			if (!agents.contains(a)) { continue; }
 			a.type.behave(a, this);
+		}
+		for (Agent a : new ArrayList<Agent>(agents)) {
+			if (!agents.contains(a)) { continue; }
+			if (a.type == AgentType.ADVENTURER) {
+				a.type.behave(a, this);
+			}
 		}
 		
 		

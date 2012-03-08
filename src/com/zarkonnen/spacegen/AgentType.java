@@ -90,6 +90,73 @@ public enum AgentType {
 		}
 	},
 	ADVENTURER() {
+		boolean encounter(Agent a, SpaceGen sg, Agent ag) {
+			switch (ag.type) {
+				case ROGUE_AI:
+					if (sg.coin()) {
+						if (a.fleet <= 3) {
+							sg.l(a.name + " is killed by the rogue AI " + ag.name + ".");
+							sg.agents.remove(a);
+							a.p.strata.add(new LostArtefact("crashed", sg.year, new Artefact(sg.year, a.originator, ArtefactType.WRECK,
+									"wreck of the flagship of " + a.name + ", destroyed by the rogue AI " + ag.name)));
+						} else {
+							int loss = sg.d(a.fleet - 1) + 1;
+							sg.l(a.name + " is attacked by the rogue AI " + ag.name + " and has to retreat, losing " + loss + " ships.");
+							a.fleet -= loss;
+							a.p.strata.add(new LostArtefact("crashed", sg.year, new Artefact(sg.year, a.originator, ArtefactType.WRECK,
+									"shattered wrecks of " + loss + " spaceships of the fleet of " + a.name + ", destroyed by the rogue AI " + ag.name)));
+						}
+					} else {
+						sg.l(a.name + " manages to confuse the rogue AI " + ag.name + " with a clever logic puzzle, distracting it long enough to shut it down.");
+						a.resources += 5;
+						sg.agents.remove(ag);
+					}
+					return true;
+				case SPACE_PROBE:
+					if (sg.coin()) {
+						sg.l(a.name + " attempts to reason with the space probe " + ag.name + " but triggers its self-destruct mechanism.");
+						if (sg.coin()) {
+							a.p.deLive(sg.year, null, "due to the self-destruction of the insane space probe " + ag.name);
+							sg.l("The resulting shockwave exterminates all life on " + a.p.name + ".");
+							sg.agents.remove(ag);
+							sg.agents.remove(a);
+						}
+					} else {
+						sg.l(a.name + " successfully reasons with the insane space probe " + ag.name + ", which transfers its accumulated information into the fleet's data banks and then shuts down.");
+						a.originator.techLevel += 3;
+						sg.agents.remove(ag);
+					}
+					return true;
+				case SPACE_MONSTER:
+					int attackRoll = sg.d(a.fleet, 6);
+					int defenseRoll = sg.d(4, 6);
+					if (attackRoll > defenseRoll) {
+						sg.l(a.name + " defeats the " + ag.name + " in orbit around " + a.p.name + ".");
+						sg.agents.remove(ag);
+						if (a.p.owner != null) {
+							sg.l("The " + a.p.owner + " rewards the adventurer handsomely.");
+							a.resources += a.p.owner.resources / 3;
+							a.p.owner.resources = a.p.owner.resources * 2 / 3;
+						}
+					} else {
+						int loss = sg.d(2) + 2;
+						if (a.fleet - loss <= 0) {
+							sg.l("The " + ag.name + " in orbit around " + a.p.name + " attacks and kills " + a.name + ".");
+							sg.agents.remove(a);
+							a.p.strata.add(new LostArtefact("crashed", sg.year, new Artefact(sg.year, a.originator, ArtefactType.WRECK,
+									"wreck of the flagship of " + a.name + ", destroyed by a " + ag.name)));
+						} else {
+							a.fleet -= loss;
+							sg.l("The " + ag.name + " attacks the fleet of " + a.name + " near " + a.p.name + " destroying " + loss + " ships.");
+							a.p.strata.add(new LostArtefact("crashed", sg.year, new Artefact(sg.year, a.originator, ArtefactType.WRECK,
+									"shattered wrecks of " + loss + " spaceships of the fleet of " + a.name + ", destroyed by a " + ag.name)));
+						}
+					}
+					return true;
+			}
+			return false;
+		}
+		
 		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			a.p = sg.pick(sg.planets);
@@ -102,6 +169,183 @@ public enum AgentType {
 				sg.agents.remove(a);
 				return;
 			}
+			
+			for (Agent ag : sg.agents) {
+				if (ag != a && ag.p == a.p) {
+					if (encounter(a, sg, ag)) { return; }
+				}
+			}
+			
+			if (sg.p(3) && a.p.owner != null && a.p.owner != a.originator && a.originator.relation(a.p.owner) == Diplomacy.Outcome.WAR) {
+				// Show some initiative!
+				String act = sg.pick(new String[] {
+					" raids the treasury on ",
+					" intercepts a convoy near ",
+					" steals jewels from ",
+					" steals a spaceship from the navy of ",
+					" extorts money from "
+				});
+				sg.l(a.name + act + a.p.name + ", a planet of the enemy " + a.p.owner.name + ".");
+				a.resources += 2;
+				a.p.owner.resources = a.p.owner.resources * 5 / 6;
+				return;
+			}
+			
+			if (a.p.owner == null || (a.p.owner != a.originator && a.originator.relation(a.p.owner) == Diplomacy.Outcome.PEACE)) {
+				// Exploration
+				StringBuilder rep = new StringBuilder();
+				boolean major = false;
+				rep.append("An expedition led by ").append(a.name).append(" explores ").append(a.p.name).append(". ");
+				
+				// - find artefacts
+				// - exterminate bad wildlife
+				
+				boolean runAway = false;
+				lp: for (SpecialLifeform slf : new ArrayList<SpecialLifeform>(a.p.lifeforms)) {
+					if (sg.coin()) { continue; }
+					switch (slf) {
+						case BRAIN_PARASITE:
+						case ULTRAVORE:
+						case SHAPE_SHIFTER:
+							String monster = slf.name.toLowerCase();;
+							major = true;
+							rep.append("They encounter the local ").append(monster);
+							if (sg.p(3)) {
+								rep.append(" and exterminate them. ");
+								a.p.lifeforms.remove(slf);
+							} else {
+								if (a.fleet < 1) {
+									rep.append(". In a desperate attempt to stop them, ").append(a.name).append(" activates the ship's self-destruct sequence.");
+									runAway = true;
+									sg.agents.remove(a);
+									break lp;
+								} else {
+									rep.append(". In a desperate attempt to stop them, ").append(a.name).append(" has half of the exploration fleet blasted to bits.");
+									runAway = true;
+									a.fleet /= 2;
+									break lp;
+								}
+							}
+							break;
+					}
+				}
+				
+				if (runAway) {
+					sg.l(rep.toString());
+					return;
+				}
+				
+				// Inhabs
+				if (!a.p.inhabitants.isEmpty()) {
+					major = true;
+					rep.append("They trade with the local ").append(sg.pick(a.p.inhabitants).type.name).append(". ");
+					a.p.evoPoints += 5000;
+					a.resources += 2;
+				}
+				
+				// Archeology!
+				Planet p = a.p;
+				for (int stratNum = 0; stratNum < p.strata.size(); stratNum++) {
+					Stratum stratum = p.strata.get(p.strata.size() - stratNum - 1);
+					if (sg.p(4 + stratNum * 2)) {
+						if (stratum instanceof Fossil) {
+							rep.append("They discover: ").append(stratum.toString()).append(" ");
+							a.originator.science++;
+						}
+						if (stratum instanceof Remnant) {
+							rep.append("They discover: ").append(stratum.toString()).append(" ");
+							a.resources++;
+							Remnant r = (Remnant) stratum;
+							Planet homeP = a.originator.largestColony();
+							if (r.plague != null && sg.d(6) < r.plague.transmissivity) {
+								boolean affects = false;
+								for (Population pop : homeP.inhabitants) {
+									if (r.plague.affects.contains(pop.type)) {
+										affects = true;
+									}
+								}
+								
+								if (affects) {
+									homeP.plagues.add(new Plague(r.plague));
+									rep.append(" Unfortunately, members of the expedition catch the ").append(r.plague.name).append(" from their exploration of the ancient tombs, infecting ").append(homeP.name).append(" upon their return. ");
+									major = true;
+								}
+							}
+						}
+						if (stratum instanceof LostArtefact) {
+							LostArtefact la = (LostArtefact) stratum;
+							if (la.artefact.type == ArtefactType.PIRATE_TOMB || la.artefact.type == ArtefactType.PIRATE_HOARD || la.artefact.type == ArtefactType.ADVENTURER_TOMB) {
+								rep.append("The expedition loots the ").append(la.artefact.desc).append(". ");
+								a.resources += la.artefact.specialValue;
+								p.strata.remove(stratum);
+								stratNum--;
+								continue;
+							}
+							if (la.artefact.type == ArtefactType.Device.STASIS_CAPSULE) {
+								if (!sg.civs.contains(la.artefact.creator)) {
+									rep.append("They open a stasis capsule from the ").append(la.artefact.creator.name).append(", which arises once more!");
+									sg.civs.add(la.artefact.creator);
+									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
+									la.artefact.creator.resources = 10;
+									la.artefact.creator.military = 10;
+									if (p.owner != null) {
+										p.owner.relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
+										la.artefact.creator.relations.put(p.owner, Diplomacy.Outcome.WAR);
+										p.owner.colonies.remove(p);
+									}
+									la.artefact.creator.colonies.clear();
+									la.artefact.creator.colonies.add(p);
+									p.owner = la.artefact.creator;
+									boolean inserted = false;
+									for (Population pop : p.inhabitants) {
+										if (pop.type == la.artefact.st) {
+											pop.size += 3;
+											inserted = true;
+											break;
+										}
+									}
+									if (!inserted) {
+										p.inhabitants.add(new Population(la.artefact.st, 3));
+									}
+									la.artefact.creator.birthYear = sg.year;
+									p.strata.remove(stratum);
+									stratNum--;
+									break;
+								}
+								continue;
+							}
+							if (la.artefact.type == ArtefactType.Device.MIND_ARCHIVE) {
+								rep.append("They encounter a mind archive of the ").append(la.artefact.creator.name).append(" which brings new knowledge and wisdom to the ").append(a.originator.name).append(". ");
+								major = true;
+								a.originator.techLevel = Math.max(a.originator.techLevel, la.artefact.creatorTechLevel);
+								continue;
+							}
+							if (la.artefact.type == ArtefactType.WRECK) {
+								rep.append("They recover: ").append(stratum).append(" ");
+								p.strata.remove(stratum);
+								a.resources += 3;
+								stratNum--;
+								continue;
+							}
+							
+							rep.append("They recover: ").append(stratum).append(" ");
+							major = true;
+							p.strata.remove(stratum);
+							a.resources++;
+							sg.pick(a.originator.colonies).artefacts.add(la.artefact);
+							stratNum--;
+						}
+					}
+				}
+				
+				if (major) {
+					sg.l(rep.toString());
+					return;
+				}
+				
+				return;
+			}
+			
 			if (a.p.owner == a.originator) {
 				while (a.resources > 4) {
 					a.fleet++;
@@ -149,6 +393,56 @@ public enum AgentType {
 				}
 				
 				// KILL SM
+				Agent mon = null;
+				lp: for (Planet p : sg.planets) {
+					for (Agent ag : sg.agents) {
+						if (ag.type != AgentType.SPACE_MONSTER) { continue; }
+						if (ag.p == p) {
+							mon = ag;
+							break lp;
+						}
+					}
+				}
+				if (mon != null) {
+					sg.l(a.name + " is sent on a mission to defeat the " + mon.name + " at " + mon.p.name + ".");
+					a.p = mon.p;
+					encounter(a, sg, mon);
+					return;
+				}
+				
+				Agent ai = null;
+				lp: for (Planet p : sg.planets) {
+					for (Agent ag : sg.agents) {
+						if (ag.type != AgentType.ROGUE_AI) { continue; }
+						if (ag.p == p) {
+							ai = ag;
+							break lp;
+						}
+					}
+				}
+				if (ai != null) {
+					sg.l(a.name + " is sent on a mission to stop the rogue AI " + ai.name + " at " + ai.p.name + ".");
+					a.p = ai.p;
+					encounter(a, sg, ai);
+					return;
+				}
+				
+				Agent pr = null;
+				lp: for (Planet p : sg.planets) {
+					for (Agent ag : sg.agents) {
+						if (ag.type != AgentType.SPACE_PROBE) { continue; }
+						if (ag.p == p) {
+							pr = ag;
+							break lp;
+						}
+					}
+				}
+				if (ai != null) {
+					sg.l(a.name + " is sent on a mission to stop the insane space probe " + pr.name + " threatening " + pr.p.name + ".");
+					a.p = pr.p;
+					encounter(a, sg, pr);
+					return;
+				}
 				
 				// PEACE MISSION
 				Civ enemy = null;
@@ -357,9 +651,9 @@ public enum AgentType {
 					Artefact art = null;
 					switch (ag.type) {
 						case ADVENTURER:
-							sg.l("The rogue AI " + a.name + " encases the adventurer Captain " + ag.name + " in a block of time ice.");
+							sg.l("The rogue AI " + a.name + " encases the adventurer " + ag.name + " in a block of time ice.");
 							art = new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
-									"block of time ice encasing Captain " + ag.name);
+									"block of time ice encasing " + ag.name);
 							break;
 						case PIRATE:
 							sg.l("The rogue AI " + a.name + " encases the pirate " + ag.name + " in a block of time ice.");
