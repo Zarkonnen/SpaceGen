@@ -83,17 +83,16 @@ public enum BadCivEvent {
 			actor.fullMembers.add(rulers);
 			actor.govt = Government.DICTATORSHIP;
 			actor.updateName(sg.historicalCivNames);
+			sg.historicalCivNames.add(actor.name);
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
 		}
 	},
 	RELIGIOUS_REVIVAL() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.govt == Government.DICTATORSHIP) {
-				return;
-			}
 			String oldName = actor.name;
 			actor.govt = Government.THEOCRACY;
 			actor.updateName(sg.historicalCivNames);
+			sg.historicalCivNames.add(actor.name);
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
 		}
 	},
