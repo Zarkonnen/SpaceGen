@@ -67,7 +67,7 @@ public enum CivAction {
 							if (!sg.p(3)) { break; }
 							victimP = sg.pick(actor.colonies);
 							int stolenResources = actor.resources / actor.colonies.size();
-							Civ newCiv = new Civ(sg.year, SentientType.genParasites(), victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
+							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
 							victimP.owner = newCiv;
 							actor.colonies.remove(victimP);

@@ -185,7 +185,14 @@ public enum BadCivEvent {
 			if (actor.fullColonies().isEmpty()) { return; }
 			Planet p = sg.pick(actor.fullColonies());
 			Plague plague = new Plague(sg);
-			plague.affects.add(sg.pick(p.inhabitants).type);
+			ArrayList<Population> is = new ArrayList<Population>();
+			for (Population pop : p.inhabitants) {
+				if (pop.type.base != SentientType.Base.ROBOTS) {
+					is.add(pop);
+				}
+			}
+			if (is.isEmpty()) { return; }
+			plague.affects.add(sg.pick(is).type);
 			rep.append("The deadly ").append(plague.desc()).append(", arises on ").append(p.name).append(".");
 			p.plagues.add(plague);
 		}
@@ -198,14 +205,18 @@ public enum BadCivEvent {
 			Planet p = sg.pick(actor.fullColonies());
 			int deaths = 0;
 			for (Population pop : new ArrayList<Population>(p.inhabitants)) {
+				if (pop.type.base == SentientType.Base.ROBOTS) { continue; }
 				int d = pop.size - pop.size / 2;
-				deaths += 2;
+				
 				if (d >= pop.size) {
 					p.dePop(pop, sg.year, null, "due to starvation", null);
+					deaths += pop.size;
 				} else {
 					pop.size -= d;
+					deaths += d;
 				}
 			}
+			if (deaths == 0) { return; }
 			rep.append("A famine breaks out on ").append(p.name).append(", killing ").append(deaths).append(" billion");
 			if (p.population() == 0) {
 				rep.append(", wiping out all sentient life.");

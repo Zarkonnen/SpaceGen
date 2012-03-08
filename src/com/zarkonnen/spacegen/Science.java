@@ -4,7 +4,8 @@ import java.util.ArrayList;
 
 public class Science {
 	static boolean advance(Civ actor, SpaceGen sg) {
-		switch (sg.d(6)) {
+		ArrayList<Planet> cands;
+		switch (sg.d(8)) {
 			case 0:
 				actor.techLevel++;
 				if (actor.techLevel == 10) {
@@ -39,7 +40,7 @@ public class Science {
 			case 4:
 				for (Planet p : sg.planets) {
 					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
-						SentientType st = SentientType.invent(sg);
+						SentientType st = SentientType.invent(sg, actor, p);
 						p.inhabitants.add(new Population(st, 3));
 						p.owner = actor;
 						actor.colonies.add(p);
@@ -48,8 +49,23 @@ public class Science {
 					}
 				}
 			case 5:
+				// ROBOTS!
+				cands = new ArrayList<Planet>();
+				lp: for (Planet p : actor.fullColonies()) {
+					for (Population pop : p.inhabitants) {
+						if (pop.type.base == SentientType.Base.ROBOTS) { continue lp; }
+					}
+					cands.add(p);
+				}
+				if (cands.isEmpty()) { return false; }
+				Planet rp = sg.pick(cands);
+				SentientType rob = SentientType.genRobots(sg, actor, rp);
+				sg.l("The $cname create " + rob.getName() + " as servants on $pname.", actor, rp);
+				rp.inhabitants.add(new Population(rob, 4));
+				break;
 			case 6:
-				ArrayList<Planet> cands = new ArrayList<Planet>();
+			case 7:
+				cands = new ArrayList<Planet>();
 				for (Planet p : actor.colonies) {
 					if (p.has(StructureType.Standard.SCIENCE_LAB)) {
 						cands.add(p);

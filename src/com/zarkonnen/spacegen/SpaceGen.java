@@ -1,6 +1,7 @@
 package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 public class SpaceGen {
@@ -10,6 +11,7 @@ public class SpaceGen {
 	ArrayList<Civ> civs = new ArrayList<Civ>();
 	ArrayList<String> historicalCivNames = new ArrayList<String>();
 	ArrayList<Agent> agents = new ArrayList<Agent>();
+	ArrayList<String> historicalSentientNames = new ArrayList<String>();
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
@@ -82,7 +84,7 @@ public class SpaceGen {
 				planet.pollution++;
 			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
-				if (planet.owner == null && p(100)) {
+				if (planet.owner == null && p(100) && pop.type.base != SentientType.Base.ROBOTS && pop.type.base != SentientType.Base.PARASITES) {
 					SentientType nst = pop.type.mutate(this);
 					l("The $sname on $pname mutate into " + nst.getName() + ".", pop.type, planet);
 					pop.type = nst;
@@ -115,7 +117,7 @@ public class SpaceGen {
 							}
 						}
 					} else {
-						if (d(20) < plague.mutationRate) {
+						if (d(12) < plague.mutationRate && pop.type.base != SentientType.Base.ROBOTS) {
 							plague.affects.add(pop.type);
 							l("The " + plague.name + " mutates to affect $name", pop.type);
 						}
@@ -311,7 +313,7 @@ public class SpaceGen {
 					} else {
 						if (p(3)) {
 							// Sentient!
-							SentientType st = SentientType.invent(this);
+							SentientType st = SentientType.invent(this, null, p);
 							l("Sentient $sname arise on $pname.", st, p);
 							p.inhabitants.add(new Population(st, 2 + d(1)));
 						} else {
@@ -378,11 +380,26 @@ public class SpaceGen {
 	}
 	
 	public void describe() {
+		// Critters
+		HashSet<SentientType> sts = new HashSet<SentientType>();
+		for (Planet p : planets) { for (Population pop : p.inhabitants) {
+			sts.add(pop.type);
+		}}
+		
+		if (sts.size() > 0) { l("SENTIENT SPECIES:"); }
+		
+		for (SentientType st : sts) {
+			l(st.getName() + ": " + st.getDesc());
+			l("");
+		}
+		
+		if (civs.size() > 0) { l("CIVILISATIONS:"); }
 		for (Civ c : civs) {
 			l(c.fullDesc(this));
 			l("");
 		}
 		
+		l("PLANETS:");
 		for (Planet p : planets) {
 			l(p.fullDesc());
 			l("");

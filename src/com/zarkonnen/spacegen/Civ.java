@@ -103,15 +103,22 @@ public class Civ {
 		String n = "";
 		if (nth > 1) { n = Names.nth(nth) + " "; }
 		n += govt.title + " of ";
-		for (int i = 0; i < fullMembers.size(); i++) {
-			if (i > 0) {
-				if (i == fullMembers.size() - 1) {
-					n += " and ";
-				} else {
-					n += ", ";
+		if (fullMembers.size() == 1) {
+			n += fullMembers.get(0).getName();
+		} else {
+			HashSet<SentientType.Base> bases = new HashSet<SentientType.Base>();
+			for (SentientType st : fullMembers) { bases.add(st.base); }
+			ArrayList<SentientType.Base> bs = new ArrayList<SentientType.Base>(bases);
+			for (int i = 0; i < bs.size(); i++) {
+				if (i > 0) {
+					if (i == bs.size() - 1) {
+						n += " and ";
+					} else {
+						n += ", ";
+					}
 				}
+				n += bs.get(i).name;
 			}
-			n += fullMembers.get(i).getName();
 		}
 		return n;
 	}
@@ -184,13 +191,11 @@ public class Civ {
 		}}
 		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
 			if (!fullMembers.contains(e.getKey())) { continue; }
-			sb.append(e.getValue()).append(" billion ").append(e.getKey().getName()).append(". ");
-			sb.append(e.getKey().getDesc()).append("\n");
+			sb.append(e.getValue()).append(" billion ").append(e.getKey().getName()).append(".\n");
 		}
 		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
 			if (fullMembers.contains(e.getKey())) { continue; }
-			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().getName()).append(". ");
-			sb.append(e.getKey().getDesc()).append("\n");
+			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().getName()).append(".\n");
 		}
 		HashSet<Device> devices = new HashSet<Device>();
 		for (Planet c : colonies) { for (Artefact a : c.artefacts) {

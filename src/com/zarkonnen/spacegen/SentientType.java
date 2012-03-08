@@ -4,18 +4,33 @@ import java.util.ArrayList;
 import static com.zarkonnen.spacegen.CivAction.*;
 
 public class SentientType {
-	static SentientType genParasites() {
-		SentientType st = new SentientType();
-		st.base = Base.PARASITES;
-		st.name = st.mkName();
-		st.specialStructures.add(Base.PARASITES.specialStructure);
-		return st;
+	static final SentientType PARASITES;
+	
+	static {
+		PARASITES = new SentientType();
+		PARASITES.base = Base.PARASITES;
+		PARASITES.name = PARASITES.mkName();
+		PARASITES.specialStructures.add(Base.PARASITES.specialStructure);
+		PARASITES.personality = "insidious";
+		PARASITES.goal = "strive to dominate all sentient life";
 	}
 
-	static SentientType invent(SpaceGen sg) {
+	static SentientType invent(SpaceGen sg, Civ creator, Planet p) {
+		SentientType st = null;
+		do {
+			st = invent2(sg, creator, p);
+		} while (sg.historicalSentientNames.contains(st.name));
+		sg.historicalSentientNames.add(st.name);
+		return st;
+	}
+	
+	static SentientType invent2(SpaceGen sg, Civ creator, Planet p) {
 		SentientType st = new SentientType();
 		ArrayList<Base> bss = new ArrayList<Base>();
 		for (Base b : Base.values()) { if (b.evolvable) { bss.add(b); } }
+		st.creators = creator;
+		st.evolvedLoc = p;
+		st.birth = sg.year;
 		st.base = sg.pick(bss);
 		st.specialStructures.add(st.base.specialStructure);
 		if (sg.coin() && st.base != Base.HUMANOIDS) {
@@ -33,18 +48,66 @@ public class SentientType {
 		if (st.postfix != null && st.postfix.specialStruct != null) {
 			st.specialStructures.add(st.postfix.specialStruct);
 		}
+		st.personality = sg.pick(PERSONALITY);
+		st.goal = sg.pick(GOAL);
 		st.name = st.mkName();
 		
 		return st;
 	}
+
+	static SentientType genRobots(SpaceGen sg, Civ creator, Planet p) {
+		SentientType st = null;
+		do {
+			st = genRobots2(sg, creator, p);
+		} while (sg.historicalSentientNames.contains(st.name));
+		sg.historicalSentientNames.add(st.name);
+		return st;
+	}
+	
+	static SentientType genRobots2(SpaceGen sg, Civ creator, Planet p) {
+		SentientType st = new SentientType();
+		st.creators = creator;
+		st.evolvedLoc = p;
+		st.birth = sg.year;
+		st.base = Base.ROBOTS;
+		st.specialStructures.add(st.base.specialStructure);
+		if (sg.coin() && st.base != Base.HUMANOIDS) {
+			st.color = sg.pick(Names.COLORS);
+		}
+		st.prefixes.add(sg.pick(Prefix.values()));
+		if (st.prefixes.get(0).specialStruct != null) {
+			st.specialStructures.add(st.prefixes.get(0).specialStruct);
+		}
+		if (sg.p(5)) {
+			st.postfix = sg.pick(Postfix.values());
+		}
+		if (st.postfix != null && st.postfix.specialStruct != null) {
+			st.specialStructures.add(st.postfix.specialStruct);
+		}
+		st.personality = sg.pick(PERSONALITY);
+		st.goal = sg.pick(GOAL);
+		st.name = st.mkName();
+		return st;
+	}
 	
 	public SentientType mutate(SpaceGen sg) {
+		SentientType st = null;
+		do {
+			st = mutate2(sg);
+		} while (sg.historicalSentientNames.contains(st.name));
+		return st;
+	}
+	
+	public SentientType mutate2(SpaceGen sg) {
 		SentientType st2 = new SentientType();
 		st2.base = base;
 		st2.prefixes.addAll(prefixes);
 		st2.color = color;
 		st2.postfix = postfix;
 		st2.cyborg = cyborg;
+		st2.personality = personality;
+		st2.goal = goal;
+		st2.birth = birth;
 		
 		while (st2.mkName().equals(name)) {
 			switch (sg.d(3)) {
@@ -60,6 +123,12 @@ public class SentientType {
 					st2.postfix = sg.pick(Postfix.values());
 					break;
 			}
+			if (sg.p(3)) {
+				st2.personality = sg.pick(PERSONALITY);
+			}
+			if (sg.p(3)) {
+				st2.goal = sg.pick(GOAL);
+			}
 		}
 		
 		st2.specialStructures.add(st2.base.specialStructure);
@@ -70,12 +139,17 @@ public class SentientType {
 		return st2;
 	}
 	
+	int birth;
+	Planet evolvedLoc;
+	Civ creators;
 	public Base base;
 	public ArrayList<StructureType> specialStructures = new ArrayList<StructureType>();
 	public ArrayList<Prefix> prefixes = new ArrayList<Prefix>();
 	public String color;
 	public Postfix postfix;
 	public boolean cyborg;
+	String personality;
+	String goal;
 	String name;
 	
 	@Override
@@ -104,8 +178,104 @@ public class SentientType {
 		return sb.toString();
 	}
 	
+	public static String[] PERSONALITY = {
+		"cautious",
+		"violent",
+		"cowardly",
+		"peaceful",
+		"humorless",
+		"hyperactive",
+		"gregarious",
+		"reclusive",
+		"meditative",
+		"fond of practical jokes",
+		"modest",
+		"thrill-seeking"
+	};
+	
+	public static String[] GOAL = {
+		"deeply religious",
+		"value personal integrity above all else",
+		"have a complex system of social castes",
+		"strive to uphold their ideals of personal honour",
+		"deeply rationalist",
+		"unwilling to compromise",
+		"always willing to listen",
+		"have a deep need to conform",
+		"believe in the survival of the fittest",
+		"believe in the inherent superiority of their species",
+		"believe that each individual must serve the community",
+		"have a complex system of social rules"
+	};
+	
 	String getDesc() {
-		return getName() + ": " + base.desc;
+		StringBuilder sb = new StringBuilder(base.desc);
+		// Skin
+		if (color != null) {
+			if (prefixes.contains(Prefix.FEATHERED)) {
+				sb.append(" They have ").append(color.toLowerCase()).append(" feathers.");
+			} else if (prefixes.contains(Prefix.SCALY)) {
+				sb.append(" They have ").append(color.toLowerCase()).append(" scales.");
+			} else {
+				sb.append(" They have ").append(color.toLowerCase()).append(" skin.");
+			}
+		}
+		// LIMBS!
+		if (prefixes.contains(Prefix.SIX_LEGGED)) {
+			sb.append(" They have six legs.");
+		}
+		if (prefixes.contains(Prefix.FOUR_ARMED)) {
+			sb.append(" They have four arms.");
+		}
+		if (prefixes.contains(Prefix.TWO_HEADED)) {
+			sb.append(" They have two heads that tend to constantly bicker with one another.");
+		}
+		
+		if (postfix == Postfix.S_3) {
+			sb.append(" They have trilateral symmetry");
+		} else  if (postfix == Postfix.S_5) {
+			sb.append(" They have five-fold symmetry");
+		} else {
+			sb.append(" They have bilateral symmetry");
+		}
+		if (prefixes.contains(Prefix.SLIM)) {
+			sb.append(" and a slim shape.");
+		} else if (prefixes.contains(Prefix.AMORPHOUS)) {
+			sb.append(" and are able to greatly alter their shape.");
+		} else {
+			sb.append(".");
+		}
+		if (postfix == Postfix.EYES) {
+			sb.append(" Their giant eyes take up most of their head.");
+		}	
+		if (postfix == Postfix.TAILS) {
+			sb.append(" They use their long tails for balance.");
+		}	
+		if (prefixes.contains(Prefix.TELEPATHIC)) {
+			sb.append(" They can fly.");
+		}
+		if (prefixes.contains(Prefix.TELEPATHIC)) {
+			sb.append(" They can read each others' minds.");
+		}
+		if (prefixes.contains(Prefix.IMMORTAL)) {
+			sb.append(" They have no fixed lifespan and only die of disease or accidents.");
+		}
+		
+		sb.append(" They are ").append(personality).append(" and ").append(goal).append(".");
+		
+		if (evolvedLoc != null) {
+			if (base == Base.ROBOTS) {
+				sb.append(" They were created by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" as servants in ").append(birth).append(".");
+			} else {
+				if (creators != null) {
+					sb.append(" They were uplifted by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+				} else {
+					sb.append(" They first evolved on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+				}
+			}
+		}
+		
+		return sb.toString();
 	}
 	
 	public static enum Prefix {
@@ -115,7 +285,6 @@ public class SentientType {
 		SIX_LEGGED("Six-Legged", "velodrome"),
 		FOUR_ARMED("Four-Armed", null),
 		TWO_HEADED("Two-Headed", null),
-		HERBIVOROUS("Herbivorous", null),
 		SLIM("Slim", null),
 		AMORPHOUS("Amorphous", "reforming vat"),
 		FEATHERED("Feathered", null),
