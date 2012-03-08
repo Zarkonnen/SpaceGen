@@ -260,7 +260,7 @@ public class SentientType {
 		if (postfix == Postfix.TAILS) {
 			sb.append(" They use their long tails for balance.");
 		}	
-		if (prefixes.contains(Prefix.TELEPATHIC)) {
+		if (prefixes.contains(Prefix.FLYING)) {
 			sb.append(" They can fly.");
 		}
 		if (prefixes.contains(Prefix.TELEPATHIC)) {
