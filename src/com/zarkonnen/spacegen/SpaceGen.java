@@ -19,22 +19,50 @@ public class SpaceGen {
 	
 	public static void main(String[] args) {
 		SpaceGen sg = new SpaceGen(args.length > 1 ? Long.parseLong(args[1]) : System.currentTimeMillis());
-		int ticks = args.length > 0 ? Integer.parseInt(args[0]) : sg.r.nextInt(400) + 120;
-		int wait = 0;
-		for (int t = 0; t < ticks; t++) {
+		int bound = args.length > 0 ? Integer.parseInt(args[0]) : 650;
+		while (!sg.interesting(bound)) {
 			sg.tick();
-			if (sg.civs.size() >= 3) {
-				wait++;
-				if (wait > 20) {
-					break;
-				}
-			} else {
-				wait = 0;
-			}
 		}
 		sg.l("");
 		sg.l("");
 		sg.describe();
+		
+		for (String le : sg.log) {
+			System.out.println(le);
+		}
+	}
+	
+	boolean interesting(int bound) {
+		// each civ gives a point
+		// each hoard, art and wreck gives a point
+		int pts = 0;
+		pts += civs.size() * 100;
+		pts += year / 6;
+		for (Planet p : planets) {
+			pts += p.lifeforms.size() * 5;
+			pts += p.specials.size() * 15;
+			pts += p.population();
+			for (Stratum s : p.strata) {
+				if (s instanceof LostArtefact) {
+					LostArtefact la = (LostArtefact) s;
+					if (la.artefact.type == ArtefactType.WRECK) {
+						pts += 20;
+					}
+					if (la.artefact.type == ArtefactType.PIRATE_HOARD) {
+						pts += 15;
+					}
+					if (la.artefact.type == ArtefactType.TIME_ICE) {
+						pts += 10;
+					}
+					pts += 5;
+				}
+			}
+			pts += p.plagues.size() * 15;
+		}
+		
+		pts += agents.size() * 25;
+				
+		return year > bound / 4 && pts > bound;
 	}
 
 	public SpaceGen(long seed) {
@@ -386,7 +414,7 @@ public class SpaceGen {
 			}
 		}
 		
-		for (Planet p : planets) {
+		/*for (Planet p : planets) {
 			if (p.owner != null) {
 				if (!p.owner.colonies.contains(p)) {
 					System.out.println("OMG BBQ WTF A");
@@ -402,7 +430,7 @@ public class SpaceGen {
 					System.out.println("OMG BBQ WTF C");
 				}
 			}
-		}
+		}*/
 	}
 	
 	public void describe() {
@@ -427,7 +455,7 @@ public class SpaceGen {
 		
 		l("PLANETS:");
 		for (Planet p : planets) {
-			l(p.fullDesc());
+			l(p.fullDesc(this));
 			l("");
 		}
 	}
@@ -469,7 +497,7 @@ public class SpaceGen {
 			yearAnnounced = true;
 			l(year + ":");
 		}
-		System.out.println(s);
+		//System.out.println(s);
 		log.add(s);
 	}
 	

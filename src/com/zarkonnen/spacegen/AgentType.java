@@ -5,6 +5,17 @@ import java.util.ArrayList;
 public enum AgentType {
 	PIRATE() {
 		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			String d = "In orbit: The pirate " + a.name + ", a " + a.st.name;
+			if (a.fleet < 2) {
+				d += ".";
+			} else {
+				d += ", commanding a fleet of " + a.fleet + " ships.";
+			}
+			return d;
+		}
+		
+		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			// move
 			a.p = sg.pick(sg.planets);
@@ -90,6 +101,17 @@ public enum AgentType {
 		}
 	},
 	ADVENTURER() {
+		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			String d = "In orbit: The adventurer " + a.name + ", a member of the " + a.st.name + ", serving the " + a.originator.name;
+			if (a.fleet < 2) {
+				d += ".";
+			} else {
+				d += ", commanding a fleet of " + a.fleet + " ships.";
+			}
+			return d;
+		}
+		
 		boolean encounter(Agent a, SpaceGen sg, Agent ag) {
 			switch (ag.type) {
 				case ROGUE_AI:
@@ -491,6 +513,10 @@ public enum AgentType {
 	},
 	SHAPE_SHIFTER() {
 		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			return "A pack of shape-shifters hiding amongst the local population.";
+		}
+		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			if (a.p.inhabitants.isEmpty()) {
 				sg.agents.remove(a);
@@ -521,6 +547,10 @@ public enum AgentType {
 		}
 	},
 	ULTRAVORES() {
+		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			return "A pack of ultravores, incredibly dangerous predators.";
+		}
 		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			if (a.p.inhabitants.isEmpty() || a.p.owner == null) {
@@ -556,6 +586,10 @@ public enum AgentType {
 	},
 	SPACE_MONSTER() {
 		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			return "In orbit: A " + a.name + " threatening the planet.";
+		}
+		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			if (sg.p(500)) {
 				sg.l("The " + a.name + " devours all life on " + a.p.name + ".");
@@ -581,6 +615,10 @@ public enum AgentType {
 		}
 	},
 	SPACE_PROBE() {
+		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			return "In orbit: The insane space probe " + a.name + " threatening the planet.";
+		}
 		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			if (a.p == null) {
@@ -620,6 +658,10 @@ public enum AgentType {
 	},
 	ROGUE_AI() {
 		@Override
+		public String describe(Agent a, SpaceGen sg) {
+			return "In orbit: The rogue AI " + a.name + ".";
+		}
+		@Override
 		public void behave(Agent a, SpaceGen sg) {
 			if (a.timer > 0) {
 				a.timer--;
@@ -652,22 +694,22 @@ public enum AgentType {
 					switch (ag.type) {
 						case ADVENTURER:
 							sg.l("The rogue AI " + a.name + " encases the adventurer " + ag.name + " in a block of time ice.");
-							art = new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
+							art = new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice encasing " + ag.name);
 							break;
 						case PIRATE:
 							sg.l("The rogue AI " + a.name + " encases the pirate " + ag.name + " in a block of time ice.");
-							art = new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
+							art = new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice encasing the pirate " + ag.name);
 							break;
 						case SHAPE_SHIFTER:
 							sg.l("The rogue AI " + a.name + " encases the shape-shifters on" + a.p.name + " in a block of time ice.");
-							art = new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
+							art = new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice, encasing a group of shape-shifters");
 							break;
 						case ULTRAVORES:
 							sg.l("The rogue AI " + a.name + " encases a pack of ultravores on " + a.p.name + " in a block of time ice.");
-							art = new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
+							art = new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice, encasing a pack of ultravores");
 							break;
 						case ROGUE_AI:
@@ -698,7 +740,7 @@ public enum AgentType {
 						case THEOCRACY: title = "Autarch"; break;
 					}
 					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.owner.name + ", in a block of time ice.");
-					a.p.artefacts.add(new Artefact(sg.year, a.name, ArtefactType.TIME_ICE,
+					a.p.artefacts.add(new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.owner.name));
 					return;
 				}
@@ -805,4 +847,6 @@ public enum AgentType {
 	public static final String[] MONSTER_TYPES = { "worm", "cube", "crystal", "jellyfish" };
 	
 	public abstract void behave(Agent a, SpaceGen sg);
+	
+	public abstract String describe(Agent a, SpaceGen sg);
 }

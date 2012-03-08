@@ -153,13 +153,18 @@ public class Planet {
 	}
 	
 	
-	public String fullDesc() {
+	public String fullDesc(SpaceGen sg) {
 		StringBuilder sb = new StringBuilder(name.toUpperCase() + "\n");
 		sb.append("A ").append(habitable ? "life-bearing " : "barren ").append("planet");
 		if (owner != null) {
 			sb.append(" of the ").append(owner.name);
 		}
 		sb.append(".\n");
+		for (Agent ag : sg.agents) {
+			if (ag.p == this) {
+				sb.append(ag.type.describe(ag, sg)).append("\n");
+			}
+		}
 		if (pollution > 0) {
 			sb.append("It is ");
 			switch (pollution) {
