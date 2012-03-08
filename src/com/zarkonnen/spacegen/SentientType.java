@@ -15,16 +15,16 @@ public class SentientType {
 		PARASITES.goal = "strive to dominate all sentient life";
 	}
 
-	static SentientType invent(SpaceGen sg, Civ creator, Planet p) {
+	static SentientType invent(SpaceGen sg, Civ creator, Planet p, String specialOrigin) {
 		SentientType st = null;
 		do {
-			st = invent2(sg, creator, p);
+			st = invent2(sg, creator, p, specialOrigin);
 		} while (sg.historicalSentientNames.contains(st.name));
 		sg.historicalSentientNames.add(st.name);
 		return st;
 	}
 	
-	static SentientType invent2(SpaceGen sg, Civ creator, Planet p) {
+	static SentientType invent2(SpaceGen sg, Civ creator, Planet p, String newSpecialOrigin) {
 		SentientType st = new SentientType();
 		ArrayList<Base> bss = new ArrayList<Base>();
 		for (Base b : Base.values()) { if (b.evolvable) { bss.add(b); } }
@@ -51,20 +51,20 @@ public class SentientType {
 		st.personality = sg.pick(PERSONALITY);
 		st.goal = sg.pick(GOAL);
 		st.name = st.mkName();
-		
+		st.specialOrigin = newSpecialOrigin;
 		return st;
 	}
 
-	static SentientType genRobots(SpaceGen sg, Civ creator, Planet p) {
+	static SentientType genRobots(SpaceGen sg, Civ creator, Planet p, String specialOrigin) {
 		SentientType st = null;
 		do {
-			st = genRobots2(sg, creator, p);
+			st = genRobots2(sg, creator, p, specialOrigin);
 		} while (sg.historicalSentientNames.contains(st.name));
 		sg.historicalSentientNames.add(st.name);
 		return st;
 	}
 	
-	static SentientType genRobots2(SpaceGen sg, Civ creator, Planet p) {
+	static SentientType genRobots2(SpaceGen sg, Civ creator, Planet p, String newSpecialOrigin) {
 		SentientType st = new SentientType();
 		st.creators = creator;
 		st.evolvedLoc = p;
@@ -87,18 +87,19 @@ public class SentientType {
 		st.personality = sg.pick(PERSONALITY);
 		st.goal = sg.pick(GOAL);
 		st.name = st.mkName();
+		st.specialOrigin = newSpecialOrigin;
 		return st;
 	}
 	
-	public SentientType mutate(SpaceGen sg) {
+	public SentientType mutate(SpaceGen sg, String specialOrigin) {
 		SentientType st = null;
 		do {
-			st = mutate2(sg);
+			st = mutate2(sg, specialOrigin);
 		} while (sg.historicalSentientNames.contains(st.name));
 		return st;
 	}
 	
-	public SentientType mutate2(SpaceGen sg) {
+	public SentientType mutate2(SpaceGen sg, String newSpecialOrigin) {
 		SentientType st2 = new SentientType();
 		st2.base = base;
 		st2.prefixes.addAll(prefixes);
@@ -138,6 +139,11 @@ public class SentientType {
 			st2.specialStructures.add(st2.postfix.specialStruct);
 		}
 		st2.name = st2.mkName();
+		if (newSpecialOrigin == null) {
+			st2.specialOrigin = "They developed from " + name + " in " + sg.year + ".";
+		} else {
+			st2.specialOrigin = newSpecialOrigin;
+		}
 		return st2;
 	}
 	
@@ -153,6 +159,7 @@ public class SentientType {
 	String personality;
 	String goal;
 	String name;
+	String specialOrigin;
 	
 	@Override
 	public boolean equals(Object o2) {
@@ -265,14 +272,18 @@ public class SentientType {
 		
 		sb.append(" They are ").append(personality).append(" and ").append(goal).append(".");
 		
-		if (evolvedLoc != null) {
-			if (base == Base.ROBOTS) {
-				sb.append(" They were created by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" as servants in ").append(birth).append(".");
-			} else {
-				if (creators != null) {
-					sb.append(" They were uplifted by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+		if (specialOrigin != null) {
+			sb.append(" ").append(specialOrigin);
+		} else {
+			if (evolvedLoc != null) {
+				if (base == Base.ROBOTS) {
+					sb.append(" They were created by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" as servants in ").append(birth).append(".");
 				} else {
-					sb.append(" They first evolved on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+					if (creators != null) {
+						sb.append(" They were uplifted by the ").append(creators.name).append(" on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+					} else {
+						sb.append(" They first evolved on ").append(evolvedLoc.name).append(" in ").append(birth).append(".");
+					}
 				}
 			}
 		}
@@ -327,6 +338,14 @@ public class SentientType {
 			new String[] { "Kak", "Krk'", "Tk", "Tch'", "Tk'k" },
 			new String[] { "erlak", "kra", "hkt", "ukk", "kraa" },
 			EXPLORE_PLANET, COLONISE_PLANET, COLONISE_PLANET, COLONISE_PLANET, BUILD_MINING_BASE, BUILD_MINING_BASE, BUILD_CONSTRUCTION),
+		KOBOLDOIDS(
+			"Koboldoids", true,
+			"Eat pretty much anything, including one another. Disturbingly fond of skulls.",
+			"skull pit",
+			" Claw",
+			new String[] { "Grzikngh", "Brghz", "Zraa", "Klutt", "Murgezzog", "Okkog Okkog", "Frix", "Zrippo", "Zazapakka", "Krull", "Blorgorz", "Uzzakk", "Hittehelmettepol", "Zong", "Krghl" },
+			new String[] { " Jameson", " Smith", " Jones", " Taylor", " Brown", " Williams", " Smythe", " Clarke", " Robinson", " Wilson", " Johnson", " Walker", " Wood", " Hall", " Thompson" },
+			EXPLORE_PLANET, COLONISE_PLANET, COLONISE_PLANET, COLONISE_PLANET, BUILD_MINING_BASE, BUILD_CONSTRUCTION, BUILD_CONSTRUCTION),
 		URSOIDS(
 			"Ursoids", true,
 			"Always at war with someone, or everyone, or one another.",

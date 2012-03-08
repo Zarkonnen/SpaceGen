@@ -8,6 +8,7 @@ public class Artefact {
 	SentientType st;
 	int creatorTechLevel;
 	int specialValue;
+	String creatorName;
 
 	public Artefact(int created, Civ creator, ArtefactType type, String desc) {
 		this.created = created;
@@ -20,8 +21,16 @@ public class Artefact {
 		}
 	}
 	
+	public Artefact(int created, String creatorName, ArtefactType type, String desc) {
+		this.created = created;
+		this.creatorName = creatorName;
+		this.type = type;
+		this.desc = desc;
+	}
+	
 	@Override
 	public String toString() {
+		if (creatorName != null) { return desc + " created by " + creatorName + " in " + created; }
 		if (creator == null) { return desc; }
 		return desc + " created by the " + creator.name + " in " + created;
 	}

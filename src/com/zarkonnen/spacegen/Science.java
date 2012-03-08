@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Science {
 	static boolean advance(Civ actor, SpaceGen sg) {
 		ArrayList<Planet> cands;
-		switch (sg.d(8)) {
+		switch (sg.d(9)) {
 			case 0:
 				actor.techLevel++;
 				if (actor.techLevel == 10) {
@@ -40,7 +40,7 @@ public class Science {
 			case 4:
 				for (Planet p : sg.planets) {
 					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
-						SentientType st = SentientType.invent(sg, actor, p);
+						SentientType st = SentientType.invent(sg, actor, p, null);
 						p.inhabitants.add(new Population(st, 3));
 						p.owner = actor;
 						actor.colonies.add(p);
@@ -59,12 +59,24 @@ public class Science {
 				}
 				if (cands.isEmpty()) { return false; }
 				Planet rp = sg.pick(cands);
-				SentientType rob = SentientType.genRobots(sg, actor, rp);
+				SentientType rob = SentientType.genRobots(sg, actor, rp, null);
 				sg.l("The $cname create " + rob.getName() + " as servants on $pname.", actor, rp);
 				rp.inhabitants.add(new Population(rob, 4));
 				break;
 			case 6:
+				Planet target = actor.largestColony();
+				if (target == null) { return false; }
+				Agent probe = new Agent(AgentType.SPACE_PROBE, sg.year, sg.pick(new String[] {
+					"Soj'r", "Monad", "Lun'hod", "Mar'er", "P'neer", "Dyad", "Triad"
+				}));
+				probe.target = target;
+				probe.timer = 10 + sg.d(50);
+				probe.originator = actor;
+				sg.l("The $name launch a space probe called " + probe.name + " to explore the galaxy.", actor);
+				sg.agents.add(probe);
+				break;
 			case 7:
+			case 8:
 				cands = new ArrayList<Planet>();
 				for (Planet p : actor.colonies) {
 					if (p.has(StructureType.Standard.SCIENCE_LAB)) {

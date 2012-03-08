@@ -80,12 +80,20 @@ public class SpaceGen {
 		hadCivs = !civs.isEmpty();
 		
 		planets: for (Planet planet : planets) {
+			if (p(1000)) {
+				String mName = "giant spaceborne " + pick(Names.COLORS).toLowerCase() + " " + pick(AgentType.MONSTER_TYPES);
+				l("A " + mName + " appears from the depths of space and menaces the skies of $name.", planet);
+				Agent m = new Agent(AgentType.SPACE_MONSTER, year, mName);
+				m.p = planet;
+				agents.add(m);
+			}
+			
 			if ((planet.population() > 12 || (planet.population() > 7 && p(10)) && planet.pollution < 4)) {
 				planet.pollution++;
 			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
 				if (planet.owner == null && p(100) && pop.type.base != SentientType.Base.ROBOTS && pop.type.base != SentientType.Base.PARASITES) {
-					SentientType nst = pop.type.mutate(this);
+					SentientType nst = pop.type.mutate(this, null);
 					l("The $sname on $pname mutate into " + nst.getName() + ".", pop.type, planet);
 					pop.type = nst;
 				}
@@ -100,6 +108,17 @@ public class SpaceGen {
 					{
 						pop.size++;
 						//l("The population of $sname on $pname has grown by a billion.", pop.type, planet);
+					}
+				}
+				if (pop.type.base == SentientType.Base.KOBOLDOIDS && p(10) && planet.has(SentientType.Base.KOBOLDOIDS.specialStructure)) {
+					pop.size++;
+					l("The skull pile on $pname excites the local $sname into a sexual frenzy.", pop.type, planet);
+				}
+				if (pop.size > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(8)) {
+					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
+					if (p(3) && planet.owner != null) {
+						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
+						planet.structures.add(new Structure(StructureType.Standard.SKULL_PILE, planet.owner, year));
 					}
 				}
 				if (pop.size <= 0) {
@@ -313,7 +332,7 @@ public class SpaceGen {
 					} else {
 						if (p(3)) {
 							// Sentient!
-							SentientType st = SentientType.invent(this, null, p);
+							SentientType st = SentientType.invent(this, null, p, null);
 							l("Sentient $sname arise on $pname.", st, p);
 							p.inhabitants.add(new Population(st, 2 + d(1)));
 						} else {

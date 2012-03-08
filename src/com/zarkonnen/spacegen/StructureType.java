@@ -11,7 +11,8 @@ public interface StructureType {
 		MUSEUM("vast museum"),
 		SPACE_HABITAT("space habitat"),
 		ARCOLOGY("complex of arcologies"),
-		ORBITAL_ELEVATOR("orbital elevator");
+		ORBITAL_ELEVATOR("orbital elevator"),
+		SKULL_PILE("skull pile");
 
 		final String name;
 		
