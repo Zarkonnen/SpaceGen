@@ -80,7 +80,7 @@ public class SpaceGen {
 		hadCivs = !civs.isEmpty();
 		
 		planets: for (Planet planet : planets) {
-			if (p(1000)) {
+			if (p(2500)) {
 				String mName = "giant spaceborne " + pick(Names.COLORS).toLowerCase() + " " + pick(AgentType.MONSTER_TYPES);
 				l("A " + mName + " appears from the depths of space and menaces the skies of $name.", planet);
 				Agent m = new Agent(AgentType.SPACE_MONSTER, year, mName);

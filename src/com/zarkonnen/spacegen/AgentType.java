@@ -268,7 +268,18 @@ public enum AgentType {
 				a.p.deLive(sg.year, null, "due to the attack of a " + a.name);
 				return;
 			}
-			if (sg.p(50)) {
+			if (sg.p(8) && a.p.population() > 2) {
+				Population t = sg.pick(a.p.inhabitants);
+				if (t.size == 1) {
+					sg.l("The " + a.name + " devours the last of the local " + t.type.name + " on " + a.p.name + ".");
+					a.p.dePop(t, sg.year, null, "due to predation by a " + a.name, null);
+				} else {
+					sg.l("The " + a.name + " devours one billion " + t.type.name + " on " + a.p.name + ".");
+					t.size--;
+				}
+				return;
+			}
+			if (sg.p(20)) {
 				sg.l("The " + a.name + " leaves the orbit of " + a.p.name + " and heads back into deep space.");
 				sg.agents.remove(a);
 				return;
