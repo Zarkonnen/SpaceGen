@@ -64,7 +64,7 @@ public class MediaProvider {
 		int sWidth = (int) (scale * src.getWidth());
 		int sHeight = (int) (scale * src.getHeight());
  		final BufferedImage dst = config.createCompatibleImage(sWidth, sHeight,
-				Transparency.TRANSLUCENT);
+				Transparency.BITMASK);
 		final WritableRaster ar = src.getAlphaRaster();
 		// Iterate over pixels in dst.
 		for (int dstY = 0; dstY < dst.getHeight(); dstY++) { for (int dstX = 0; dstX < dst.getWidth(); dstX++) {
@@ -269,6 +269,29 @@ public class MediaProvider {
 		Clip clip = (Clip) AudioSystem.getLine(info);
 		clip.open(stream);
 		return clip;
+	}
+	
+	public BufferedImage border(BufferedImage src, Color borderC) {
+		final int w = src.getWidth();
+		final int h = src.getHeight();
+		final BufferedImage dst = createImage(w + 2, h + 2, Transparency.BITMASK);
+		Graphics2D g = dst.createGraphics();
+		g.drawImage(src, 1, 1, null);
+		final WritableRaster ar = src.getAlphaRaster();
+		for (int y = 0; y < h + 2; y++) { for (int x = 0; x < w + 2; x++) {
+			if (y > 0 && y < h + 1 && x > 0 && x < h + 1 && ar.getSample(x - 1, y - 1, 0) > 0) { continue; }
+			boolean border = false;
+			lp: for (int dy = -2; dy < 1; dy++) { for (int dx = -2; dx < 1; dx++) {
+				if (y + dy < 0 || y + dy >= h || x + dx < 0 || x + dx >= w) {
+					continue;
+				}
+				if (ar.getSample(x + dx, y + dy, 0) > 0) { border = true; break lp; }
+			}}
+			if (border) {
+				dst.setRGB(x, y, borderC.getRGB());
+			}
+		}}
+		return dst;
 	}
 	
 	public BufferedImage tint(BufferedImage src, Color tint) {

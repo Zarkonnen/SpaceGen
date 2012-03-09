@@ -109,8 +109,8 @@ public class Planet {
 		this.evoNeeded = 15000 + (r.nextInt(3) == 0 ? 0 : 1000000);
 		this.evoPoints = -evoNeeded;
 		lp: while (true) {
-			x = r.nextInt(10);
-			y = r.nextInt(10);
+			x = r.nextInt(8);
+			y = r.nextInt(8);
 			for (Planet p : sg.planets) {
 				if (p.x == x && p.y == y) { continue lp; }
 			}

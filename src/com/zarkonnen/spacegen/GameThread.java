@@ -9,8 +9,8 @@ public class GameThread implements Runnable {
 	GameDisplay display;
 	BufferStrategy bs;
 	Input input;
-	Controls controls;
-	public GameThread(GameWorld world, Input input, GameDisplay display, Controls controls, BufferStrategy bs) {
+	GameControls controls;
+	public GameThread(GameWorld world, Input input, GameDisplay display, GameControls controls, BufferStrategy bs) {
 		this.world = world;
 		this.input = input;
 		this.display = display;
@@ -28,7 +28,7 @@ public class GameThread implements Runnable {
 				display.draw(g);
 				bs.show();
 
-				Thread.sleep(350); // qqDPS
+				Thread.sleep(35);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

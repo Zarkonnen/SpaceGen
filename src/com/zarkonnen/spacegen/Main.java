@@ -12,8 +12,8 @@ import javax.swing.JFrame;
 
 public class Main {
     public static void main(String[] args) {
-		int width = 800;
-		int height = 600;
+		int width = 1200;
+		int height = 800;
 
 		JFrame jf = new JFrame("Game");
 		jf.setIgnoreRepaint(true);
@@ -46,7 +46,7 @@ public class Main {
 		c.addMouseListener(input);
 		c.addMouseMotionListener(input);
 		c.requestFocus();
-		GameThread gt = new GameThread(w, input, d, new Controls(d, w, input), c.getBufferStrategy());
+		GameThread gt = new GameThread(w, input, d, new GameControls(d, w, input), c.getBufferStrategy());
 		new Thread(gt, "Game Thread").start();
     }
 }

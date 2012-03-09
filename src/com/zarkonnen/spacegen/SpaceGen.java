@@ -12,6 +12,7 @@ public class SpaceGen {
 	ArrayList<String> historicalCivNames = new ArrayList<String>();
 	ArrayList<Agent> agents = new ArrayList<Agent>();
 	ArrayList<String> historicalSentientNames = new ArrayList<String>();
+	ArrayList<String> turnLog = new ArrayList<String>();
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
@@ -96,6 +97,7 @@ public class SpaceGen {
 	}
 	
 	public void tick() {
+		turnLog.clear();
 		year++;
 		yearAnnounced = false;
 		if (!hadCivs && !civs.isEmpty()) {
@@ -109,9 +111,11 @@ public class SpaceGen {
 		
 		planets: for (Planet planet : planets) {
 			if (p(2500)) {
-				String mName = "giant spaceborne " + pick(Names.COLORS).toLowerCase() + " " + pick(AgentType.MONSTER_TYPES);
+				String col = pick(Names.COLORS);
+				String mName = "giant spaceborne " + col.toLowerCase() + " " + pick(AgentType.MONSTER_TYPES);
 				l("A " + mName + " appears from the depths of space and menaces the skies of $name.", planet);
 				Agent m = new Agent(AgentType.SPACE_MONSTER, year, mName);
+				m.color = col;
 				m.p = planet;
 				agents.add(m);
 			}
@@ -499,6 +503,7 @@ public class SpaceGen {
 		}
 		//System.out.println(s);
 		log.add(s);
+		turnLog.add(s);
 	}
 	
 	final boolean coin() { return r.nextBoolean(); }
@@ -514,5 +519,10 @@ public class SpaceGen {
 		int sum = 0;
 		for (int roll = 0; roll < rolls; roll++) { sum += d(n); }
 		return sum;
+	}
+
+	void tickUntilSomethingHappens() {
+		turnLog.clear();
+		while (turnLog.isEmpty()) { tick(); }
 	}
 }
