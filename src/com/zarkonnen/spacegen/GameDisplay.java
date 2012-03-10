@@ -17,6 +17,13 @@ public class GameDisplay {
 	void draw(Graphics2D g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
+		g.translate(-w.stage.camX + width / 2, -w.stage.camY + height / 2);
+		w.stage.draw(g);
+	}
+	
+	void draw_old(Graphics2D g) {
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, width, height);
 
 		/*int x = 0;
 		for (Civ c : w.sg.civs) { for (SentientType st : c.fullMembers) {

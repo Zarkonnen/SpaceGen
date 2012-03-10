@@ -29,6 +29,8 @@ public class Planet {
 	int x;
 	int y;
 	
+	PlanetSprite sprite;
+	
 	public void dePop(Population pop, int time, Cataclysm cat, String reason, Plague plague) {
 		strata.add(new Remnant(pop, time, cat, reason, plague));
 		inhabitants.remove(pop);
@@ -117,6 +119,7 @@ public class Planet {
 			}
 			break;
 		}
+		sprite = new PlanetSprite(this);
 	}
 	
 	public boolean has(StructureType st) {

@@ -35,4 +35,22 @@ public class GameThread implements Runnable {
 			JOptionPane.showMessageDialog(null, e.getMessage());
 		}
 	}
+
+	void subRun() {
+		boolean done = false;
+		try {
+			while (!done) {
+				controls.processInput();
+				done = world.subTick();
+				Graphics2D g = (Graphics2D) bs.getDrawGraphics();
+				display.draw(g);
+				bs.show();
+
+				Thread.sleep(35);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, e.getMessage());
+		}
+	}
 }

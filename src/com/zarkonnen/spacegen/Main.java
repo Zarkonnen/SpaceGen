@@ -1,16 +1,35 @@
 package com.zarkonnen.spacegen;
 
 import java.awt.Canvas;
-import java.awt.Color;
 import java.awt.Cursor;
-import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Toolkit;
-import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
+import java.util.Collection;
 import javax.swing.JFrame;
 
 public class Main {
+	public static GameThread gt;
+	public static GameWorld w;
+	
+	public static void animate(Stage.Animation... as) {
+		w.stage.animate(as);
+		gt.subRun();
+	}
+	
+	public static void add(Stage.Animation a) {
+		w.stage.animate(a);
+	}
+	
+	public static void animate() {
+		gt.subRun();
+	}
+	
+	public static void animate(Collection<Stage.Animation> as) {
+		w.stage.animate(as);
+		gt.subRun();
+	}
+	
     public static void main(String[] args) {
 		int width = 1200;
 		int height = 800;
@@ -37,16 +56,15 @@ public class Main {
 		jf.setResizable(false);
 		jf.setVisible(true);
 		MediaProvider.createInstance(c.getGraphicsConfiguration());
-		GameWorld w = new GameWorld();
+		w = new GameWorld();
 		GameDisplay d = new GameDisplay(w, width, height);
 		c.createBufferStrategy(2);
-		BufferStrategy bs = c.getBufferStrategy();
 		Input input = new Input();
 		c.addKeyListener(input);
 		c.addMouseListener(input);
 		c.addMouseMotionListener(input);
 		c.requestFocus();
-		GameThread gt = new GameThread(w, input, d, new GameControls(d, w, input), c.getBufferStrategy());
+		gt = new GameThread(w, input, d, new GameControls(d, w, input), c.getBufferStrategy());
 		new Thread(gt, "Game Thread").start();
     }
 }

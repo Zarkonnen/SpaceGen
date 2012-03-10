@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public class SpaceGen {
 	Random r;
 	ArrayList<String> log = new ArrayList<String>();
@@ -67,6 +70,7 @@ public class SpaceGen {
 	}
 
 	public SpaceGen(long seed) {
+		animate(delay(10));
 		l("IN THE BEGINNING, ALL WAS DARK.");
 		l("THEN, PLANETS BEGAN TO FORM:");
 		r = new Random(seed);
@@ -75,7 +79,9 @@ public class SpaceGen {
 			Planet p = new Planet(r, this);
 			l(p.name);
 			planets.add(p);
+			add(add(p.sprite));
 		}
+		animate();
 	}
 	
 	public boolean checkCivDoom(Civ c) {
@@ -268,12 +274,12 @@ public class SpaceGen {
 				c.nextBreakthrough *= 2;
 			}
 			
-			int age = year - c.birthYear;
-			if (age > 5) { c.decrepitude++; }
-			if (age > 15) { c.decrepitude++; }
-			if (age > 25) { c.decrepitude++; }
-			if (age > 40) { c.decrepitude++; }
-			if (age > 60) { c.decrepitude++; }
+			int cAge = year - c.birthYear;
+			if (cAge > 5) { c.decrepitude++; }
+			if (cAge > 15) { c.decrepitude++; }
+			if (cAge > 25) { c.decrepitude++; }
+			if (cAge > 40) { c.decrepitude++; }
+			if (cAge > 60) { c.decrepitude++; }
 			
 			
 			if (p(3)) {
@@ -341,12 +347,13 @@ public class SpaceGen {
 				p.pollution--;
 			}
 			
-			if (p(200 + 5000 * p.specials.size())) {
+			if (p(300 + 5000 * p.specials.size())) {
 				PlanetSpecial ps = pick(PlanetSpecial.values());
 				if (!p.specials.contains(ps)) {
 					p.specials.add(ps);
 					ps.apply(p);
 					l(ps.announcement, p);
+					if (p.specials.size() == 1) { animate(tracking(p.sprite, change(p.sprite, Imager.get(p)))); }
 				}
 			}
 			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.pollution);
@@ -355,6 +362,7 @@ public class SpaceGen {
 				if (!p.habitable) {
 					p.habitable = true;
 					l("Life arises on $name", p);
+					animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));
 				} else {
 					if (!p.inhabitants.isEmpty()) {
 						if (p.owner == null) {

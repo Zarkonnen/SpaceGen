@@ -294,6 +294,19 @@ public class MediaProvider {
 		return dst;
 	}
 	
+	public BufferedImage mask(BufferedImage src, Color fillC) {
+		final int w = src.getWidth();
+		final int h = src.getHeight();
+		final BufferedImage dst = createImage(w, h, Transparency.BITMASK);
+		final WritableRaster ar = src.getAlphaRaster();
+		for (int y = 0; y < h; y++) { for (int x = 0; x < w; x++) {
+			if (ar.getSample(x, y, 0) > 0) {
+				dst.setRGB(x, y, fillC.getRGB());
+			}
+		}}
+		return dst;
+	}
+	
 	public BufferedImage tint(BufferedImage src, Color tint) {
 		final int w = src.getWidth();
 		final int h = src.getHeight();
