@@ -140,9 +140,9 @@ public enum AgentType {
 						if (sg.coin()) {
 							a.p.deLive(sg.year, null, "due to the self-destruction of the insane space probe " + ag.name);
 							sg.l("The resulting shockwave exterminates all life on " + a.p.name + ".");
-							sg.agents.remove(ag);
 							sg.agents.remove(a);
 						}
+						sg.agents.remove(ag);
 					} else {
 						sg.l(a.name + " successfully reasons with the insane space probe " + ag.name + ", which transfers its accumulated information into the fleet's data banks and then shuts down.");
 						a.originator.techLevel += 3;
@@ -156,7 +156,7 @@ public enum AgentType {
 						sg.l(a.name + " defeats the " + ag.name + " in orbit around " + a.p.name + ".");
 						sg.agents.remove(ag);
 						if (a.p.owner != null) {
-							sg.l("The " + a.p.owner + " rewards the adventurer handsomely.");
+							sg.l("The " + a.p.owner.name + " rewards the adventurer handsomely.");
 							a.resources += a.p.owner.resources / 3;
 							a.p.owner.resources = a.p.owner.resources * 2 / 3;
 						}

@@ -26,19 +26,43 @@ public class Science {
 				actor.weapLevel++;
 				break;
 			case 3:
-				for (Planet p : sg.planets) {
-					if (!p.habitable && p.owner == null) {
-						p.habitable = true;
-						p.inhabitants.add(new Population(actor.fullMembers.get(0), 1));
-						p.owner = actor;
-						actor.colonies.add(p);
-						sg.l("The $cname terraform and colonise $pname.", actor, p);
-						return false;
+				Planet srcP = actor.largestColony();
+				if (srcP.population() > 1) {
+					for (Planet p : actor.reachables(sg)) {
+						if (!p.habitable && p.owner == null) {
+							p.habitable = true;
+							//p.inhabitants.add(new Population(actor.fullMembers.get(0), 1));
+
+							Population srcPop = null;
+							for (Population pop : srcP.inhabitants) {
+								if (actor.fullMembers.contains(pop.type) && pop.size > 1) {
+									srcPop = pop;
+								}
+							}
+							if (srcPop == null) { srcPop = sg.pick(srcP.inhabitants); }
+							if (srcPop.size == 1) {
+								srcP.inhabitants.remove(srcPop);
+							}
+							boolean inserted = false;
+							for (Population pop : p.inhabitants) {
+								if (pop.type == srcPop.type) {
+									pop.size++;
+									inserted = true;
+									break;
+								}
+							}
+							if (!inserted) { p.inhabitants.add(new Population(srcPop.type, 1)); }
+
+							p.owner = actor;
+							actor.colonies.add(p);
+							sg.l("The $cname terraform and colonise $pname.", actor, p);
+							return false;
+						}
 					}
 				}
 				// INTENTIONAL FALLTHROUGH
 			case 4:
-				for (Planet p : sg.planets) {
+				for (Planet p : actor.reachables(sg)) {
 					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
 						SentientType st = SentientType.invent(sg, actor, p, null);
 						p.inhabitants.add(new Population(st, 3));

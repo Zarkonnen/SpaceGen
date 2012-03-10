@@ -29,10 +29,10 @@ public class Imager {
 	static final Color BORDER = new Color(20, 20, 20);
 	
 	public static BufferedImage get(SentientType st) {
-		return get(st, false);
+		return get(st, false, null);
 	}
 	
-	public static BufferedImage get(SentientType st, boolean eyepatch) {
+	public static BufferedImage get(SentientType st, boolean eyepatch, String specialColor) {		
 		if (st.base == SentientType.Base.PARASITES) {
 			return M.border(M.getImage("sentients/parasites"), BORDER);
 		}
@@ -80,17 +80,22 @@ public class Imager {
 			g.drawImage(M.getImage("sentients/giant_eyes"), 0, 0, null);
 		}
 		img = M.tint(img, new Color(255, 255, 255, 31));
-		if (st.color != null) {
-			img = M.tint(img, TINTS.get(st.color));
+		if (specialColor != null) {
+			img = M.tint(img, TINTS.get(specialColor));
+		} else {
+			if (st.color != null) {
+				img = M.tint(img, TINTS.get(st.color));
+			}
 		}
 		if (eyepatch) {
+			g = img.createGraphics();
 			g.drawImage(M.getImage("agents/eyepatch"), 0, 0, null);
 		}
 		
 		if (st.postfix == SentientType.Postfix.S_3 || st.postfix == SentientType.Postfix.S_5) {
 			BufferedImage img2 = M.createImage(32, 32, Transparency.BITMASK);
 			Graphics2D g2 = img2.createGraphics();
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+			g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
 			int symm = st.postfix == SentientType.Postfix.S_3 ? 3 : 5;
 			for (int j = 0; j < symm; j++) {
 				g2.translate(16, 16);
@@ -131,7 +136,7 @@ public class Imager {
 			case ADVENTURER:
 				return get(a.st);
 			case PIRATE:
-				return get(a.st, true);
+				return get(a.st, true, a.color);
 			case SPACE_MONSTER:
 				return M.border(M.tint(M.getImage("agents/" + a.type.name().toLowerCase()), TINTS.get(a.color)), BORDER);
 			default:

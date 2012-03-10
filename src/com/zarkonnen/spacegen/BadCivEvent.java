@@ -228,10 +228,12 @@ public enum BadCivEvent {
 	SPAWN_PIRATE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			SentientType st = sg.pick(actor.fullMembers);
-			String name = sg.pick(Names.COLORS) + st.base.pSuffix;
+			String color = sg.pick(Names.COLORS);
+			String name = color + st.base.pSuffix;
 			Planet p = sg.pick(actor.colonies);
 			rep.append("The pirate ").append(name).append(" establishes ").append(sg.coin() ? "himself" : "herself").append(" on ").append(p.name).append(".");
 			Agent ag = new Agent(AgentType.PIRATE, sg.year, name);
+			ag.color = color;
 			ag.fleet = 2 + sg.d(6);
 			ag.resources = sg.d(6);
 			ag.originator = actor;

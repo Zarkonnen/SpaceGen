@@ -76,9 +76,10 @@ public class Planet {
 	}
 	
 	public void deCiv(int time, Cataclysm cat, String reason) {
-		if (owner == null) { return; }
-		owner.colonies.remove(this);
-		owner = null;
+		if (owner != null) {
+			owner.colonies.remove(this);
+			owner = null;
+		}
 		for (Population p : new ArrayList<Population>(inhabitants)) {
 			dePop(p, time, cat, reason, null);
 		}
