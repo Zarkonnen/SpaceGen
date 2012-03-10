@@ -452,6 +452,7 @@ public enum CivAction {
 			actor.resources -= 8;
 			p.structures.add(new Structure(st, actor, sg.year));
 			rep.append("The ").append(actor.name).append(" build a ").append(st.getName()).append(" on ").append(p.name).append(".");
+			actor.decrepitude -= 3;
 			return;
 		}
 	}

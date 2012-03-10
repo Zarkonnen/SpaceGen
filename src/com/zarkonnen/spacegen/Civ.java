@@ -21,6 +21,7 @@ public class Civ {
 	String name;
 	int birthYear;
 	int nextBreakthrough = 6;
+	int decrepitude = 0;
 	
 	public ArrayList<Planet> reachables(SpaceGen sg) {
 		int range = 3 + techLevel * techLevel;
@@ -145,13 +146,16 @@ public class Civ {
 			sb.append("A young");
 		} else if (age < 16) {
 			sb.append("A well-established");
-		} else if (age < 30) {
-			sb.append("A declining");
-		} else if (age < 50) {
-			sb.append("A crumbling");
 		} else {
 			sb.append("An ancient");
 		}
+		
+		if (decrepitude >= 20) {
+			sb.append(", corrupt");
+		} else if (decrepitude >= 40) {
+			sb.append(", crumbling");
+		}
+		
 		if (resources < 2) {
 			sb.append(", dirt poor");
 		} else if (resources < 4) {

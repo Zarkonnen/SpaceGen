@@ -268,18 +268,25 @@ public class SpaceGen {
 				c.nextBreakthrough *= 2;
 			}
 			
+			int age = year - c.birthYear;
+			if (age > 5) { c.decrepitude++; }
+			if (age > 15) { c.decrepitude++; }
+			if (age > 25) { c.decrepitude++; }
+			if (age > 40) { c.decrepitude++; }
+			if (age > 60) { c.decrepitude++; }
+			
+			
 			if (p(3)) {
 				int evtTypeRoll = d(6);
 				boolean good;
 				boolean bad;
-				int civAge = year - c.birthYear;
-				if (civAge < 5) {
+				if (c.decrepitude < 5) {
 					good = evtTypeRoll <= 5;
 					bad = false;
-				} else if (civAge < 17) {
+				} else if (c.decrepitude < 17) {
 					good = evtTypeRoll >= 4;
 					bad = evtTypeRoll == 1;
-				} else if (civAge < 25) {
+				} else if (c.decrepitude < 25) {
 					good = evtTypeRoll == 6;
 					bad = evtTypeRoll < 3;
 				} else {
