@@ -227,14 +227,14 @@ public enum AgentType {
 					if (sg.coin()) { continue; }
 					switch (slf) {
 						case BRAIN_PARASITE:
-						case ULTRAVORE:
+						case ULTRAVORES:
 						case SHAPE_SHIFTER:
 							String monster = slf.name.toLowerCase();;
 							major = true;
 							rep.append("They encounter the local ").append(monster);
 							if (sg.p(3)) {
 								rep.append(" and exterminate them. ");
-								a.p.lifeforms.remove(slf);
+								a.p.removeLifeform(slf);
 							} else {
 								if (a.fleet < 1) {
 									rep.append(". In a desperate attempt to stop them, ").append(a.name).append(" activates the ship's self-destruct sequence.");
@@ -540,7 +540,7 @@ public enum AgentType {
 				sg.l("The population of " + a.p.name + " turn out to be all shape-shifters. The colony collapses as the shape-shifters need real sentients to keep up their mimicry.");
 				a.p.deCiv(sg.year, null, "when the entire population of the planet turned out to be shape-shifters");
 				if (!a.p.lifeforms.contains(SpecialLifeform.SHAPE_SHIFTER)) {
-					a.p.lifeforms.add(SpecialLifeform.SHAPE_SHIFTER);
+					a.p.addLifeform(SpecialLifeform.SHAPE_SHIFTER);
 				}
 				sg.agents.remove(a);
 			}

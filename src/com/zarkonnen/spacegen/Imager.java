@@ -144,6 +144,18 @@ public class Imager {
 		}
 	}
 	
+	static BufferedImage get(SpecialLifeform s) {
+		switch (s) {
+			case BRAIN_PARASITE:
+				return M.border(M.getImage("sentients/parasites"), BORDER);
+			case ULTRAVORES:
+			case SHAPE_SHIFTER:
+				return M.border(M.getImage("agents/" + s.name().toLowerCase()), BORDER);
+			default:
+				return M.border(M.getImage("lifeforms/" + s.name().toLowerCase()), BORDER);
+		}
+	}
+	
 	static BufferedImage get(Planet p) {
 		BufferedImage img = null;
 		if (p.specials.isEmpty()) {

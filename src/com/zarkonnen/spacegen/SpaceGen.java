@@ -402,7 +402,7 @@ public class SpaceGen {
 							// Some special creature.
 							SpecialLifeform slf = pick(SpecialLifeform.values());
 							if (!p.lifeforms.contains(slf)) {
-								p.lifeforms.add(slf);
+								p.addLifeform(slf);
 								l("$lname evolve on $pname.", slf, p);
 								confirm();
 							}

@@ -18,6 +18,7 @@ public class PlanetSprite extends Sprite {
 	
 	HashMap<Population, ArrayList<Sprite>> popSprites = new HashMap<Population, ArrayList<Sprite>>();
 	CivSprite ownerSprite = null;
+	HashMap<SpecialLifeform, Sprite> lifeformSprites = new HashMap<SpecialLifeform, Sprite>();
 	
 	public int popX(Population pop, int index) {
 		int total = p.population();
@@ -38,7 +39,7 @@ public class PlanetSprite extends Sprite {
 		for (Population pop : p.inhabitants) {
 			ArrayList<Sprite> sprites = popSprites.get(pop);
 			for (int i = 0; i < sprites.size(); i++) {
-				add(move(sprites.get(i), popX(pop, i), 128 / 2 - 32 / 2));
+				add(move(sprites.get(i), popX(pop, i), 0));
 			}
 		}
 		animate();

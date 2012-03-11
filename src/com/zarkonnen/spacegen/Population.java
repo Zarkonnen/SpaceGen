@@ -30,7 +30,7 @@ public class Population {
 		for (int i = 0; i < amt; i++) {
 			Sprite s = new Sprite();
 			s.img = Imager.get(type);
-			s.y = 128 / 2 - 32 / 2;
+			s.y = 0;
 			s.x = p.sprite.popX(this, size - amt + i);
 			sprites.add(s);
 			add(add(s, p.sprite));
@@ -85,7 +85,7 @@ public class Population {
 			target.sprite.rearrangePopulation();
 		}
 		animate(emancipate(mover));
-		animate(tracking(mover, move(mover, target.sprite.x + target.sprite.popX(targetPop, targetPop.size - 1), target.sprite.y + 128 / 2 - 32 / 2)));
+		animate(tracking(mover, move(mover, target.sprite.x + target.sprite.popX(targetPop, targetPop.size - 1), target.sprite.y)));
 		animate(subordinate(mover, target.sprite));
 		target.sprite.popSprites.get(targetPop).add(mover);
 		
@@ -109,7 +109,7 @@ public class Population {
 		for (int i = 0; i < getSize(); i++) {
 			Sprite s = new Sprite();
 			s.img = Imager.get(type);
-			s.y = 128 / 2 - 32 / 2;
+			s.y = 0;
 			s.x = p.sprite.popX(this, i);
 			sprites.add(s);
 			add(add(s, p.sprite));

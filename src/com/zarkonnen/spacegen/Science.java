@@ -46,6 +46,7 @@ public class Science {
 
 							p.setOwner(actor);
 							actor.colonies.add(p);
+							animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));
 							sg.l("The $cname terraform and colonise $pname.", actor, p);
 							confirm();
 							return false;

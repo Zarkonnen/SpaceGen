@@ -34,6 +34,34 @@ public class Planet {
 	
 	PlanetSprite sprite;
 	
+	public void addLifeform(SpecialLifeform slf) {
+		lifeforms.add(slf);
+		Sprite slfs = new Sprite(Imager.get(slf), (lifeforms.size() - 1) * 32, 32 * 3);
+		sprite.lifeformSprites.put(slf, slfs);
+		animate(tracking(sprite, delay()));
+		animate(add(slfs, sprite));
+	}
+	
+	public void removeLifeform(SpecialLifeform slf) {
+		int lfIndex = lifeforms.indexOf(slf);
+		Sprite slfs = sprite.lifeformSprites.get(slf);
+		animate(tracking(sprite, delay()));
+		animate(remove(slfs));
+		for (int i = lfIndex + 1; i < lifeforms.size(); i++) {
+			add(move(sprite.lifeformSprites.get(lifeforms.get(i)), i * 32, 32 * 3));
+		}
+		animate();
+		lifeforms.remove(slf);
+	}
+	
+	public void clearLifeforms() {
+		for (SpecialLifeform slf : lifeforms) {
+			add(remove(sprite.lifeformSprites.get(slf)));
+		}
+		animate();
+		lifeforms.clear();
+	}
+	
 	public Civ getOwner() {
 		return owner;
 	}
@@ -119,13 +147,14 @@ public class Planet {
 	}
 	
 	public void deLive(int time, Cataclysm cat, String reason) {
+		animate(tracking(sprite, delay()));
 		deCiv(time, cat, reason);
 		evoPoints = 0;
 		for (SpecialLifeform slf : lifeforms) {
 			strata.add(new Fossil(slf, time, cat));
 		}
 		plagues.clear();
-		lifeforms.clear();
+		clearLifeforms();
 		habitable = false;
 		animate(tracking(sprite, change(sprite, Imager.get(this))));
 	}

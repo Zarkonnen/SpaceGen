@@ -11,6 +11,15 @@ public class Sprite {
 	public Sprite parent;
 	boolean highlight;
 	boolean flash;
+
+	Sprite(BufferedImage img, int x, int y) {
+		this.img = img;
+		this.x = x;
+		this.y = y;
+	}
+
+	public Sprite() {
+	}
 	
 	public int globalX() {
 		if (parent == null) { return x; }

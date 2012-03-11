@@ -1,7 +1,7 @@
 package com.zarkonnen.spacegen;
 
 public enum SpecialLifeform {
-	ULTRAVORE(
+	ULTRAVORES(
 		"Ultravores",
 		"The ultimate apex predator, the Ultravore is capable of stalking and killing even the most intelligent and well-armed prey."),
 	PHARMACEUTICALS(

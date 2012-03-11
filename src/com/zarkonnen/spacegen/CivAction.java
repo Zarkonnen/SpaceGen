@@ -97,7 +97,7 @@ public enum CivAction {
 								sg.agents.add(ag);
 							}
 							return;
-						case ULTRAVORE:
+						case ULTRAVORES:
 							victimP = sg.pick(actor.colonies);
 							if (victimP.population() < 2 || sg.coin()) {
 								if (sg.p(10)) {
