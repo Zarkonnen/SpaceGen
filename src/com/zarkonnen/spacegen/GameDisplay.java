@@ -2,22 +2,36 @@ package com.zarkonnen.spacegen;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class GameDisplay {
 	final GameWorld w;
 	final int width;
 	final int height;
+	ArrayList<Point> stars = new ArrayList<Point>();
+	
+	BufferedImage star = MediaProvider.it.getImage("misc/star");
 
 	GameDisplay(GameWorld w, int width, int height) {
 		this.w = w;
 		this.width = width;
 		this.height = height;
+		Random r = new Random();
+		for (int i = 0; i < 1000; i++) {
+			stars.add(new Point(r.nextInt(2000) - 300, r.nextInt(2000) - 300));
+		}
 	}
 
 	void draw(Graphics2D g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
 		g.translate(-w.stage.camX + width / 2, -w.stage.camY + height / 2);
+		for (Point p : stars) {
+			g.drawImage(star, p.x, p.y, null);
+		}
 		w.stage.draw(g);
 		g.translate(w.stage.camX - width / 2, w.stage.camY - height / 2);
 		StringBuilder info = new StringBuilder();

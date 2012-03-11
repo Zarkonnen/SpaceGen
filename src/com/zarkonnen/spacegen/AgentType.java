@@ -2,6 +2,9 @@ package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public enum AgentType {
 	PIRATE() {
 		@Override
@@ -30,13 +33,13 @@ public enum AgentType {
 			}
 			if (a.p.getOwner() != null) {
 				int tribute = sg.d(8) + 1;
-				if (a.p.getOwner().resources >= tribute && !sg.p(4)) {
-					a.p.getOwner().resources -= tribute;
+				if (a.p.getOwner().getResources() >= tribute && !sg.p(4)) {
+					a.p.getOwner().setResources(a.p.getOwner().getResources() - tribute);
 					a.resources += tribute;
 					sg.l("The pirate " + a.name + " receives tribute from " + a.p.name + " of the " + a.p.getOwner().name + ".");
 				} else {
 					int attack = a.fleet * 4;
-					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.getOwner().techLevel + 2 * a.p.getOwner().weapLevel) : 0);
+					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.getOwner().getTechLevel() + 2 * a.p.getOwner().weapLevel) : 0);
 					if (a.p.has(SentientType.Base.URSOIDS.specialStructure)) {
 						defence += 4;
 					}
@@ -48,7 +51,7 @@ public enum AgentType {
 							for (Structure st : new ArrayList<Structure>(target.structures)) {
 								if (sg.p(3)) {
 									target.strata.add(new Ruin(st, sg.year, null, "through orbital bombardment by the pirate " + a.name));
-									target.structures.remove(st);
+									target.removeStructure(st);
 								}
 							}
 							sg.l("The pirate " + a.name + " subjects " + target.name + " to orbital bombardment. Its inhabitants hide in the dome deep in the planet's crust and escape harm.");
@@ -71,15 +74,15 @@ public enum AgentType {
 							for (Structure st : new ArrayList<Structure>(target.structures)) {
 								if (sg.coin()) {
 									target.strata.add(new Ruin(st, sg.year, null, "through orbital bombardment by the pirate " + a.name));
-									target.structures.remove(st);
+									target.removeStructure(st);
 								}
 							}
 							sg.l("The pirate " + a.name + " subjects " + target.name + " to orbital bombardment, killing " + deaths + " billion.");
 						}
 					} else {
 						sg.l("The $name defeats the pirate " + a.name + ".", a.p.getOwner());
-						a.p.getOwner().resources += a.resources / 2;
-						a.p.getOwner().military = a.p.getOwner().military * 5 / 6;
+						a.p.getOwner().setResources(a.p.getOwner().getResources() + a.resources / 2);
+						a.p.getOwner().setMilitary(a.p.getOwner().getMilitary() * 5 / 6);
 						sg.agents.remove(a);
 					}
 				}
@@ -145,7 +148,7 @@ public enum AgentType {
 						sg.agents.remove(ag);
 					} else {
 						sg.l(a.name + " successfully reasons with the insane space probe " + ag.name + ", which transfers its accumulated information into the fleet's data banks and then shuts down.");
-						a.originator.techLevel += 3;
+						a.originator.setTechLevel(a.originator.getTechLevel() + 3);
 						sg.agents.remove(ag);
 					}
 					return true;
@@ -157,8 +160,8 @@ public enum AgentType {
 						sg.agents.remove(ag);
 						if (a.p.getOwner() != null) {
 							sg.l("The " + a.p.getOwner().name + " rewards the adventurer handsomely.");
-							a.resources += a.p.getOwner().resources / 3;
-							a.p.getOwner().resources = a.p.getOwner().resources * 2 / 3;
+							a.resources += a.p.getOwner().getResources() / 3;
+							a.p.getOwner().setResources(a.p.getOwner().getResources() * 2 / 3);
 						}
 					} else {
 						int loss = sg.d(2) + 2;
@@ -209,7 +212,7 @@ public enum AgentType {
 				});
 				sg.l(a.name + act + a.p.name + ", a planet of the enemy " + a.p.getOwner().name + ".");
 				a.resources += 2;
-				a.p.getOwner().resources = a.p.getOwner().resources * 5 / 6;
+				a.p.getOwner().setResources(a.p.getOwner().getResources() * 5 / 6);
 				return;
 			}
 			
@@ -272,7 +275,7 @@ public enum AgentType {
 					if (sg.p(4 + stratNum * 2)) {
 						if (stratum instanceof Fossil) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
-							a.originator.science++;
+							a.originator.setScience(a.originator.getScience() + 1);
 						}
 						if (stratum instanceof Remnant) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
@@ -288,7 +291,7 @@ public enum AgentType {
 								}
 								
 								if (affects) {
-									homeP.plagues.add(new Plague(r.plague));
+									homeP.addPlague(new Plague(r.plague));
 									rep.append(" Unfortunately, members of the expedition catch the ").append(r.plague.name).append(" from their exploration of the ancient tombs, infecting ").append(homeP.name).append(" upon their return. ");
 									major = true;
 								}
@@ -307,9 +310,9 @@ public enum AgentType {
 								if (!sg.civs.contains(la.artefact.creator)) {
 									rep.append("They open a stasis capsule from the ").append(la.artefact.creator.name).append(", which arises once more!");
 									sg.civs.add(la.artefact.creator);
-									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
-									la.artefact.creator.resources = 10;
-									la.artefact.creator.military = 10;
+									la.artefact.creator.setTechLevel(la.artefact.creatorTechLevel);
+									la.artefact.creator.setResources(10);
+									la.artefact.creator.setMilitary(10);
 									if (p.getOwner() != null) {
 										p.getOwner().relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
 										la.artefact.creator.relations.put(p.getOwner(), Diplomacy.Outcome.WAR);
@@ -339,7 +342,7 @@ public enum AgentType {
 							if (la.artefact.type == ArtefactType.Device.MIND_ARCHIVE) {
 								rep.append("They encounter a mind archive of the ").append(la.artefact.creator.name).append(" which brings new knowledge and wisdom to the ").append(a.originator.name).append(". ");
 								major = true;
-								a.originator.techLevel = Math.max(a.originator.techLevel, la.artefact.creatorTechLevel);
+								a.originator.setTechLevel(Math.max(a.originator.getTechLevel(), la.artefact.creatorTechLevel));
 								continue;
 							}
 							if (la.artefact.type == ArtefactType.WRECK) {
@@ -354,7 +357,7 @@ public enum AgentType {
 							major = true;
 							p.strata.remove(stratum);
 							a.resources++;
-							sg.pick(a.originator.colonies).artefacts.add(la.artefact);
+							sg.pick(a.originator.colonies).addArtefact(la.artefact);
 							stratNum--;
 						}
 					}
@@ -401,7 +404,7 @@ public enum AgentType {
 						sg.l(a.name + " defeats the pirate " + pir.name + " - the skies of " + a.p.name + " are safe again.");
 						sg.agents.remove(pir);
 						a.resources += pir.resources / 2;
-						a.originator.resources += pir.resources / 2;
+						a.originator.setResources(a.originator.getResources() + pir.resources / 2);
 					} else {
 						if (a.fleet < 2) {
 							sg.l(a.name + " is defeated utterly by the pirate.");
@@ -494,8 +497,9 @@ public enum AgentType {
 							if (sg.coin()) {
 								Planet lc = a.originator.largestColony();
 								sg.l(a.name + " successfully acquires the " + art.type.getName() + " and delivers it to " + lc.name + ".");
-								p.artefacts.remove(art);
-								lc.artefacts.add(art);
+								/*p.artefacts.remove(art);
+								lc.artefacts.add(art);*/
+								p.moveArtefact(art, lc);
 							} else {
 								if (sg.p(3)) {
 									sg.l("The " + enemy.name + " capture and execute " + a.name + " for trying to steal the " + art.type.getName() + ".");
@@ -628,7 +632,7 @@ public enum AgentType {
 					sg.l("The space probe " + a.name + " returns to " + a.p.name + ".");
 					if (a.p.getOwner() == a.originator) {
 						sg.l("The " + a.originator.name + " gains a wealth of new knowledge as a result.");
-						a.originator.techLevel += 3;
+						a.originator.setTechLevel(a.originator.getTechLevel() + 3);
 						sg.agents.remove(a);
 						return;
 					} else {
@@ -720,8 +724,9 @@ public enum AgentType {
 							return;
 					}
 					if (art != null) {
-						a.p.artefacts.add(art);
+						a.p.addArtefact(art);
 						sg.agents.remove(ag);
+						confirm();
 						return;
 					}
 				}
@@ -739,14 +744,15 @@ public enum AgentType {
 						case REPUBLIC: title = "President"; break;
 						case THEOCRACY: title = "Autarch"; break;
 					}
-					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.getOwner().name + ", in a block of time ice.");
-					a.p.artefacts.add(new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
+					a.p.addArtefact(new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
 									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.getOwner().name));
+					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.getOwner().name + ", in a block of time ice.");
+					confirm();
 					return;
 				}
 				if (sg.p(60)) {
 					sg.l("The rogue AI " + a.name + " crashes the " + a.p.name + " stock exchange.");
-					a.p.getOwner().resources /= 2;
+					a.p.getOwner().setResources(a.p.getOwner().getResources() / 2);
 					return;
 				}
 				if (sg.p(30)) {
@@ -754,15 +760,18 @@ public enum AgentType {
 					if (dt == ArtefactType.Device.STASIS_CAPSULE) { return; }
 					if (dt == ArtefactType.Device.MIND_ARCHIVE) { return; }
 					Artefact dev = new Artefact(sg.year, "the rogue AI " + a.name, dt, dt.create(null, sg));
+					a.p.addArtefact(dev);
 					sg.l("The rogue AI " + a.name + " presents the inhabitants of " + a.p.name + " with a gift: a " + dev.type.getName() + ".");
-					a.p.artefacts.add(dev);
+					confirm();
 					return;
 				}
 				if (sg.p(20) && !a.p.artefacts.isEmpty()) {
 					Artefact art = sg.pick(a.p.artefacts);
 					Planet t = sg.pick(sg.planets);
 					sg.l("The rogue AI " + a.name + " steals the " + art.desc + " on " + a.p.name + " and hides it on " + t.name + ".");
-					a.p.artefacts.remove(art);
+					//a.p.artefacts.remove(art);
+					// qqDPS
+					a.p.removeArtefact(art);
 					t.strata.add(new LostArtefact("hidden", sg.year, art));
 					return;
 				}
@@ -776,8 +785,9 @@ public enum AgentType {
 							pl.affects.add(a.p.inhabitants.get(i).type);
 						}
 					}
+					a.p.addPlague(pl);
 					sg.l("The rogue AI " + a.name + " infects the inhabitants of " + a.p.name + " with " + pl.desc() + ".");
-					a.p.plagues.add(pl);
+					confirm();
 					return;
 				}
 				if (a.p.population() > 2 && sg.p(25)) {

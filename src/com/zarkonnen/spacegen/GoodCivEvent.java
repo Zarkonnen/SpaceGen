@@ -7,15 +7,15 @@ public enum GoodCivEvent {
 	GOLDEN_AGE_OF_SCIENCE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" enters a golden age of science! ");
-			actor.resources += 5;
+			actor.setResources(actor.getResources() + 5);
 			CivAction.BUILD_SCIENCE_OUTPOST.i(actor, sg, rep);
-			actor.science += 10;
+			actor.setScience(actor.getScience() + 10);
 		}
 	},
 	GOLDEN_AGE_OF_INDUSTRY() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" enters a golden age of industry! ");
-			actor.resources += 10;
+			actor.setResources(actor.getResources() + 10);
 			CivAction.BUILD_MINING_BASE.i(actor, sg, rep);
 			rep.append(" ");
 			CivAction.BUILD_MINING_BASE.i(actor, sg, rep);
@@ -27,7 +27,7 @@ public enum GoodCivEvent {
 			ArtefactType.Art art = sg.pick(ArtefactType.Art.values());
 			String artDesc = art.create(actor, sg);
 			rep.append("Artists on ").append(col.name).append(" create a ").append(artDesc).append(". ");
-			col.artefacts.add(new Artefact(sg.year, actor, art, artDesc));
+			col.addArtefact(new Artefact(sg.year, actor, art, artDesc));
 		}
 	},
 	POPULATION_BOOM() {
@@ -49,8 +49,7 @@ public enum GoodCivEvent {
 					actor.fullMembers.add(p.type);
 				}
 			}}
-			actor.setGovt(Government.REPUBLIC);
-			actor.updateName(sg.historicalCivNames);
+			actor.setGovt(Government.REPUBLIC, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
 		}

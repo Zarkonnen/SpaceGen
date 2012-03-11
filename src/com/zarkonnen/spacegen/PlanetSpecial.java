@@ -5,7 +5,7 @@ public enum PlanetSpecial {
 			"$name has become a poison world.",
 			"Poison World: Mineral deposits produce a steady stream of toxins that makes survival extremely difficult."
 	) {
-		@Override void apply(Planet p) { p.pollution += 4; }
+		@Override void apply(Planet p) { p.setPollution(p.getPollution() + 4); }
 	},
 	GEM_WORLD(
 			"Deposits of huge gems form on $name.",

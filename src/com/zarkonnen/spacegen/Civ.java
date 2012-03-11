@@ -18,18 +18,85 @@ public class Civ {
 	
 	ArrayList<CivSprite> sprites = new ArrayList<CivSprite>();
 	
-	int resources = 0;
-	int science = 0;
-	int military = 0;
+	private int resources = 0;
+	private int science = 0;
+	private int military = 0;
 	int weapLevel = 0;
-	int techLevel = 1;
+	private int techLevel = 0;
 	String name;
 	int birthYear;
 	int nextBreakthrough = 6;
 	int decrepitude = 0;
 	
+	public int getResources() {
+		return resources;
+	}
+
+	public final void setResources(int resources) {
+		int oldRes = this.resources;
+		this.resources = resources;
+		for (CivSprite cs : sprites) {
+			cs.changeRes(oldRes, resources);
+		}
+		animate();
+	}
+	
+	public int getScience() {
+		return science;
+	}
+
+	public void setScience(int science) {
+		this.science = science;
+		for (CivSprite cs : sprites) {
+			cs.changeScience(science);
+		}
+		animate();
+	}
+
+	public int getMilitary() {
+		return military;
+	}
+
+	public void setMilitary(int military) {
+		int oldMil = this.military;
+		this.military = military;
+		for (CivSprite cs : sprites) {
+			cs.changeFleet(oldMil, military);
+		}
+		animate();
+	}
+
+	public int getTechLevel() {
+		return techLevel;
+	}
+
+	public final void setTechLevel(int techLevel) {
+		this.techLevel = techLevel;
+		for (CivSprite cs : sprites) {
+			cs.changeTech(techLevel);
+		}
+		animate();
+	}
+	
+	public Planet closestColony(Planet p) {
+		Planet c = null;
+		int closestDist = 0;
+		for (Planet col : fullColonies()) {
+			int dist = (p.x - col.x) * (p.x - col.x) + (p.y - col.y) * (p.y - col.y);
+			if (dist < closestDist || c == null) {
+				c = col;
+				closestDist = dist;
+			}
+		}
+		if (c == null) {
+			return colonies.get(0);
+		} else {
+			return c;
+		}
+	}
+	
 	public ArrayList<Planet> reachables(SpaceGen sg) {
-		int range = 3 + techLevel * techLevel;
+		int range = 3 + getTechLevel() * getTechLevel();
 		if (has(ArtefactType.Device.TELEPORT_GATE)) { range = 10000; }
 		ArrayList<Planet> ir = new ArrayList<Planet>();
 		for (Planet p : sg.planets) {
@@ -77,10 +144,11 @@ public class Civ {
 			this.fullMembers.add(st);
 		}
 		this.colonies.add(home);
-		this.resources = resources;
+		setResources(resources);
 		this.birthYear = year;
 		updateName(historicals);
 		home.setOwner(this);
+		setTechLevel(1);
 	}
 	
 	public int population() {
@@ -161,23 +229,23 @@ public class Civ {
 			sb.append(", crumbling");
 		}
 		
-		if (resources < 2) {
+		if (getResources() < 2) {
 			sb.append(", dirt poor");
-		} else if (resources < 4) {
+		} else if (getResources() < 4) {
 			sb.append(", impoverished");
-		} else if (resources < 16) {
+		} else if (getResources() < 16) {
 			
-		} else if (resources < 25) {
+		} else if (getResources() < 25) {
 			sb.append(", wealthy");
 		} else {
 			sb.append(", fantastically wealthy");
 		}
 		
-		if (techLevel < 2) {
+		if (getTechLevel() < 2) {
 			sb.append(", primitive");
-		} else if (techLevel < 4) {
+		} else if (getTechLevel() < 4) {
 			
-		} else if (techLevel < 7) {
+		} else if (getTechLevel() < 7) {
 			sb.append(", advanced");
 		} else {
 			sb.append(", highly advanced");
@@ -237,8 +305,9 @@ public class Civ {
 		return govt;
 	}
 
-	public void setGovt(Government govt) {
+	void setGovt(Government govt, ArrayList<String> historicalNames) {
 		this.govt = govt;
+		updateName(historicalNames);
 		animate(tracking(largestColony().sprite, delay()));
 		for (CivSprite s : sprites) { add(change(s, Imager.get(this))); }
 		animate();

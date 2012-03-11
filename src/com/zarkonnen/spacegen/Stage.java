@@ -169,7 +169,7 @@ public class Stage {
 				sy = s.y;
 				if (time == 0) {
 					time = (int)
-							(Math.sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty)) / 120) + 2;
+							(Math.sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty)) / 60) + 2;
 				}
 			}
 			s.highlight = true;

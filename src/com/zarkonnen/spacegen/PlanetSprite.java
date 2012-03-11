@@ -12,17 +12,20 @@ public class PlanetSprite extends Sprite {
 	public PlanetSprite(Planet p) {
 		this.p = p;
 		img = Imager.get(p);
-		x = p.x * 200;
-		y = p.y * 200;
+		x = p.x * 240;
+		y = p.y * 240;
 	}
 	
 	HashMap<Population, ArrayList<Sprite>> popSprites = new HashMap<Population, ArrayList<Sprite>>();
 	CivSprite ownerSprite = null;
 	HashMap<SpecialLifeform, Sprite> lifeformSprites = new HashMap<SpecialLifeform, Sprite>();
+	HashMap<Structure, Sprite> structureSprites = new HashMap<Structure, Sprite>();
+	HashMap<Artefact, Sprite> artefactSprites = new HashMap<Artefact, Sprite>();
+	HashMap<Plague, Sprite> plagueSprites = new HashMap<Plague, Sprite>();
 	
 	public int popX(Population pop, int index) {
 		int total = p.population();
-		int step = Math.min(32, 128 / total);
+		int step = Math.min(36, 160 / total);
 		int d = 0;
 		for (Population pop2 : p.inhabitants) {
 			if (pop2 == pop) {

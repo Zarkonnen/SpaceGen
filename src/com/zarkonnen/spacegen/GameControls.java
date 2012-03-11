@@ -22,5 +22,9 @@ public class GameControls {
 			w.confirm = true;
 			w.cooldown = 2;
 		}
+		if (input.keyDown(VK_R) && w.cooldown == 0) {
+			w.autorun = !w.autorun;
+			w.cooldown = 2;
+		}
 	}
 }

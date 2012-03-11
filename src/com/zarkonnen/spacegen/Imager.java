@@ -20,7 +20,7 @@ public class Imager {
 		TINTS.put("Orange", new Color(255, 127, 0, 160));
 		TINTS.put("Yellow", new Color(255, 255, 0, 160));
 		TINTS.put("Black", new Color(0, 0, 0, 160));
-		TINTS.put("White", new Color(255, 255, 255, 160));
+		TINTS.put("White", new Color(255, 255, 255, 220));
 		TINTS.put("Purple", new Color(200, 0, 255, 160));
 		TINTS.put("Grey", new Color(127, 127, 127, 160));
 		TINTS_L.addAll(TINTS.values());
@@ -128,7 +128,21 @@ public class Imager {
 	}
 	
 	static BufferedImage get(Structure s) {
-		return M.getImage("structures/structure");
+		if (s.type instanceof StructureType.Standard) {
+			return M.border(M.getImage("structures/" + ((StructureType.Standard) s.type).name().toLowerCase()), BORDER);
+		}
+		for (SentientType.Prefix p : SentientType.Prefix.values()) {
+			if (s.type == p.specialStruct) {
+				return M.border(M.getImage("structures/" + p.name().toLowerCase()), BORDER);
+			}
+		}
+		for (SentientType.Base b : SentientType.Base.values()) {
+			if (s.type == b.specialStructure) {
+				return M.border(M.getImage("structures/" + b.name().toLowerCase()), BORDER);
+			}
+		}
+		
+		return M.border(M.getImage("structures/building"), BORDER);
 	}
 	
 	static BufferedImage get(Agent a) {
@@ -142,6 +156,10 @@ public class Imager {
 			default:
 				return M.border(M.getImage("agents/" + a.type.name().toLowerCase()), BORDER);
 		}
+	}
+	
+	static BufferedImage get(Plague p) {
+		return M.border(M.tint(M.getImage("misc/plague"), TINTS.get(p.color)), BORDER);
 	}
 	
 	static BufferedImage get(SpecialLifeform s) {
@@ -164,15 +182,25 @@ public class Imager {
 			img = M.getImage("planets/" + p.specials.get(0).name().toLowerCase());
 		}
 		
+		BufferedImage img2 = img;
 		if (p.habitable) {
-			img = M.tint(img, new Color(0, 255, 0, 32));
+			img2 = M.tint(img, new Color(0, 255, 0, 32));
+		}
+		if (p.getPollution() > 0) {
+			BufferedImage pollImg = M.tint(img, new Color(111, 88, 63, 220));
+			Graphics2D g = img2.createGraphics();
+			int amt = Math.min(32, p.getPollution() * 3);
+			g.drawImage(pollImg, 0, amt, 32, 32, 0, amt, 32, 32, null);
 		}
 		
-		return scale(img, 128);
+		return scale(img2, 160);
 	}
+	
+	static BufferedImage EXPEDITION = M.border(M.getImage("misc/ship_large"), BORDER);
 	
 	static BufferedImage get(Civ civ) {
 		BufferedImage crest = M.createImage(32, 32, Transparency.BITMASK);
+		if (civ.fullMembers.isEmpty()) { return crest; }
 		Graphics2D g = crest.createGraphics();
 		int sliceSz = 32 / civ.fullMembers.size();
 		boolean monochrome = true;

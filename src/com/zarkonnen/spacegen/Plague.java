@@ -8,10 +8,12 @@ public class Plague {
 	int mutationRate;
 	int transmissivity;
 	int curability;
+	String color;
 	ArrayList<SentientType> affects = new ArrayList<SentientType>();
 
 	public Plague(SpaceGen sg) {
-		name = sg.pick(Names.COLORS) + " " + sg.pick(new String[] { "Rot", "Death", "Plague", "Fever", "Wasting", "Pox"});
+		color = sg.pick(Names.COLORS);
+		name =  color + " " + sg.pick(new String[] { "Rot", "Death", "Plague", "Fever", "Wasting", "Pox"});
 		lethality = sg.d(9);
 		mutationRate = sg.d(3);
 		transmissivity = sg.d(3);
@@ -24,6 +26,7 @@ public class Plague {
 		this.mutationRate = plague.mutationRate;
 		this.transmissivity = plague.transmissivity;
 		this.curability = plague.curability;
+		this.color = color;
 		affects.addAll(plague.affects);
 	}
 	

@@ -9,7 +9,6 @@ public interface StructureType {
 		VAULT("vast underground vault"),
 		PALACE("grand palace"),
 		MUSEUM("vast museum"),
-		SPACE_HABITAT("space habitat"),
 		ARCOLOGY("complex of arcologies"),
 		ORBITAL_ELEVATOR("orbital elevator"),
 		SKULL_PILE("skull pile");
@@ -24,7 +23,7 @@ public interface StructureType {
 		}
 
 		static StructureType[] COLONY_ONLY = {
-			CITY, VAULT, PALACE, MUSEUM, SPACE_HABITAT, ARCOLOGY, ORBITAL_ELEVATOR
+			CITY, VAULT, PALACE, MUSEUM, ARCOLOGY, ORBITAL_ELEVATOR
 		};
 	}
 	

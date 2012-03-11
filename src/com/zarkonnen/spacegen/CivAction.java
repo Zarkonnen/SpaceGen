@@ -10,8 +10,23 @@ public enum CivAction {
 	EXPLORE_PLANET() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
+			Sprite expedition = null;
 			// Pick a planet to explore.
 			Planet p = sg.pick(actor.reachables(sg));
+			Planet srcP = actor.closestColony(p);
+			if (p.getOwner() == actor) {
+				animate(track(p.sprite));
+			} else {
+				animate(track(srcP.sprite));
+				expedition = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
+				animate(add(expedition));
+				animate(tracking(expedition, move(expedition, p.sprite.x - 48, p.sprite.y + 160 / 2 - 32 / 2)));
+				animate(track(p.sprite));
+			}
+			expedite(actor, sg, rep, p, srcP);
+			if (expedition != null) { animate(remove(expedition)); }
+		}
+		public void expedite(Civ actor, SpaceGen sg, StringBuilder rep, Planet p, Planet srcP) {
 			if (p.getOwner() != null && p.getOwner() != actor) {
 				Civ other = p.getOwner();
 				// They meet a civ.
@@ -24,13 +39,12 @@ public enum CivAction {
 				if (outcome == Diplomacy.Outcome.UNION) {
 					sg.civs.remove(other);
 					Government newGovt = sg.pick(new Government[] { actor.getGovt(), other.getGovt()});
-					actor.setGovt(newGovt);
 					actor.colonies.addAll(other.colonies);
 					for (Planet c : other.colonies) {
 						c.setOwner(actor);
 					}
-					actor.resources += other.resources;
-					actor.science += other.science;
+					actor.setResources(actor.getResources() + other.getResources());
+					actor.setScience(actor.getScience() + other.getScience());
 					for (SentientType st : other.fullMembers) {
 						if (!actor.fullMembers.contains(st)) {
 							actor.fullMembers.add(st);
@@ -50,7 +64,7 @@ public enum CivAction {
 						}
 					}
 					actor.relations = newRels;
-					actor.updateName(sg.historicalCivNames);
+					actor.setGovt(newGovt, sg.historicalCivNames);
 					rep.append("The two civilizations combine into the ").append(actor.name).append(". ");
 					return;
 				} else {
@@ -72,7 +86,7 @@ public enum CivAction {
 						case BRAIN_PARASITE:
 							if (!sg.p(3)) { break; }
 							victimP = sg.pick(actor.colonies);
-							int stolenResources = actor.resources / actor.colonies.size();
+							int stolenResources = actor.getResources() / actor.colonies.size();
 							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
 							victimP.setOwner(newCiv);
@@ -84,7 +98,7 @@ public enum CivAction {
 							return;
 						case PHARMACEUTICALS:
 							rep.append("The expedition encounters plants with useful pharmaceutical properties. ");
-							actor.science += 4;
+							actor.setScience(actor.getScience() + 4);
 							major = true;
 							break;
 						case SHAPE_SHIFTER:
@@ -102,7 +116,7 @@ public enum CivAction {
 							if (victimP.population() < 2 || sg.coin()) {
 								if (sg.p(10)) {
 									rep.append("The expedition captures an ultravore. The science of the ").append(actor.name).append(" fashions it into a living weapon of war. ");
-									actor.largestColony().artefacts.add(new Artefact(sg.year, actor, ArtefactType.Device.LIVING_WEAPON, ArtefactType.Device.LIVING_WEAPON.create(actor, sg)));
+									actor.largestColony().addArtefact(new Artefact(sg.year, actor, ArtefactType.Device.LIVING_WEAPON, ArtefactType.Device.LIVING_WEAPON.create(actor, sg)));
 									major = true;
 								}
 							} else {
@@ -169,12 +183,12 @@ public enum CivAction {
 					if (sg.p(4 + stratNum * 2)) {
 						if (stratum instanceof Fossil) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
-							actor.science++;
+							actor.setScience(actor.getScience() + 1);
 						}
 						if (stratum instanceof Remnant) {
 							rep.append("They discover: ").append(stratum.toString()).append(" ");
-							actor.resources++;
-							actor.science++;
+							actor.setResources(actor.getResources() + 1);
+							actor.setScience(actor.getScience() + 1);
 							Remnant r = (Remnant) stratum;
 							Planet homeP = actor.largestColony();
 							if (r.plague != null && sg.d(6) < r.plague.transmissivity) {
@@ -186,7 +200,7 @@ public enum CivAction {
 								}
 								
 								if (affects) {
-									homeP.plagues.add(new Plague(r.plague));
+									homeP.addPlague(new Plague(r.plague));
 									rep.append(" Unfortunately, they catch the ").append(r.plague.name).append(" from their exploration of the ancient tombs, infecting ").append(homeP.name).append(" upon their return.");
 									major = true;
 								}
@@ -198,18 +212,18 @@ public enum CivAction {
 							if (ruin.structure.type instanceof StructureType.Standard) {
 								switch ((StructureType.Standard) ruin.structure.type) {
 									case MILITARY_BASE:
-										actor.military++;
-										actor.science++;
-										actor.resources++;
+										actor.setMilitary(actor.getMilitary() + 1);
+										actor.setScience(actor.getScience() + 1);
+										actor.setResources(actor.getResources() + 1);
 										break;
 									case SCIENCE_LAB:
-										actor.science += 3;
+										actor.setScience(actor.getScience() + 3);
 										break;
 									case MINING_BASE:
-										actor.resources += 5;
+										actor.setResources(actor.getResources() + 5);
 										break;
 									default:
-										actor.resources += 2;
+										actor.setResources(actor.getResources() + 2);
 										break;
 								}
 							}
@@ -218,7 +232,7 @@ public enum CivAction {
 							LostArtefact la = (LostArtefact) stratum;
 							if (la.artefact.type == ArtefactType.PIRATE_TOMB || la.artefact.type == ArtefactType.PIRATE_HOARD || la.artefact.type == ArtefactType.ADVENTURER_TOMB) {
 								rep.append("They loot the ").append(la.artefact.desc).append(". ");
-								actor.resources += la.artefact.specialValue;
+								actor.setResources(actor.getResources() + la.artefact.specialValue);
 								p.strata.remove(stratum);
 								stratNum--;
 								return;
@@ -227,9 +241,9 @@ public enum CivAction {
 								if (!sg.civs.contains(la.artefact.creator)) {
 									rep.append("They open a stasis capsule from the ").append(la.artefact.creator.name).append(", which arises once more!");
 									sg.civs.add(la.artefact.creator);
-									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
-									la.artefact.creator.resources = 10;
-									la.artefact.creator.military = 10;
+									la.artefact.creator.setTechLevel(la.artefact.creatorTechLevel);
+									la.artefact.creator.setResources(10);
+									la.artefact.creator.setMilitary(10);
 									if (p.getOwner() != null) {
 										p.getOwner().relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
 										la.artefact.creator.relations.put(p.getOwner(), Diplomacy.Outcome.WAR);
@@ -259,13 +273,13 @@ public enum CivAction {
 							if (la.artefact.type == ArtefactType.Device.MIND_ARCHIVE) {
 								rep.append("They encounter a mind archive of the ").append(la.artefact.creator.name).append(" which brings them new knowledge and wisdom. ");
 								major = true;
-								actor.techLevel = Math.max(actor.techLevel, la.artefact.creatorTechLevel);
+								actor.setTechLevel(Math.max(actor.getTechLevel(), la.artefact.creatorTechLevel));
 								continue;
 							}
 							if (la.artefact.type == ArtefactType.WRECK) {
 								rep.append("They recover: ").append(stratum).append(" ");
 								p.strata.remove(stratum);
-								actor.resources += 3;
+								actor.setResources(actor.getResources() + 3);
 								stratNum--;
 								continue;
 							}
@@ -273,7 +287,8 @@ public enum CivAction {
 							rep.append("They recover: ").append(stratum).append(" ");
 							major = true;
 							p.strata.remove(stratum);
-							sg.pick(actor.colonies).artefacts.add(la.artefact);
+							// qqdPS
+							sg.pick(actor.colonies).addArtefact(la.artefact);
 							stratNum--;
 						}
 					}
@@ -290,7 +305,7 @@ public enum CivAction {
 	COLONISE_PLANET() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.resources < 6) { return; }
+			if (actor.getResources() < 6) { return; }
 			if (actor.population() < 2) { return; }
 			Planet srcP = actor.largestColony();
 			if (srcP.population() <= 1) { return; }
@@ -342,7 +357,7 @@ public enum CivAction {
 					actor.updateName(sg.historicalCivNames);
 					rep.append(" They now call themselves the ").append(actor.name).append(".");
 				}
-				actor.resources -= 6;
+				actor.setResources(actor.getResources() - 6);
 				p.setOwner(actor);
 				actor.colonies.add(p);
 				Population srcPop = null;
@@ -378,19 +393,19 @@ public enum CivAction {
 	DO_RESEARCH() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.resources == 0) { return; }
-			int res = Math.min(actor.resources, sg.d(6));
-			actor.resources -= res;
-			actor.science += res;
+			if (actor.getResources() == 0) { return; }
+			int res = Math.min(actor.getResources(), sg.d(6));
+			actor.setResources(actor.getResources() - res);
+			actor.setScience(actor.getScience() + res);
 		}
 	},
 	BUILD_WARSHIPS() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.resources < 3) { return; }
-			int res = Math.min(actor.resources, sg.d(6) + 2);
-			actor.resources -= res;
-			actor.military += res;
+			if (actor.getResources() < 3) { return; }
+			int res = Math.min(actor.getResources(), sg.d(6) + 2);
+			actor.setResources(actor.getResources() - res);
+			actor.setMilitary(actor.getMilitary() + res);
 			//rep.append("The ").append(actor.name).append(" constructs a fleet of ").append(res).append(" warships.");
 		}
 	},
@@ -405,30 +420,39 @@ public enum CivAction {
 	public void invoke(Civ actor, SpaceGen sg) {
 		StringBuilder rep = new StringBuilder();
 		i(actor, sg, rep);
-		if (rep.length() > 0) { sg.l(rep.toString()); confirm();}
+		if (rep.length() > 0) { sg.l(rep.toString()); confirm(); }
 	}
 	
 	void buildOutpost(StructureType st, Civ actor, SpaceGen sg, StringBuilder rep) {
-		if (actor.resources < 5) { return; }
+		if (actor.getResources() < 5) { return; }
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.
 			Planet p = sg.pick(actor.reachables(sg));
 			if ((p.getOwner() != null || !p.inhabitants.isEmpty()) && p.getOwner() != actor) { continue; }
-			
 			if (p.has(st)) { continue; }
+			
+			Planet srcP = actor.closestColony(p);
+			animate(track(srcP.sprite));
+			if (srcP != p) {
+				Sprite expedition = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
+				animate(add(expedition));
+				animate(tracking(expedition, move(expedition, p.sprite.x - 48, p.sprite.y + 160 / 2 - 32 / 2)));
+				animate(track(p.sprite), remove(expedition));
+			}
+			
 			if (p.getOwner() != actor) {
 				p.setOwner(actor);
 				actor.colonies.add(p);
 			}
-			actor.resources -= 5;
-			p.structures.add(new Structure(st, actor, sg.year));
+			actor.setResources(actor.getResources() - 5);
+			p.addStructure(new Structure(st, actor, sg.year));
 			//rep.append("The ").append(actor.name).append(" build a ").append(st.name).append(" on ").append(p.name).append(".");
 			return;
 		}
 	}
 	
 	void buildColonyStructure(StructureType st, Civ actor, SpaceGen sg, StringBuilder rep) {
-		if (actor.resources < 8) { return; }
+		if (actor.getResources() < 8) { return; }
 		if (sg.p(3)) {
 			st = sg.pick(sg.pick(actor.fullMembers).specialStructures);
 		}
@@ -437,12 +461,15 @@ public enum CivAction {
 			Planet p = sg.pick(actor.colonies);
 			if (p.isOutpost()) { continue; }
 			if (p.has(st)) { continue; }
+			
+			animate(track(p.sprite));
+			
 			if (p.getOwner() != actor) {
 				p.setOwner(actor);
 				actor.colonies.add(p);
 			}
-			actor.resources -= 8;
-			p.structures.add(new Structure(st, actor, sg.year));
+			actor.setResources(actor.getResources() - 8);
+			p.addStructure(new Structure(st, actor, sg.year));
 			rep.append("The ").append(actor.name).append(" build a ").append(st.getName()).append(" on ").append(p.name).append(".");
 			actor.decrepitude -= 3;
 			return;

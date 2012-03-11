@@ -78,13 +78,16 @@ public class SpaceGen {
 		l("IN THE BEGINNING, ALL WAS DARK.");
 		l("THEN, PLANETS BEGAN TO FORM:");
 		int np = 6 + d(4, 6);
+		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < np; i++) {
 			Planet p = new Planet(r, this);
-			l(p.name);
+			sb.append(p.name).append(i == np - 1 ? "" : ", ");
 			planets.add(p);
 			add(add(p.sprite));
 		}
 		animate();
+		l(sb.toString());
+		confirm();
 	}
 	
 	public boolean checkCivDoom(Civ c) {
@@ -113,10 +116,12 @@ public class SpaceGen {
 		yearAnnounced = false;
 		if (!hadCivs && !civs.isEmpty()) {
 			l("WE ENTER THE " + Names.nth(age).toUpperCase() + " AGE OF CIVILISATION");
+			confirm();
 		}
 		if (hadCivs && civs.isEmpty()) {
 			age++;
 			l("WE ENTER THE " + Names.nth(age).toUpperCase() + " AGE OF DARKNESS");
+			confirm();
 		}
 		hadCivs = !civs.isEmpty();
 		
@@ -132,8 +137,8 @@ public class SpaceGen {
 				confirm();
 			}
 			
-			if ((planet.population() > 12 || (planet.population() > 7 && p(10)) && planet.pollution < 4)) {
-				planet.pollution++;
+			if ((planet.population() > 12 || (planet.population() > 7 && p(10)) && planet.getPollution() < 4)) {
+				planet.setPollution(planet.getPollution() + 1);
 			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
 				if (planet.getOwner() == null && p(100) && pop.type.base != SentientType.Base.ROBOTS && pop.type.base != SentientType.Base.PARASITES) {
@@ -144,9 +149,9 @@ public class SpaceGen {
 					confirm();
 				}
 				int roll = d(6);
-				if (roll < planet.pollution) {
+				if (roll < planet.getPollution()) {
 					//l("Pollution kills a billion $sname on $pname.", pop.type, planet);
-					planet.pollution--;
+					planet.setPollution(planet.getPollution() - 1);
 					if (pop.getSize() == 1) {
 						pop.eliminate();
 						planet.dePop(pop, year, null, "from the effects of pollution", null);
@@ -171,8 +176,9 @@ public class SpaceGen {
 				if (pop.getSize() > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
 					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
 					if (planet.getOwner() != null) {
+						planet.addStructure(new Structure(StructureType.Standard.SKULL_PILE, planet.getOwner(), year));
 						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
-						planet.structures.add(new Structure(StructureType.Standard.SKULL_PILE, planet.getOwner(), year));
+						confirm();
 					}
 				}
 
@@ -197,7 +203,7 @@ public class SpaceGen {
 			
 			for (Plague plague : new ArrayList<Plague>(planet.plagues)) {
 				if (d(12) < plague.curability) {
-					planet.plagues.remove(plague);
+					planet.removePlague(plague);
 					l(plague.name + " has been eradicated on $name.", planet);
 				} else {
 					if (d(12) < plague.transmissivity) {
@@ -219,7 +225,7 @@ public class SpaceGen {
 								}
 							}
 							if (!match) {
-								target.plagues.add(new Plague(plague));
+								target.addPlague(new Plague(plague));
 							}
 						}
 					}
@@ -237,11 +243,11 @@ public class SpaceGen {
 					for (Plague p : col.plagues) {
 						l("The " + p.name + " on $name is cured by the universal antidote.", col);
 					}
-					col.plagues.clear();
+					col.clearPlagues();
 				}
 				if (col.population() > 7 || (col.population() > 4 && p(3))) {
 					col.evoPoints = 0;
-					col.pollution++;
+					col.setPollution(col.getPollution() + 1);
 					//l("Overcrowding on $name leads to increased pollution.", col);
 				}
 				if (c.has(ArtefactType.Device.MIND_READER) && p(4)) {
@@ -271,7 +277,7 @@ public class SpaceGen {
 				newSci += 3;
 			}
 			
-			c.resources += newRes;
+			c.setResources(c.getResources() + newRes);
 			
 			SentientType lead = pick(c.fullMembers);
 			pick(lead.base.behaviour).invoke(c, this);
@@ -279,11 +285,11 @@ public class SpaceGen {
 			pick(c.getGovt().behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			
-			c.science += newSci;
+			c.setScience(c.getScience() + newSci);
 			
-			if (c.science > c.nextBreakthrough) {
+			if (c.getScience() > c.nextBreakthrough) {
+				c.setScience(c.getScience() - c.nextBreakthrough);
 				if (Science.advance(c, this)) { continue; }
-				c.science -= c.nextBreakthrough;
 				c.nextBreakthrough *= 2;
 			}
 			
@@ -356,9 +362,9 @@ public class SpaceGen {
 				continue;
 			}
 			
-			if (p(200) && p.pollution > 1 && !p.specials.contains(PlanetSpecial.POISON_WORLD)) {
+			if (p(200) && p.getPollution() > 1 && !p.specials.contains(PlanetSpecial.POISON_WORLD)) {
 				l("Pollution on $name abates.", p);
-				p.pollution--;
+				p.setPollution(p.getPollution() - 1);
 			}
 			
 			if (p(300 + 5000 * p.specials.size())) {
@@ -370,8 +376,8 @@ public class SpaceGen {
 					if (p.specials.size() == 1) { animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));	confirm(); }
 				}
 			}
-			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.pollution);
-			if (p.evoPoints > p.evoNeeded && p(30) && p.pollution < 2) {
+			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.getPollution());
+			if (p.evoPoints > p.evoNeeded && p(30) && p.getPollution() < 2) {
 				p.evoPoints -= p.evoNeeded;
 				if (!p.habitable) {
 					p.habitable = true;

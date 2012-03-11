@@ -7,6 +7,8 @@ public class GameWorld {
 	int sx, sy, cooldown;
 	boolean confirm = false;
 	boolean confirmNeeded = false;
+	boolean autorun = false;
+	int confirmWait = 0;
 
 	public GameWorld() {
 		stage = new Stage();
@@ -25,9 +27,10 @@ public class GameWorld {
 	public boolean subTick() {
 		if (cooldown > 0) { cooldown--; }
 		if (confirmNeeded) {
-			if (confirm) {
+			if (confirm || (autorun && confirmWait++ > 5)) {
 				confirmNeeded = false;
 				sg.turnLog.clear();
+				confirmWait = 0;
 			}
 			return false;
 		}

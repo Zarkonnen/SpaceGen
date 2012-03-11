@@ -36,13 +36,13 @@ public enum BadCivEvent {
 						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of torture pits of the ").append(actor.name).append(".");
 						return;
 					}
-					int resTaken = actor.resources / actor.colonies.size();
-					int milTaken = actor.military / actor.colonies.size();
+					int resTaken = actor.getResources() / actor.colonies.size();
+					int milTaken = actor.getMilitary() / actor.colonies.size();
 					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg.historicalCivNames);
 					actor.colonies.remove(col);
-					actor.resources -= resTaken;
-					actor.military -= milTaken;
-					newCiv.military = milTaken;
+					actor.setResources(actor.getResources() - resTaken);
+					actor.setMilitary(actor.getMilitary() - milTaken);
+					newCiv.setMilitary(milTaken);
 					newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 					col.setOwner(newCiv);
 					actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
@@ -70,7 +70,9 @@ public enum BadCivEvent {
 			Planet p = null;
 			for (Planet p2 : actor.colonies) { if (p2.artefacts.contains(a)) { p = p2; } }
 			Planet newP = sg.pick(sg.planets);
-			p.artefacts.remove(a);
+			//p.artefacts.remove(a);
+			// qqDPS
+			p.removeArtefact(a);
 			newP.strata.add(new LostArtefact("hidden", sg.year, a));
 			rep.append("The ").append(a).append(" on ").append(p.name).append(" has been stolen and hidden on ").append(newP.name).append(".");
 		}
@@ -84,8 +86,7 @@ public enum BadCivEvent {
 			String oldName = actor.name;
 			actor.fullMembers.clear();
 			actor.fullMembers.add(rulers);
-			actor.setGovt(Government.DICTATORSHIP);
-			actor.updateName(sg.historicalCivNames);
+			actor.setGovt(Government.DICTATORSHIP, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
 		}
@@ -93,23 +94,22 @@ public enum BadCivEvent {
 	RELIGIOUS_REVIVAL() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			String oldName = actor.name;
-			actor.setGovt(Government.THEOCRACY);
-			actor.updateName(sg.historicalCivNames);
+			actor.setGovt(Government.THEOCRACY, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
 		}
 	},
 	MARKET_CRASH() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			actor.resources /= 5;
+			actor.setResources(actor.getResources() / 5);
 			rep.append("A market crash impoverishes the ").append(actor.name).append(".");
 		}
 	},
 	DARK_AGE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" enters a dark age.");
-			actor.techLevel--;
-			if (actor.techLevel == 0) {
+			actor.setTechLevel(actor.getTechLevel() - 1);
+			if (actor.getTechLevel() == 0) {
 				if (actor.fullMembers.size() > 1) {
 					rep.append(" With the knowledge of faster-than-light travel lost, each planet in the empire has to fend for itself.");
 				}
@@ -138,7 +138,7 @@ public enum BadCivEvent {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			Planet p = sg.pick(actor.fullColonies());
 			rep.append("An industrial accident on ").append(p.name).append(" causes deadly levels of pollution.");
-			p.pollution += 5;
+			p.setPollution(p.getPollution() + 5);
 		}
 	},
 	CIVIL_WAR() {
@@ -149,11 +149,11 @@ public enum BadCivEvent {
 			}
 			if (bigPlanets.size() > 1) {
 				Collections.shuffle(bigPlanets, sg.r);
-				Civ newCiv = new Civ(sg.year, null, bigPlanets.get(0), sg.pick(Government.values()), actor.resources / 2, sg.historicalCivNames);
+				Civ newCiv = new Civ(sg.year, null, bigPlanets.get(0), sg.pick(Government.values()), actor.getResources() / 2, sg.historicalCivNames);
 				newCiv.fullMembers.clear();
-				newCiv.military = actor.military / 2;
-				actor.military -= newCiv.military;
-				actor.resources -= newCiv.resources;
+				newCiv.setMilitary(actor.getMilitary() / 2);
+				actor.setMilitary(actor.getMilitary() - newCiv.getMilitary());
+				actor.setResources(actor.getResources() - newCiv.getResources());
 				for (int i = 1; i < bigPlanets.size() / 2; i++) {
 					newCiv.colonies.add(bigPlanets.get(i));
 					bigPlanets.get(i).setOwner(newCiv);
@@ -179,6 +179,7 @@ public enum BadCivEvent {
 				sg.civs.add(newCiv);
 				sg.historicalCivNames.add(newCiv.name);
 				rep.append("The ").append(newCiv.name).append(" secedes from the ").append(actor.name).append(", leading to a civil war!");
+				confirm();
 			}
 		}
 	},
@@ -195,8 +196,9 @@ public enum BadCivEvent {
 			}
 			if (is.isEmpty()) { return; }
 			plague.affects.add(sg.pick(is).type);
+			p.addPlague(plague);
 			rep.append("The deadly ").append(plague.desc()).append(", arises on ").append(p.name).append(".");
-			p.plagues.add(plague);
+			confirm();
 		}
 	},
 	STARVATION() {

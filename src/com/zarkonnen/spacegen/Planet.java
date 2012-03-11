@@ -16,7 +16,7 @@ public class Planet {
 	
 	public final String name;
 	
-	int pollution;
+	private int pollution;
 	boolean habitable;
 	int evoPoints;
 	int evoNeeded;
@@ -34,9 +34,123 @@ public class Planet {
 	
 	PlanetSprite sprite;
 	
+	public int getPollution() {
+		return pollution;
+	}
+
+	public void setPollution(int pollution) {
+		this.pollution = pollution;
+	}
+	
+	public void addPlague(Plague p) {
+		plagues.add(p);
+		Sprite ps = new Sprite(Imager.get(p), (structures.size() - 1) * 36, 36 * 4);
+		sprite.plagueSprites.put(p, ps);
+		animate(tracking(sprite, delay()));
+		animate(add(ps, sprite));
+	}
+	
+	public void removePlague(Plague p) {
+		int sIndex = plagues.indexOf(p);
+		Sprite ss = sprite.plagueSprites.get(p);
+		animate(tracking(sprite, delay()));
+		animate(remove(ss));
+		for (int i = sIndex + 1; i < plagues.size(); i++) {
+			add(move(sprite.plagueSprites.get(plagues.get(i)), i * 36, 36 * 2));
+		}
+		animate();
+		plagues.remove(p);
+		sprite.plagueSprites.remove(p);
+	}
+	
+	public void clearPlagues() {
+		for (Plague p : plagues) {
+			add(remove(sprite.plagueSprites.get(p)));
+		}
+		animate();
+		plagues.clear();
+		sprite.plagueSprites.clear();
+	}
+	
+	public void addArtefact(Artefact a) {
+		artefacts.add(a);
+		Sprite as = new Sprite(Imager.get(a), (artefacts.size() - 1) * 36, 36);
+		sprite.artefactSprites.put(a, as);
+		animate(tracking(sprite, delay()));
+		animate(add(as, sprite));
+	}
+	
+	public void moveArtefact(Artefact a, Planet dst) {
+		Sprite as = sprite.artefactSprites.get(a);
+		animate(emancipate(as));
+		animate(tracking(as, move(as, dst.sprite.x + dst.artefacts.size() * 36, dst.sprite.y + 36)));
+		animate(subordinate(as, dst.sprite));
+		dst.sprite.artefactSprites.put(a, as);
+		dst.artefacts.add(a);
+		int aIndex = artefacts.indexOf(a);
+		for (int i = aIndex + 1; i < artefacts.size(); i++) {
+			add(move(sprite.artefactSprites.get(artefacts.get(i)), i * 36, 36));
+		}
+		animate();
+		artefacts.remove(a);
+		sprite.artefactSprites.remove(a);
+	}
+	
+	public void removeArtefact(Artefact a) {
+		int aIndex = artefacts.indexOf(a);
+		Sprite as = sprite.artefactSprites.get(a);
+		animate(tracking(sprite, delay()));
+		animate(remove(as));
+		for (int i = aIndex + 1; i < artefacts.size(); i++) {
+			add(move(sprite.artefactSprites.get(artefacts.get(i)), i * 36, 36));
+		}
+		animate();
+		artefacts.remove(a);
+		sprite.artefactSprites.remove(a);
+	}
+	
+	public void clearArtefacts() {
+		for (Artefact a : artefacts) {
+			add(remove(sprite.artefactSprites.get(a)));
+		}
+		animate();
+		artefacts.clear();
+		sprite.artefactSprites.clear();
+	}
+	
+	public void addStructure(Structure s) {
+		structures.add(s);
+		Sprite ss = new Sprite(Imager.get(s), (structures.size() - 1) * 36, 36 * 2);
+		sprite.structureSprites.put(s, ss);
+		animate(tracking(sprite, delay()));
+		animate(add(ss, sprite));
+	}
+	
+	public void removeStructure(Structure s) {
+		int sIndex = structures.indexOf(s);
+		Sprite ss = sprite.structureSprites.get(s);
+		animate(tracking(sprite, delay()));
+		animate(remove(ss));
+		for (int i = sIndex + 1; i < structures.size(); i++) {
+			add(move(sprite.structureSprites.get(structures.get(i)), i * 36, 36 * 2));
+		}
+		animate();
+		structures.remove(s);
+		sprite.structureSprites.remove(s);
+	}
+	
+	public void clearStructures() {
+		for (Structure s : structures) {
+			add(remove(sprite.structureSprites.get(s)));
+		}
+		animate();
+		structures.clear();
+		sprite.structureSprites.clear();
+	}
+	
 	public void addLifeform(SpecialLifeform slf) {
 		lifeforms.add(slf);
-		Sprite slfs = new Sprite(Imager.get(slf), (lifeforms.size() - 1) * 32, 32 * 3);
+		Sprite slfs = new Sprite(Imager.get(slf), (lifeforms.size() - 1) * 36, 36 * 3);
 		sprite.lifeformSprites.put(slf, slfs);
 		animate(tracking(sprite, delay()));
 		animate(add(slfs, sprite));
@@ -48,10 +162,11 @@ public class Planet {
 		animate(tracking(sprite, delay()));
 		animate(remove(slfs));
 		for (int i = lfIndex + 1; i < lifeforms.size(); i++) {
-			add(move(sprite.lifeformSprites.get(lifeforms.get(i)), i * 32, 32 * 3));
+			add(move(sprite.lifeformSprites.get(lifeforms.get(i)), i * 36, 36 * 3));
 		}
 		animate();
 		lifeforms.remove(slf);
+		sprite.lifeformSprites.remove(slf);
 	}
 	
 	public void clearLifeforms() {
@@ -60,6 +175,7 @@ public class Planet {
 		}
 		animate();
 		lifeforms.clear();
+		sprite.lifeformSprites.clear();
 	}
 	
 	public Civ getOwner() {
@@ -76,6 +192,7 @@ public class Planet {
 		if (owner != null) {
 			sprite.ownerSprite = new CivSprite(owner);
 			owner.sprites.add(sprite.ownerSprite);
+			sprite.ownerSprite.init();
 			animate(tracking(sprite, add(sprite.ownerSprite, sprite)));
 		}
 		animate(delay());
@@ -90,7 +207,7 @@ public class Planet {
 					continue lp;
 				}
 			}
-			plagues.remove(p);
+			removePlague(p);
 		}
 	}
 	
@@ -98,11 +215,11 @@ public class Planet {
 		for (Structure s : structures) {
 			strata.add(new Ruin(s, time, null, "during the collapse of the " + getOwner().name));
 		}
-		structures.clear();
+		clearStructures();
 		for (Artefact a : artefacts) {
 			strata.add(new LostArtefact("lost", time, a));
 		}
-		artefacts.clear();
+		clearArtefacts();
 		
 		setOwner(null);
 	}
@@ -116,13 +233,12 @@ public class Planet {
 		for (Structure s : structures) {
 			strata.add(new Ruin(s, time, null, "after the transcendence of the " + getOwner().name));
 		}
-		structures.clear();
+		clearStructures();
 		for (Artefact a : artefacts) {
 			strata.add(new LostArtefact("lost and buried when the " + getOwner().name + " transcended", time, a));
 		}
-		artefacts.clear();
-		structures.clear();
-		plagues.clear();
+		clearArtefacts();
+		clearPlagues();
 		getOwner().colonies.remove(this);
 		setOwner(null);
 	}
@@ -138,12 +254,11 @@ public class Planet {
 		for (Structure s : structures) {
 			strata.add(new Ruin(s, time, cat, reason));
 		}
-		structures.clear();
+		clearStructures();
 		for (Artefact a : artefacts) {
 			strata.add(new LostArtefact("buried", time, a));
 		}
-		artefacts.clear();
-		structures.clear();
+		clearArtefacts();
 	}
 	
 	public void deLive(int time, Cataclysm cat, String reason) {
@@ -153,7 +268,7 @@ public class Planet {
 		for (SpecialLifeform slf : lifeforms) {
 			strata.add(new Fossil(slf, time, cat));
 		}
-		plagues.clear();
+		clearPlagues();
 		clearLifeforms();
 		habitable = false;
 		animate(tracking(sprite, change(sprite, Imager.get(this))));
@@ -164,8 +279,8 @@ public class Planet {
 		this.evoNeeded = 15000 + (r.nextInt(3) == 0 ? 0 : 1000000);
 		this.evoPoints = -evoNeeded;
 		lp: while (true) {
-			x = r.nextInt(8);
-			y = r.nextInt(8);
+			x = r.nextInt(7);
+			y = r.nextInt(7);
 			for (Planet p : sg.planets) {
 				if (p.x == x && p.y == y) { continue lp; }
 			}
@@ -221,9 +336,9 @@ public class Planet {
 				sb.append(ag.type.describe(ag, sg)).append("\n");
 			}
 		}
-		if (pollution > 0) {
+		if (getPollution() > 0) {
 			sb.append("It is ");
-			switch (pollution) {
+			switch (getPollution()) {
 				case 1: sb.append("a little"); break;
 				case 2: sb.append("slightly"); break;
 				case 3: sb.append("somewhat"); break;

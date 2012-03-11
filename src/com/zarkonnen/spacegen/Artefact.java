@@ -9,6 +9,7 @@ public class Artefact {
 	int creatorTechLevel;
 	int specialValue;
 	String creatorName;
+	Sprite sprite;
 
 	public Artefact(int created, Civ creator, ArtefactType type, String desc) {
 		this.created = created;
@@ -17,8 +18,9 @@ public class Artefact {
 		this.desc = desc;
 		if (creator != null) {
 			st = creator.fullMembers.get(0);
-			creatorTechLevel = creator.techLevel;
+			creatorTechLevel = creator.getTechLevel();
 		}
+		this.sprite = new Sprite(Imager.get(this), 0, 0);
 	}
 	
 	public Artefact(int created, String creatorName, ArtefactType type, String desc) {
@@ -26,6 +28,7 @@ public class Artefact {
 		this.creatorName = creatorName;
 		this.type = type;
 		this.desc = desc;
+		this.sprite = new Sprite(Imager.get(this), 0, 0);
 	}
 	
 	@Override

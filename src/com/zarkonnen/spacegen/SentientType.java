@@ -295,7 +295,7 @@ public class SentientType {
 		FLYING("Flying", "grand roost"),
 		TINY("Tiny", null),
 		GIANT("Giant", null),
-		SIX_LEGGED("Six-Legged", "velodrome"),
+		SIX_LEGGED("Six-Legged", null),
 		FOUR_ARMED("Four-Armed", null),
 		TWO_HEADED("Two-Headed", null),
 		SLIM("Slim", null),

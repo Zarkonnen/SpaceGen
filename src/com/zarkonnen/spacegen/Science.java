@@ -10,8 +10,8 @@ public class Science {
 		ArrayList<Planet> cands;
 		switch (sg.d(8)) {
 			case 0:
-				actor.techLevel++;
-				if (actor.techLevel == 10) {
+				actor.setTechLevel(actor.getTechLevel() + 1);
+				if (actor.getTechLevel() == 10) {
 					sg.l("The highly advanced technology of the $name allows them to transcend the bounds of this universe. They vanish instantly.");
 					for (Planet col : new ArrayList<Planet>(actor.colonies)) {
 						col.transcend(sg.year);
@@ -107,7 +107,7 @@ public class Science {
 				Planet p = sg.pick(cands);
 				ArtefactType.Device type = sg.pick(ArtefactType.Device.values());
 				Artefact a = new Artefact(sg.year, actor, type, type.create(actor, sg));
-				p.artefacts.add(a);
+				p.addArtefact(a);
 				sg.l("The $name develop a " + a.type.getName() + ".", actor);
 				confirm();
 		}
