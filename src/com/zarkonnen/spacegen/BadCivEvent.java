@@ -3,6 +3,9 @@ package com.zarkonnen.spacegen;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public enum BadCivEvent {
 	REVOLT() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
@@ -13,7 +16,7 @@ public enum BadCivEvent {
 				for (Population pop : col.inhabitants) {
 					if (!actor.fullMembers.contains(pop.type)) {
 						rebels.add(pop);
-						nRebels += pop.size;
+						nRebels += pop.getSize();
 					}
 				}	
 				if (nRebels > col.population() / 2) {
@@ -41,7 +44,7 @@ public enum BadCivEvent {
 					actor.military -= milTaken;
 					newCiv.military = milTaken;
 					newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
-					col.owner = newCiv;
+					col.setOwner(newCiv);
 					actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 					for (Population pop : new ArrayList<Population>(col.inhabitants)) {
 						if (!rebels.contains(pop)) {
@@ -74,14 +77,14 @@ public enum BadCivEvent {
 	},
 	PUTSCH() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.govt == Government.DICTATORSHIP) {
+			if (actor.getGovt() == Government.DICTATORSHIP) {
 				return;
 			}
 			SentientType rulers = sg.pick(actor.fullMembers);
 			String oldName = actor.name;
 			actor.fullMembers.clear();
 			actor.fullMembers.add(rulers);
-			actor.govt = Government.DICTATORSHIP;
+			actor.setGovt(Government.DICTATORSHIP);
 			actor.updateName(sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
@@ -90,7 +93,7 @@ public enum BadCivEvent {
 	RELIGIOUS_REVIVAL() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			String oldName = actor.name;
-			actor.govt = Government.THEOCRACY;
+			actor.setGovt(Government.THEOCRACY);
 			actor.updateName(sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
@@ -122,7 +125,7 @@ public enum BadCivEvent {
 			rep.append("Mass hysteria breaks out in the ").append(actor.name).append(", killing billions.");
 			for (Planet c : actor.fullColonies()) {
 				int pop = c.population();
-				c.inhabitants.get(0).size = 1;
+				c.inhabitants.get(0).setSize(1);
 				if (pop > 1 && pop > 3) {
 					while (c.inhabitants.size() > 1) {
 						c.dePop(c.inhabitants.get(1), sg.year, null, "from mass hysteria", null);
@@ -153,7 +156,7 @@ public enum BadCivEvent {
 				actor.resources -= newCiv.resources;
 				for (int i = 1; i < bigPlanets.size() / 2; i++) {
 					newCiv.colonies.add(bigPlanets.get(i));
-					bigPlanets.get(i).owner = newCiv;
+					bigPlanets.get(i).setOwner(newCiv);
 					for (Population pop : bigPlanets.get(i).inhabitants) {
 						if (!newCiv.fullMembers.contains(pop.type)) {
 							newCiv.fullMembers.add(pop.type);
@@ -167,7 +170,7 @@ public enum BadCivEvent {
 				}
 				for (Planet c : actor.colonies) {
 					if (bigPlanets.contains(c)) { continue; }
-					if (sg.coin()) { newCiv.colonies.add(c); c.owner = newCiv; }
+					if (sg.coin()) { newCiv.colonies.add(c); c.setOwner(newCiv); }
 				}
 				actor.colonies.removeAll(newCiv.colonies);
 				newCiv.updateName(sg.historicalCivNames);
@@ -205,13 +208,13 @@ public enum BadCivEvent {
 			int deaths = 0;
 			for (Population pop : new ArrayList<Population>(p.inhabitants)) {
 				if (pop.type.base == SentientType.Base.ROBOTS) { continue; }
-				int d = pop.size - pop.size / 2;
+				int d = pop.getSize() - pop.getSize() / 2;
 				
-				if (d >= pop.size) {
+				if (d >= pop.getSize()) {
 					p.dePop(pop, sg.year, null, "due to starvation", null);
-					deaths += pop.size;
+					deaths += pop.getSize();
 				} else {
-					pop.size -= d;
+					pop.setSize(pop.getSize() - d);
 					deaths += d;
 				}
 			}
@@ -260,6 +263,9 @@ public enum BadCivEvent {
 	public void invoke(Civ actor, SpaceGen sg) {
 		StringBuilder rep = new StringBuilder();
 		i(actor, sg, rep);
-		if (rep.length() > 0) { sg.l(rep.toString()); }
+		if (rep.length() > 0) {
+			sg.l(rep.toString());
+			confirm();
+		}
 	}
 }

@@ -50,6 +50,8 @@ public class Stage {
 	
 	public static Animation delay(int wait, Animation a) { return new Delay(wait, a); }
 	public static Animation delay(int wait) { return new Delay(wait, null); }
+	public static Animation delay() { return new Delay(10, null); }
+	public static Animation bigDelay() { return new Delay(40, null); }
 	public static class Delay implements Animation {
 		Animation a;
 		int wait;
@@ -67,6 +69,7 @@ public class Stage {
 	}
 	
 	public static Animation tracking(Sprite s, Animation a) { return new Tracking(s, a); }
+	public static Animation track(Sprite s) { return new Tracking(s, null); }
 	public static class Tracking implements Animation {
 		Sprite s;
 		Animation a;
@@ -85,7 +88,7 @@ public class Stage {
 				sx = stage.camX;
 				sy = stage.camY;
 				time = (int)
-						(Math.sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty)) / 100) + 5;
+						(Math.sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty)) / 120) + 3;
 			}
 			if (!lock) {
 				stage.camX = sx + (tx - sx) * tick / time;
@@ -96,7 +99,7 @@ public class Stage {
 			} else {
 				stage.camX = tx;
 				stage.camY = ty;
-				return a.tick(stage);
+				return a == null ? true : a.tick(stage);
 			}
 		}
 	}
@@ -157,7 +160,6 @@ public class Stage {
 			this.s = s;
 			this.tx = tx;
 			this.ty = ty;
-			this.time = 50;
 		}
 		
 		@Override
@@ -165,11 +167,15 @@ public class Stage {
 			if (tick == 0) {
 				sx = s.x;
 				sy = s.y;
+				if (time == 0) {
+					time = (int)
+							(Math.sqrt((sx - tx) * (sx - tx) + (sy - ty) * (sy - ty)) / 120) + 2;
+				}
 			}
 			s.highlight = true;
-			s.x = (tx - sx) * tick / time;
-			s.y = (ty - sy) * tick / time;
-			if (tick++ > time) {
+			s.x = sx + (tx - sx) * tick / time;
+			s.y = sy + (ty - sy) * tick / time;
+			if (tick++ >= time) {
 				s.highlight = false;
 				return true;
 			}
@@ -177,17 +183,10 @@ public class Stage {
 		}
 	}
 	
-	public Animation remove(Sprite s, Sprite parent) { return new Remove(s, parent); }
-	public Animation remove(Sprite s) { return new Remove(s); }
+	public static Animation remove(Sprite s) { return new Remove(s); }
 	public static class Remove implements Animation {
 		Sprite s;
-		Sprite parent;
 		int tick = 0;
-
-		public Remove(Sprite s, Sprite parent) {
-			this.s = s;
-			this.parent = parent;
-		}
 
 		public Remove(Sprite s) {
 			this.s = s;
@@ -197,10 +196,10 @@ public class Stage {
 		public boolean tick(Stage stage) {
 			s.flash = true;
 			if (tick++ > 5) {
-				if (parent == null) {
+				if (s.parent == null) {
 					stage.sprites.remove(s);
 				} else {
-					parent.children.remove(s);
+					s.parent.children.remove(s);
 				}
 				return true;
 			}

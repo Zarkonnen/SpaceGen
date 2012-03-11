@@ -1,5 +1,8 @@
 package com.zarkonnen.spacegen;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public enum GoodCivEvent {
 	GOLDEN_AGE_OF_SCIENCE() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
@@ -31,13 +34,13 @@ public enum GoodCivEvent {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" experiences a population boom! ");
 			for (Planet col : actor.colonies) {
-				for (Population p : col.inhabitants) { p.size++; }
+				for (Population p : col.inhabitants) { p.setSize(p.getSize() + 1); }
 			}
 		}
 	},
 	DEMOCRATISATION() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.govt == Government.REPUBLIC) {
+			if (actor.getGovt() == Government.REPUBLIC) {
 				return;
 			}
 			String oldName = actor.name;
@@ -46,7 +49,7 @@ public enum GoodCivEvent {
 					actor.fullMembers.add(p.type);
 				}
 			}}
-			actor.govt = Government.REPUBLIC;
+			actor.setGovt(Government.REPUBLIC);
 			actor.updateName(sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
@@ -74,6 +77,9 @@ public enum GoodCivEvent {
 	public void invoke(Civ actor, SpaceGen sg) {
 		StringBuilder rep = new StringBuilder();
 		i(actor, sg, rep);
-		if (rep.length() > 0) { sg.l(rep.toString()); }
+		if (rep.length() > 0) {
+			sg.l(rep.toString());
+			confirm();
+		}
 	}
 }

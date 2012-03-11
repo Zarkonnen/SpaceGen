@@ -7,7 +7,7 @@ public class War {
 		if (actor.military <= 0) { return; }
 		ArrayList<Planet> targets = new ArrayList<Planet>();
 		for (Planet p : sg.planets) {
-			if (p.owner != null && p.owner != actor && actor.relation(p.owner) == Diplomacy.Outcome.WAR) {
+			if (p.getOwner() != null && p.getOwner() != actor && actor.relation(p.getOwner()) == Diplomacy.Outcome.WAR) {
 				targets.add(p);
 			}
 		}
@@ -15,11 +15,11 @@ public class War {
 		Planet target = sg.pick(targets);
 		
 		if (actor.has(ArtefactType.Device.TIME_MACHINE)) {
-			sg.l("The $name use their time machine to erase their hated enemies, the " + target.owner.name + ".", actor);
-			Civ victim = target.owner;
+			sg.l("The $name use their time machine to erase their hated enemies, the " + target.getOwner().name + ".", actor);
+			Civ victim = target.getOwner();
 			for (Planet p : new ArrayList<Planet>(victim.colonies)) {
 				p.deCiv(sg.year / 2, null, "by a time vortex");
-				p.owner = null;
+				p.setOwner(null);
 			}
 			sg.civs.remove(victim);
 			Planet p = sg.pick(sg.planets);
@@ -31,28 +31,28 @@ public class War {
 			return;
 		}
 		if (actor.has(ArtefactType.Device.KILLER_MEME)) {
-			sg.l("The $name use their memetic weapon against the " + target.owner.name + ".", actor);
-			BadCivEvent.MASS_HYSTERIA.invoke(target.owner, sg);
+			sg.l("The $name use their memetic weapon against the " + target.getOwner().name + ".", actor);
+			BadCivEvent.MASS_HYSTERIA.invoke(target.getOwner(), sg);
 			target.strata.add(new LostArtefact("forgotten", sg.year, actor.use(ArtefactType.Device.KILLER_MEME)));
 			return;
 		}
 		if (actor.has(ArtefactType.Device.UNIVERSAL_COMPUTER_VIRUS)) {
-			sg.l("The $name use their universal computer virus against the " + target.owner.name + ".", actor);
-			BadCivEvent.MARKET_CRASH.invoke(target.owner, sg);
+			sg.l("The $name use their universal computer virus against the " + target.getOwner().name + ".", actor);
+			BadCivEvent.MARKET_CRASH.invoke(target.getOwner(), sg);
 			target.strata.add(new LostArtefact("forgotten", sg.year, actor.use(ArtefactType.Device.UNIVERSAL_COMPUTER_VIRUS)));
 			return;
 		}
 		if (actor.has(ArtefactType.Device.ARTIFICIAL_PLAGUE)) {
-			sg.l("The $name use their artificial plague against the " + target.owner.name + ".", actor);
-			BadCivEvent.PLAGUE.invoke(target.owner, sg);
+			sg.l("The $name use their artificial plague against the " + target.getOwner().name + ".", actor);
+			BadCivEvent.PLAGUE.invoke(target.getOwner(), sg);
 			actor.use(ArtefactType.Device.ARTIFICIAL_PLAGUE);
 			return;
 		}
 		
-		Civ enemy = target.owner;
+		Civ enemy = target.getOwner();
 		
 		int attack = actor.military * (2 + (actor.techLevel + 2 * actor.weapLevel));
-		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.owner.techLevel + 2 * target.owner.weapLevel) : 0);
+		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.getOwner().techLevel + 2 * target.getOwner().weapLevel) : 0);
 		if (target.has(SentientType.Base.URSOIDS.specialStructure)) {
 			defence += 4;
 		}
@@ -60,7 +60,7 @@ public class War {
 		int defenceRoll = sg.d(defence, 6);
 		if (attackRoll > defenceRoll) {
 			actor.military -= sg.d(actor.military / 6 + 1);
-			if (sg.d(6) < actor.govt.bombardP || target.owner.has(SentientType.Base.PARASITES)) {
+			if (sg.d(6) < actor.getGovt().bombardP || target.getOwner().has(SentientType.Base.PARASITES)) {
 				if (actor.has(ArtefactType.Device.PLANET_DESTROYER)) {
 					target.deLive(sg.year, null, "when the planet was scoured by a superweapon of the " + actor.name);
 					sg.l("The $cname attack $pname and use their planet destroyer to turn it into a lifeless cinder.", actor, target);
@@ -78,11 +78,11 @@ public class War {
 				}
 				int deaths = 0;
 				for (Population pop : new ArrayList<Population>(target.inhabitants)) {
-					int pd = sg.d(pop.size) + 1;
-					if (pd >= pop.size) {
+					int pd = sg.d(pop.getSize()) + 1;
+					if (pd >= pop.getSize()) {
 						target.dePop(pop, sg.year, null, "due to orbital bombardment by the " + actor.name, null);
 					} else {
-						pop.size -= pd;
+						pop.setSize(pop.getSize() - pd);
 					}
 					deaths += pd;
 				}
@@ -113,13 +113,13 @@ public class War {
 					if (target.population() > 0) {
 						int deaths = 0;
 						for (Population pop : new ArrayList<Population>(target.inhabitants)) {
-							int pd = sg.d(pop.size - pop.size / 2);
+							int pd = sg.d(pop.getSize() - pop.getSize() / 2);
 							if (pd >= target.population()) { pd = 1; }
 							if (pd >= target.population()) { break; }
-							if (pd >= pop.size) {
+							if (pd >= pop.getSize()) {
 								target.dePop(pop, sg.year, null, "during the invasion of the " + actor.name, null);
 							} else {
-								pop.size -= pd;
+								pop.setSize(pop.getSize() - pd);
 							}
 							deaths += pd;
 						}
@@ -138,8 +138,8 @@ public class War {
 					sg.l("The $cname gain control of the " + a.type.getName() + " on $pname.", actor, target);
 				}
 				
-				target.owner.colonies.remove(target);
-				target.owner = actor;
+				target.getOwner().colonies.remove(target);
+				target.setOwner(actor);
 				actor.colonies.add(target);
 			}
 		} else {
@@ -149,7 +149,7 @@ public class War {
 				}
 			}
 			actor.military -= sg.d(actor.military / 3 + 1);
-			sg.l("The " + target.owner.name + " repel the " + actor.name + " at " + target.name + ".");
+			sg.l("The " + target.getOwner().name + " repel the " + actor.name + " at " + target.name + ".");
 		}
 	}
 }

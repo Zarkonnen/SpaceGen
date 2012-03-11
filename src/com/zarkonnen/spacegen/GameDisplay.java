@@ -19,6 +19,16 @@ public class GameDisplay {
 		g.fillRect(0, 0, width, height);
 		g.translate(-w.stage.camX + width / 2, -w.stage.camY + height / 2);
 		w.stage.draw(g);
+		g.translate(w.stage.camX - width / 2, w.stage.camY - height / 2);
+		StringBuilder info = new StringBuilder();
+		/*for (int i = w.sg.turnLog.size() - 1; i >= 0; i--) {
+			info.append(w.sg.turnLog.get(i)).append("\n");
+		}*/
+		for (String s : w.sg.turnLog) {
+			info.append(s).append("\n");
+		}
+		Draw.text(g, "[bg=333333cc]" + info.toString() + "", 10, height - 100, width - 20, 100);
+		Draw.text(g, "[bg=333333cc]" + w.sg.year, 10, 10);
 	}
 	
 	void draw_old(Graphics2D g) {
@@ -35,14 +45,14 @@ public class GameDisplay {
 		for (Planet p : w.sg.planets) {
 			g.translate(p.x * 220, p.y * 220);
 			g.drawImage(Imager.get(p), 0, 0, null);
-			if (p.owner != null) {
-				g.drawImage(Imager.get(p.owner), 128 / 2 - 32 / 2, - 32, null);
+			if (p.getOwner() != null) {
+				g.drawImage(Imager.get(p.getOwner()), 128 / 2 - 32 / 2, - 32, null);
 			}
 			int offs = 0;
 			if (p.population() > 0) {
 				int step = 128 / p.population();
 				for (Population pop : p.inhabitants) {
-					for (int i = 0; i < pop.size; i++) {
+					for (int i = 0; i < pop.getSize(); i++) {
 						g.drawImage(Imager.get(pop.type), offs, 128 / 2 - 32 / 2, null);
 						offs += step;
 					}

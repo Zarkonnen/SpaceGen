@@ -12,6 +12,12 @@ public class Main {
 	public static GameThread gt;
 	public static GameWorld w;
 	
+	public static void confirm() {
+		w.confirmNeeded = true;
+		w.confirm = false;
+		gt.subRun();
+	}
+	
 	public static void animate(Stage.Animation... as) {
 		w.stage.animate(as);
 		gt.subRun();

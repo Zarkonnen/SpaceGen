@@ -43,6 +43,4 @@ public enum Government {
 		this.bombardP = bombardP;
 		this.encounterOutcomes = encounterOutcomes;
 	}
-	
-	
 }

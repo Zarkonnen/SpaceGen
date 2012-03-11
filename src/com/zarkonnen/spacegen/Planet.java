@@ -3,6 +3,9 @@ package com.zarkonnen.spacegen;
 import java.util.ArrayList;
 import java.util.Random;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public class Planet {
 	static final String[] P_NAMES = {
 		"Taranis", "Krantor", "Mycon", "Urbon", "Metatron", "Autorog", "Pastinakos", "Orra",
@@ -21,7 +24,7 @@ public class Planet {
 	ArrayList<SpecialLifeform> lifeforms = new ArrayList<SpecialLifeform>();
 	ArrayList<Population> inhabitants = new ArrayList<Population>();
 	ArrayList<Artefact> artefacts = new ArrayList<Artefact>();
-	Civ owner;
+	private Civ owner;
 	ArrayList<Structure> structures = new ArrayList<Structure>();
 	ArrayList<Plague> plagues = new ArrayList<Plague>();
 	
@@ -31,9 +34,28 @@ public class Planet {
 	
 	PlanetSprite sprite;
 	
+	public Civ getOwner() {
+		return owner;
+	}
+
+	public void setOwner(Civ owner) {
+		if (this.owner != null) {
+			this.owner.sprites.remove(sprite.ownerSprite);
+			animate(tracking(sprite, remove(sprite.ownerSprite)));
+			sprite.ownerSprite = null;
+		}
+		this.owner = owner;
+		if (owner != null) {
+			sprite.ownerSprite = new CivSprite(owner);
+			owner.sprites.add(sprite.ownerSprite);
+			animate(tracking(sprite, add(sprite.ownerSprite, sprite)));
+		}
+		animate(delay());
+	}
+	
 	public void dePop(Population pop, int time, Cataclysm cat, String reason, Plague plague) {
 		strata.add(new Remnant(pop, time, cat, reason, plague));
-		inhabitants.remove(pop);
+		pop.eliminate();
 		lp: for (Plague p : new ArrayList<Plague>(plagues)) {
 			for (Population p2 : inhabitants) {
 				if (p.affects.contains(p2.type)) {
@@ -46,7 +68,7 @@ public class Planet {
 	
 	void darkAge(int time) {
 		for (Structure s : structures) {
-			strata.add(new Ruin(s, time, null, "during the collapse of the " + owner.name));
+			strata.add(new Ruin(s, time, null, "during the collapse of the " + getOwner().name));
 		}
 		structures.clear();
 		for (Artefact a : artefacts) {
@@ -54,33 +76,33 @@ public class Planet {
 		}
 		artefacts.clear();
 		
-		owner = null;
+		setOwner(null);
 	}
 	
 	public void transcend(int time) {
-		if (owner == null) { return; }
+		if (getOwner() == null) { return; }
 		for (Population p : new ArrayList<Population>(inhabitants)) {
 			strata.add(new Remnant(p, time));
+			p.eliminate();
 		}
-		inhabitants.clear();
 		for (Structure s : structures) {
-			strata.add(new Ruin(s, time, null, "after the transcendence of the " + owner.name));
+			strata.add(new Ruin(s, time, null, "after the transcendence of the " + getOwner().name));
 		}
 		structures.clear();
 		for (Artefact a : artefacts) {
-			strata.add(new LostArtefact("lost and buried when the " + owner.name + " transcended", time, a));
+			strata.add(new LostArtefact("lost and buried when the " + getOwner().name + " transcended", time, a));
 		}
 		artefacts.clear();
 		structures.clear();
 		plagues.clear();
-		owner.colonies.remove(this);
-		owner = null;
+		getOwner().colonies.remove(this);
+		setOwner(null);
 	}
 	
 	public void deCiv(int time, Cataclysm cat, String reason) {
-		if (owner != null) {
-			owner.colonies.remove(this);
-			owner = null;
+		if (getOwner() != null) {
+			getOwner().colonies.remove(this);
+			setOwner(null);
 		}
 		for (Population p : new ArrayList<Population>(inhabitants)) {
 			dePop(p, time, cat, reason, null);
@@ -105,6 +127,7 @@ public class Planet {
 		plagues.clear();
 		lifeforms.clear();
 		habitable = false;
+		animate(tracking(sprite, change(sprite, Imager.get(this))));
 	}
 	
 	public Planet(Random r, SpaceGen sg) {
@@ -151,7 +174,7 @@ public class Planet {
 	int population() {
 		int sum = 0;
 		for (Population p : inhabitants) {
-			sum += p.size;
+			sum += p.getSize();
 		}
 		return sum;
 	}
@@ -160,8 +183,8 @@ public class Planet {
 	public String fullDesc(SpaceGen sg) {
 		StringBuilder sb = new StringBuilder(name.toUpperCase() + "\n");
 		sb.append("A ").append(habitable ? "life-bearing " : "barren ").append("planet");
-		if (owner != null) {
-			sb.append(" of the ").append(owner.name);
+		if (getOwner() != null) {
+			sb.append(" of the ").append(getOwner().name);
 		}
 		sb.append(".\n");
 		for (Agent ag : sg.agents) {

@@ -3,28 +3,31 @@ package com.zarkonnen.spacegen;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public enum CivAction {
 	EXPLORE_PLANET() {
 		@Override
 		public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			// Pick a planet to explore.
 			Planet p = sg.pick(actor.reachables(sg));
-			if (p.owner != null && p.owner != actor) {
-				Civ other = p.owner;
+			if (p.getOwner() != null && p.getOwner() != actor) {
+				Civ other = p.getOwner();
 				// They meet a civ.
 				rep.append("The ").append(actor.name).append(" send a delegation to ").append(p.name).append(". ");
 				Diplomacy.Outcome outcome = Diplomacy.meet(actor, other, sg);
 				rep.append(outcome.desc(other, actor.relation(other))).append(" ");
-				if (outcome == Diplomacy.Outcome.UNION && (actor.has(SentientType.Base.PARASITES) || p.owner.has(SentientType.Base.PARASITES))) {
+				if (outcome == Diplomacy.Outcome.UNION && (actor.has(SentientType.Base.PARASITES) || p.getOwner().has(SentientType.Base.PARASITES))) {
 					outcome = Diplomacy.Outcome.PEACE;
 				}
 				if (outcome == Diplomacy.Outcome.UNION) {
 					sg.civs.remove(other);
-					Government newGovt = sg.pick(new Government[] { actor.govt, other.govt });
-					actor.govt = newGovt;
+					Government newGovt = sg.pick(new Government[] { actor.getGovt(), other.getGovt()});
+					actor.setGovt(newGovt);
 					actor.colonies.addAll(other.colonies);
 					for (Planet c : other.colonies) {
-						c.owner = actor;
+						c.setOwner(actor);
 					}
 					actor.resources += other.resources;
 					actor.science += other.science;
@@ -72,7 +75,7 @@ public enum CivAction {
 							int stolenResources = actor.resources / actor.colonies.size();
 							Civ newCiv = new Civ(sg.year, SentientType.PARASITES, victimP, sg.pick(Government.values()), stolenResources, sg.historicalCivNames);
 							rep.append("The expedition encounters brain parasites. Upon their return to ").append(victimP.name).append(", the parasites take over the brains of the planet's inhabitants, creating the ").append(newCiv.name).append(".");
-							victimP.owner = newCiv;
+							victimP.setOwner(newCiv);
 							actor.colonies.remove(victimP);
 							sg.civs.add(newCiv);
 							sg.historicalCivNames.add(newCiv.name);
@@ -115,29 +118,29 @@ public enum CivAction {
 				}
 				
 				// The locals.
-				if (p.owner == null) {
+				if (p.getOwner() == null) {
 					for (Population pop : new ArrayList<Population>(p.inhabitants)) {
 						major = true;
 						if (pop.type.base == SentientType.Base.DEEP_DWELLERS) {
 							rep.append("They remain unaware of the Deep Dweller culture far beneath. ");
 							continue;
 						}
-						SentientEncounterOutcome seo = sg.pick(actor.govt.encounterOutcomes);
+						SentientEncounterOutcome seo = sg.pick(actor.getGovt().encounterOutcomes);
 						rep.append(seo.desc.replace("$a", pop.type.getName()));
 						switch (seo) {
 							case EXTERMINATE:
 								int kills = sg.d(3) + 1;
-								if (kills >= pop.size) {
+								if (kills >= pop.getSize()) {
 									p.dePop(pop, sg.year, null, "a campaign of extermination by " + actor.name, null);
 									rep.append(" and wipe them out. ");
 								} else {
-									pop.size -= kills;
+									pop.setSize(pop.getSize() - kills);
 									rep.append(", killing ").append(kills).append(" billion.");
 								}
 								break;
 							case EXTERMINATE_FAIL:
 								Civ newCiv = new Civ(sg.year, pop.type, p, Government.REPUBLIC, 1, sg.historicalCivNames);
-								pop.size++;
+								pop.setSize(pop.getSize() + 1);
 								actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 								newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 								sg.civs.add(newCiv);
@@ -152,7 +155,7 @@ public enum CivAction {
 								}
 								// INTENTIONAL FALLTHROUGH!!!
 							case SUBJUGATE:
-								p.owner = actor;
+								p.setOwner(actor);
 								if (!actor.colonies.contains(p)) { actor.colonies.add(p); }
 								break;
 						}
@@ -227,24 +230,24 @@ public enum CivAction {
 									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
 									la.artefact.creator.resources = 10;
 									la.artefact.creator.military = 10;
-									if (p.owner != null) {
-										p.owner.relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
-										la.artefact.creator.relations.put(p.owner, Diplomacy.Outcome.WAR);
-										p.owner.colonies.remove(p);
+									if (p.getOwner() != null) {
+										p.getOwner().relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
+										la.artefact.creator.relations.put(p.getOwner(), Diplomacy.Outcome.WAR);
+										p.getOwner().colonies.remove(p);
 									}
 									la.artefact.creator.colonies.clear();
 									la.artefact.creator.colonies.add(p);
-									p.owner = la.artefact.creator;
+									p.setOwner(la.artefact.creator);
 									boolean inserted = false;
 									for (Population pop : p.inhabitants) {
 										if (pop.type == la.artefact.st) {
-											pop.size += 3;
+											pop.setSize(pop.getSize() + 3);
 											inserted = true;
 											break;
 										}
 									}
 									if (!inserted) {
-										p.inhabitants.add(new Population(la.artefact.st, 3));
+										new Population(la.artefact.st, 3, p);
 									}
 									la.artefact.creator.birthYear = sg.year;
 									p.strata.remove(stratum);
@@ -295,7 +298,7 @@ public enum CivAction {
 				// Pick a planet to colonise.
 				Planet p = sg.pick(actor.reachables(sg));
 				if (!p.habitable) { continue; }
-				if (p.owner != null) { continue; }
+				if (p.getOwner() != null) { continue; }
 				// Who shall the colonists be?
 				
 				rep.append("The ").append(actor.name).append(" colonise ").append(p.name).append(". ");
@@ -312,7 +315,7 @@ public enum CivAction {
 					}
 					rep.append("the ").append(nativeP);
 					
-					SentientEncounterOutcome seo = sg.pick(actor.govt.encounterOutcomes);
+					SentientEncounterOutcome seo = sg.pick(actor.getGovt().encounterOutcomes);
 					switch (seo) {
 						case EXTERMINATE:
 						case EXTERMINATE_FAIL:
@@ -340,27 +343,16 @@ public enum CivAction {
 					rep.append(" They now call themselves the ").append(actor.name).append(".");
 				}
 				actor.resources -= 6;
-				p.owner = actor;
+				p.setOwner(actor);
 				actor.colonies.add(p);
 				Population srcPop = null;
 				for (Population pop : srcP.inhabitants) {
-					if (actor.fullMembers.contains(pop.type) && pop.size > 1) {
+					if (actor.fullMembers.contains(pop.type) && pop.getSize() > 1) {
 						srcPop = pop;
 					}
 				}
 				if (srcPop == null) { srcPop = sg.pick(srcP.inhabitants); }
-				if (srcPop.size == 1) {
-					srcP.inhabitants.remove(srcPop);
-				}
-				boolean inserted = false;
-				for (Population pop : p.inhabitants) {
-					if (pop.type == srcPop.type) {
-						pop.size++;
-						inserted = true;
-						break;
-					}
-				}
-				if (!inserted) { p.inhabitants.add(new Population(srcPop.type, 1)); }
+				srcPop.send(p);
 				return;
 			}
 		}
@@ -413,7 +405,7 @@ public enum CivAction {
 	public void invoke(Civ actor, SpaceGen sg) {
 		StringBuilder rep = new StringBuilder();
 		i(actor, sg, rep);
-		if (rep.length() > 0) { sg.l(rep.toString()); }
+		if (rep.length() > 0) { sg.l(rep.toString()); confirm();}
 	}
 	
 	void buildOutpost(StructureType st, Civ actor, SpaceGen sg, StringBuilder rep) {
@@ -421,11 +413,11 @@ public enum CivAction {
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.
 			Planet p = sg.pick(actor.reachables(sg));
-			if ((p.owner != null || !p.inhabitants.isEmpty()) && p.owner != actor) { continue; }
+			if ((p.getOwner() != null || !p.inhabitants.isEmpty()) && p.getOwner() != actor) { continue; }
 			
 			if (p.has(st)) { continue; }
-			if (p.owner != actor) {
-				p.owner = actor;
+			if (p.getOwner() != actor) {
+				p.setOwner(actor);
 				actor.colonies.add(p);
 			}
 			actor.resources -= 5;
@@ -445,8 +437,8 @@ public enum CivAction {
 			Planet p = sg.pick(actor.colonies);
 			if (p.isOutpost()) { continue; }
 			if (p.has(st)) { continue; }
-			if (p.owner != actor) {
-				p.owner = actor;
+			if (p.getOwner() != actor) {
+				p.setOwner(actor);
 				actor.colonies.add(p);
 			}
 			actor.resources -= 8;

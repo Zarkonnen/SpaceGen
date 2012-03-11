@@ -2,10 +2,13 @@ package com.zarkonnen.spacegen;
 
 import java.util.ArrayList;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public class Science {
 	static boolean advance(Civ actor, SpaceGen sg) {
 		ArrayList<Planet> cands;
-		switch (sg.d(9)) {
+		switch (sg.d(8)) {
 			case 0:
 				actor.techLevel++;
 				if (actor.techLevel == 10) {
@@ -14,65 +17,55 @@ public class Science {
 						col.transcend(sg.year);
 					}
 					sg.civs.remove(actor);
+					confirm();
 					return true;
 				}
 				break;
 			case 1:
-				// Send out space probe: todo.
-				break;
-			case 2:
 				// Develop new weapons systems.
 				sg.l("The $name develop powerful new weapons.", actor);
 				actor.weapLevel++;
+				confirm();
 				break;
-			case 3:
+			case 2:
 				Planet srcP = actor.largestColony();
 				if (srcP.population() > 1) {
 					for (Planet p : actor.reachables(sg)) {
-						if (!p.habitable && p.owner == null) {
+						if (!p.habitable && p.getOwner() == null) {
 							p.habitable = true;
 							//p.inhabitants.add(new Population(actor.fullMembers.get(0), 1));
 
 							Population srcPop = null;
 							for (Population pop : srcP.inhabitants) {
-								if (actor.fullMembers.contains(pop.type) && pop.size > 1) {
+								if (actor.fullMembers.contains(pop.type) && pop.getSize() > 1) {
 									srcPop = pop;
 								}
 							}
 							if (srcPop == null) { srcPop = sg.pick(srcP.inhabitants); }
-							if (srcPop.size == 1) {
-								srcP.inhabitants.remove(srcPop);
-							}
-							boolean inserted = false;
-							for (Population pop : p.inhabitants) {
-								if (pop.type == srcPop.type) {
-									pop.size++;
-									inserted = true;
-									break;
-								}
-							}
-							if (!inserted) { p.inhabitants.add(new Population(srcPop.type, 1)); }
+							srcPop.send(p);
 
-							p.owner = actor;
+							p.setOwner(actor);
 							actor.colonies.add(p);
 							sg.l("The $cname terraform and colonise $pname.", actor, p);
+							confirm();
 							return false;
 						}
 					}
 				}
 				// INTENTIONAL FALLTHROUGH
-			case 4:
+			case 3:
 				for (Planet p : actor.reachables(sg)) {
-					if (p.habitable && p.owner == null && p.inhabitants.isEmpty()) {
+					if (p.habitable && p.getOwner() == null && p.inhabitants.isEmpty()) {
 						SentientType st = SentientType.invent(sg, actor, p, null);
-						p.inhabitants.add(new Population(st, 3));
-						p.owner = actor;
+						new Population(st, 3, p);
+						p.setOwner(actor);
 						actor.colonies.add(p);
 						sg.l("The $cname uplift the local " + st.getName() + " on $pname and incorporate the planet into their civilisation.", actor, p);
+						confirm();
 						return false;
 					}
 				}
-			case 5:
+			case 4:
 				// ROBOTS!
 				cands = new ArrayList<Planet>();
 				lp: for (Planet p : actor.fullColonies()) {
@@ -85,9 +78,10 @@ public class Science {
 				Planet rp = sg.pick(cands);
 				SentientType rob = SentientType.genRobots(sg, actor, rp, null);
 				sg.l("The $cname create " + rob.getName() + " as servants on $pname.", actor, rp);
-				rp.inhabitants.add(new Population(rob, 4));
+				new Population(rob, 4, rp);
+				confirm();
 				break;
-			case 6:
+			case 5:
 				Planet target = actor.largestColony();
 				if (target == null) { return false; }
 				Agent probe = new Agent(AgentType.SPACE_PROBE, sg.year, sg.pick(new String[] {
@@ -98,9 +92,10 @@ public class Science {
 				probe.originator = actor;
 				sg.l("The $name launch a space probe called " + probe.name + " to explore the galaxy.", actor);
 				sg.agents.add(probe);
+				confirm();
 				break;
+			case 6:
 			case 7:
-			case 8:
 				cands = new ArrayList<Planet>();
 				for (Planet p : actor.colonies) {
 					if (p.has(StructureType.Standard.SCIENCE_LAB)) {
@@ -113,6 +108,7 @@ public class Science {
 				Artefact a = new Artefact(sg.year, actor, type, type.create(actor, sg));
 				p.artefacts.add(a);
 				sg.l("The $name develop a " + a.type.getName() + ".", actor);
+				confirm();
 		}
 		
 		return false;

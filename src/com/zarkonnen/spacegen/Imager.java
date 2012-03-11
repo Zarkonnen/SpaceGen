@@ -165,7 +165,7 @@ public class Imager {
 		int sliceSz = 32 / civ.fullMembers.size();
 		boolean monochrome = true;
 		for (int i = 0; i < civ.fullMembers.size(); i++) {
-			BufferedImage slice = M.getImage("misc/" + civ.govt.name().toLowerCase());
+			BufferedImage slice = M.getImage("misc/" + civ.getGovt().name().toLowerCase());
 			if (civ.fullMembers.get(i).color != null) {
 				slice = M.tint(slice, TINTS.get(civ.fullMembers.get(i).color));
 				monochrome = false;

@@ -7,11 +7,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import static com.zarkonnen.spacegen.Stage.*;
+import static com.zarkonnen.spacegen.Main.*;
+
 public class Civ {	
 	ArrayList<SentientType> fullMembers = new ArrayList<SentientType>();
-	Government govt;
+	private Government govt;
 	ArrayList<Planet> colonies = new ArrayList<Planet>();
 	HashMap<Civ, Diplomacy.Outcome> relations = new HashMap<Civ, Diplomacy.Outcome>();
+	
+	ArrayList<CivSprite> sprites = new ArrayList<CivSprite>();
 	
 	int resources = 0;
 	int science = 0;
@@ -74,8 +79,8 @@ public class Civ {
 		this.colonies.add(home);
 		this.resources = resources;
 		this.birthYear = year;
-		home.owner = this;
 		updateName(historicals);
+		home.setOwner(this);
 	}
 	
 	public int population() {
@@ -93,7 +98,7 @@ public class Civ {
 	}
 	
 	public Planet largestColony() {
-		int sz = 0;
+		int sz = -1;
 		Planet largest = null;
 		for (Planet col : colonies) {
 			if (col.population() > sz) { largest = col; sz = col.population(); }
@@ -104,7 +109,7 @@ public class Civ {
 	final String genName(int nth) {
 		String n = "";
 		if (nth > 1) { n = Names.nth(nth) + " "; }
-		n += govt.title + " of ";
+		n += getGovt().title + " of ";
 		if (fullMembers.size() == 1) {
 			n += fullMembers.get(0).getName();
 		} else {
@@ -178,7 +183,7 @@ public class Civ {
 			sb.append(", highly advanced");
 		}
 		
-		sb.append(" ").append(govt.title).append(" of ");
+		sb.append(" ").append(getGovt().title).append(" of ");
 		if (colonies.size() == 1) {
 			sb.append("a single planet, ").append(colonies.get(0).name);
 		} else {
@@ -189,9 +194,9 @@ public class Civ {
 		HashMap<SentientType, Integer> pops = new HashMap<SentientType, Integer>();
 		for (Planet c : colonies) { for (Population pop : c.inhabitants) {
 			if (!pops.containsKey(pop.type)) {
-				pops.put(pop.type, pop.size);
+				pops.put(pop.type, pop.getSize());
 			} else {
-				pops.put(pop.type, pops.get(pop.type) + pop.size);
+				pops.put(pop.type, pops.get(pop.type) + pop.getSize());
 			}
 		}}
 		for (Map.Entry<SentientType, Integer> e : pops.entrySet()) {
@@ -226,5 +231,16 @@ public class Civ {
 	boolean has(Base base) {
 		for (SentientType st : fullMembers) { if (st.base == base) { return true; } }
 		return false;
+	}
+
+	public Government getGovt() {
+		return govt;
+	}
+
+	public void setGovt(Government govt) {
+		this.govt = govt;
+		animate(tracking(largestColony().sprite, delay()));
+		for (CivSprite s : sprites) { add(change(s, Imager.get(this))); }
+		animate();
 	}
 }

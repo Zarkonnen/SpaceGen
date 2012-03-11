@@ -70,10 +70,13 @@ public class SpaceGen {
 	}
 
 	public SpaceGen(long seed) {
+		r = new Random(seed);
+	}
+	
+	void init() {
 		animate(delay(10));
 		l("IN THE BEGINNING, ALL WAS DARK.");
 		l("THEN, PLANETS BEGAN TO FORM:");
-		r = new Random(seed);
 		int np = 6 + d(4, 6);
 		for (int i = 0; i < np; i++) {
 			Planet p = new Planet(r, this);
@@ -90,13 +93,15 @@ public class SpaceGen {
 			for (Planet out : new ArrayList<Planet>(c.colonies)) {
 				out.deCiv(year, null, "during the collapse of the " + c.name);
 			}
+			confirm();
 			return true;
 		}
 		if (c.colonies.size() == 1 && c.colonies.get(0).population() == 1) {
 			Planet remnant = c.colonies.get(0);
 			l("The $cname collapses, leaving only a few survivors on $pname.", c, remnant);
-			remnant.owner = null;
+			remnant.setOwner(null);
 			c.colonies.clear();
+			confirm();
 			return true;
 		}
 		return false;
@@ -124,53 +129,61 @@ public class SpaceGen {
 				m.color = col;
 				m.p = planet;
 				agents.add(m);
+				confirm();
 			}
 			
 			if ((planet.population() > 12 || (planet.population() > 7 && p(10)) && planet.pollution < 4)) {
 				planet.pollution++;
 			}
 			for (Population pop : new ArrayList<Population>(planet.inhabitants)) {
-				if (planet.owner == null && p(100) && pop.type.base != SentientType.Base.ROBOTS && pop.type.base != SentientType.Base.PARASITES) {
+				if (planet.getOwner() == null && p(100) && pop.type.base != SentientType.Base.ROBOTS && pop.type.base != SentientType.Base.PARASITES) {
 					SentientType nst = pop.type.mutate(this, null);
 					l("The $sname on $pname mutate into " + nst.getName() + ".", pop.type, planet);
 					pop.type = nst;
+					pop.update();
+					confirm();
 				}
 				int roll = d(6);
 				if (roll < planet.pollution) {
 					//l("Pollution kills a billion $sname on $pname.", pop.type, planet);
 					planet.pollution--;
-					pop.size--;
+					if (pop.getSize() == 1) {
+						pop.eliminate();
+						planet.dePop(pop, year, null, "from the effects of pollution", null);
+						l("$sname have died out on $pname!", pop.type, planet);
+						confirm();
+						continue planets;
+					} else {
+						pop.setSize(pop.getSize() - 1);
+					}
 				} else {
-					if (roll == 6 || (pop.type.base == SentientType.Base.ANTOIDS && roll > 3) || (planet.owner != null && roll == 5) ||
+					if (roll == 6 || (pop.type.base == SentientType.Base.ANTOIDS && roll > 3) || (planet.getOwner() != null && roll == 5) ||
 						(planet.has(SentientType.Base.ANTOIDS.specialStructure) && roll > 2))
 					{
-						pop.size++;
+						pop.setSize(pop.getSize() + 1);
 						//l("The population of $sname on $pname has grown by a billion.", pop.type, planet);
 					}
 				}
 				if (pop.type.base == SentientType.Base.KOBOLDOIDS && p(10) && planet.has(SentientType.Base.KOBOLDOIDS.specialStructure)) {
-					pop.size++;
+					pop.setSize(pop.getSize() + 1);
 					l("The skull pile on $pname excites the local $sname into a sexual frenzy.", pop.type, planet);
 				}
-				if (pop.size > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
+				if (pop.getSize() > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
 					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
-					if (planet.owner != null) {
+					if (planet.getOwner() != null) {
 						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
-						planet.structures.add(new Structure(StructureType.Standard.SKULL_PILE, planet.owner, year));
+						planet.structures.add(new Structure(StructureType.Standard.SKULL_PILE, planet.getOwner(), year));
 					}
 				}
-				if (pop.size <= 0) {
-					planet.dePop(pop, year, null, "from the effects of pollution", null);
-					l("$sname have died out on $pname!", pop.type, planet);
-					continue planets;
-				}
+
 				for (Plague plague : new ArrayList<Plague>(planet.plagues)) {
 					if (plague.affects.contains(pop.type)) {
 						if (d(12) < plague.lethality) {
-							pop.size--;
-							if (pop.size <= 0) {
+							if (pop.getSize() <= 1) {
 								planet.dePop(pop, year, null, "from the " + plague.name, new Plague(plague));
 								l("The $sname on $pname have been wiped out by the " + plague.name + "!", pop.type, planet);
+							} else {
+								pop.setSize(pop.getSize() - 1);
 							}
 						}
 					} else {
@@ -233,7 +246,7 @@ public class SpaceGen {
 				}
 				if (c.has(ArtefactType.Device.MIND_READER) && p(4)) {
 					for (Population pop : col.inhabitants) { 
-						pop.size++;
+						pop.setSize(pop.getSize() + 1);
 					}
 				}
 				if (col.population() == 0 && !col.isOutpost()) {
@@ -263,7 +276,7 @@ public class SpaceGen {
 			SentientType lead = pick(c.fullMembers);
 			pick(lead.base.behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
-			pick(c.govt.behaviour).invoke(c, this);
+			pick(c.getGovt().behaviour).invoke(c, this);
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			
 			c.science += newSci;
@@ -332,13 +345,14 @@ public class SpaceGen {
 		for (Planet p : planets) {
 			if (p.habitable && p(500)) {
 				Cataclysm c = pick(Cataclysm.values());
-				Civ civ = p.owner;
+				Civ civ = p.getOwner();
 				l(c.desc, p);
 				p.deLive(year, c, null);
 				
 				if (civ != null) {
 					if (checkCivDoom(civ)) { civs.remove(civ); }
 				}
+				confirm();
 				continue;
 			}
 			
@@ -353,7 +367,7 @@ public class SpaceGen {
 					p.specials.add(ps);
 					ps.apply(p);
 					l(ps.announcement, p);
-					if (p.specials.size() == 1) { animate(tracking(p.sprite, change(p.sprite, Imager.get(p)))); }
+					if (p.specials.size() == 1) { animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));	confirm(); }
 				}
 			}
 			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.pollution);
@@ -361,33 +375,36 @@ public class SpaceGen {
 				p.evoPoints -= p.evoNeeded;
 				if (!p.habitable) {
 					p.habitable = true;
-					l("Life arises on $name", p);
 					animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));
+					l("Life arises on $name", p);
+					confirm();
 				} else {
 					if (!p.inhabitants.isEmpty()) {
-						if (p.owner == null) {
+						if (p.getOwner() == null) {
 							// Do the civ thing.
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
-							starter.size++;
+							starter.setSize(starter.getSize() + 1);
 							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivNames);
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + ", the " + c.name + ".", starter.type, p);
 							historicalCivNames.add(c.name);
 							civs.add(c);
-							p.owner = c;
+							confirm();
 						}
 					} else {
 						if (p(3)) {
 							// Sentient!
 							SentientType st = SentientType.invent(this, null, p, null);
+							new Population(st, 2 + d(1), p);
 							l("Sentient $sname arise on $pname.", st, p);
-							p.inhabitants.add(new Population(st, 2 + d(1)));
+							confirm();
 						} else {
 							// Some special creature.
 							SpecialLifeform slf = pick(SpecialLifeform.values());
 							if (!p.lifeforms.contains(slf)) {
-								l("$lname evolve on $pname.", slf, p);
 								p.lifeforms.add(slf);
+								l("$lname evolve on $pname.", slf, p);
+								confirm();
 							}
 						}
 					}

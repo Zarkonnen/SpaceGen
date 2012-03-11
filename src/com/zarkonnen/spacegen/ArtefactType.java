@@ -34,7 +34,7 @@ public interface ArtefactType {
 					}
 					// fallthru!
 				case 2:
-					switch (actor.govt) {
+					switch (actor.getGovt()) {
 						case DICTATORSHIP:
 							return ret + " the Emperor of the " + actor.name;
 						case FEUDAL_STATE:
@@ -45,7 +45,7 @@ public interface ArtefactType {
 							return ret + " the Autarch of the " + actor.name;
 					}
 				case 3:
-					switch (actor.govt) {
+					switch (actor.getGovt()) {
 						case DICTATORSHIP:
 							return ret + " the Empress of the " + actor.name;
 						case FEUDAL_STATE:

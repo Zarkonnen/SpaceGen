@@ -28,15 +28,15 @@ public enum AgentType {
 				sg.agents.remove(a);
 				return;
 			}
-			if (a.p.owner != null) {
+			if (a.p.getOwner() != null) {
 				int tribute = sg.d(8) + 1;
-				if (a.p.owner.resources >= tribute && !sg.p(4)) {
-					a.p.owner.resources -= tribute;
+				if (a.p.getOwner().resources >= tribute && !sg.p(4)) {
+					a.p.getOwner().resources -= tribute;
 					a.resources += tribute;
-					sg.l("The pirate " + a.name + " receives tribute from " + a.p.name + " of the " + a.p.owner.name + ".");
+					sg.l("The pirate " + a.name + " receives tribute from " + a.p.name + " of the " + a.p.getOwner().name + ".");
 				} else {
 					int attack = a.fleet * 4;
-					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.owner.techLevel + 2 * a.p.owner.weapLevel) : 0);
+					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.getOwner().techLevel + 2 * a.p.getOwner().weapLevel) : 0);
 					if (a.p.has(SentientType.Base.URSOIDS.specialStructure)) {
 						defence += 4;
 					}
@@ -56,11 +56,11 @@ public enum AgentType {
 						}
 						int deaths = 0;
 						for (Population pop : new ArrayList<Population>(target.inhabitants)) {
-							int pd = sg.d(pop.size) + 1;
-							if (pd >= pop.size) {
+							int pd = sg.d(pop.getSize()) + 1;
+							if (pd >= pop.getSize()) {
 								target.dePop(pop, sg.year, null, "due to orbital bombardment by the pirate " + a.name, null);
 							} else {
-								pop.size -= pd;
+								pop.setSize(pop.getSize() - pd);
 							}
 							deaths += pd;
 						}
@@ -77,9 +77,9 @@ public enum AgentType {
 							sg.l("The pirate " + a.name + " subjects " + target.name + " to orbital bombardment, killing " + deaths + " billion.");
 						}
 					} else {
-						sg.l("The $name defeats the pirate " + a.name + ".", a.p.owner);
-						a.p.owner.resources += a.resources / 2;
-						a.p.owner.military = a.p.owner.military * 5 / 6;
+						sg.l("The $name defeats the pirate " + a.name + ".", a.p.getOwner());
+						a.p.getOwner().resources += a.resources / 2;
+						a.p.getOwner().military = a.p.getOwner().military * 5 / 6;
 						sg.agents.remove(a);
 					}
 				}
@@ -155,10 +155,10 @@ public enum AgentType {
 					if (attackRoll > defenseRoll) {
 						sg.l(a.name + " defeats the " + ag.name + " in orbit around " + a.p.name + ".");
 						sg.agents.remove(ag);
-						if (a.p.owner != null) {
-							sg.l("The " + a.p.owner.name + " rewards the adventurer handsomely.");
-							a.resources += a.p.owner.resources / 3;
-							a.p.owner.resources = a.p.owner.resources * 2 / 3;
+						if (a.p.getOwner() != null) {
+							sg.l("The " + a.p.getOwner().name + " rewards the adventurer handsomely.");
+							a.resources += a.p.getOwner().resources / 3;
+							a.p.getOwner().resources = a.p.getOwner().resources * 2 / 3;
 						}
 					} else {
 						int loss = sg.d(2) + 2;
@@ -198,7 +198,7 @@ public enum AgentType {
 				}
 			}
 			
-			if (sg.p(3) && a.p.owner != null && a.p.owner != a.originator && a.originator.relation(a.p.owner) == Diplomacy.Outcome.WAR) {
+			if (sg.p(3) && a.p.getOwner() != null && a.p.getOwner() != a.originator && a.originator.relation(a.p.getOwner()) == Diplomacy.Outcome.WAR) {
 				// Show some initiative!
 				String act = sg.pick(new String[] {
 					" raids the treasury on ",
@@ -207,13 +207,13 @@ public enum AgentType {
 					" steals a spaceship from the navy of ",
 					" extorts money from "
 				});
-				sg.l(a.name + act + a.p.name + ", a planet of the enemy " + a.p.owner.name + ".");
+				sg.l(a.name + act + a.p.name + ", a planet of the enemy " + a.p.getOwner().name + ".");
 				a.resources += 2;
-				a.p.owner.resources = a.p.owner.resources * 5 / 6;
+				a.p.getOwner().resources = a.p.getOwner().resources * 5 / 6;
 				return;
 			}
 			
-			if (a.p.owner == null || (a.p.owner != a.originator && a.originator.relation(a.p.owner) == Diplomacy.Outcome.PEACE)) {
+			if (a.p.getOwner() == null || (a.p.getOwner() != a.originator && a.originator.relation(a.p.getOwner()) == Diplomacy.Outcome.PEACE)) {
 				// Exploration
 				StringBuilder rep = new StringBuilder();
 				boolean major = false;
@@ -310,24 +310,24 @@ public enum AgentType {
 									la.artefact.creator.techLevel = la.artefact.creatorTechLevel;
 									la.artefact.creator.resources = 10;
 									la.artefact.creator.military = 10;
-									if (p.owner != null) {
-										p.owner.relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
-										la.artefact.creator.relations.put(p.owner, Diplomacy.Outcome.WAR);
-										p.owner.colonies.remove(p);
+									if (p.getOwner() != null) {
+										p.getOwner().relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
+										la.artefact.creator.relations.put(p.getOwner(), Diplomacy.Outcome.WAR);
+										p.getOwner().colonies.remove(p);
 									}
 									la.artefact.creator.colonies.clear();
 									la.artefact.creator.colonies.add(p);
-									p.owner = la.artefact.creator;
+									p.setOwner(la.artefact.creator);
 									boolean inserted = false;
 									for (Population pop : p.inhabitants) {
 										if (pop.type == la.artefact.st) {
-											pop.size += 3;
+											pop.setSize(pop.getSize() + 3);
 											inserted = true;
 											break;
 										}
 									}
 									if (!inserted) {
-										p.inhabitants.add(new Population(la.artefact.st, 3));
+										new Population(la.artefact.st, 3, p);
 									}
 									la.artefact.creator.birthYear = sg.year;
 									p.strata.remove(stratum);
@@ -368,7 +368,7 @@ public enum AgentType {
 				return;
 			}
 			
-			if (a.p.owner == a.originator) {
+			if (a.p.getOwner() == a.originator) {
 				while (a.resources > 4) {
 					a.fleet++;
 					a.resources -= 4;
@@ -525,11 +525,11 @@ public enum AgentType {
 			if (a.p.population() > 1) {
 				if (sg.p(6)) {
 					Population victim = sg.pick(a.p.inhabitants);
-					if (victim.size == 1) {
+					if (victim.getSize() == 1) {
 						sg.l("Shape-shifters devour the last remaining " + victim.type.getName() + " on " + a.p.name + ".");
 						a.p.dePop(victim, sg.year, null, "through predation by shape-shifters", null);
 					} else {
-						victim.size--;
+						victim.setSize(victim.getSize() - 1);
 					}
 				}
 				if (sg.p(40)) {
@@ -553,25 +553,25 @@ public enum AgentType {
 		}
 		@Override
 		public void behave(Agent a, SpaceGen sg) {
-			if (a.p.inhabitants.isEmpty() || a.p.owner == null) {
+			if (a.p.inhabitants.isEmpty() || a.p.getOwner() == null) {
 				sg.agents.remove(a);
 				return;
 			}
 			if (sg.p(6)) {
 				if (a.p.population() > 1) {
 					Population victim = sg.pick(a.p.inhabitants);
-					if (victim.size == 1) {
+					if (victim.getSize() == 1) {
 						sg.l("A billion " + victim.type.getName() + " on " + a.p.name + " are devoured by ultravores.");
 						a.p.dePop(victim, sg.year, null, "through predation by ultravores", null);
 					} else {
-						victim.size--;
+						victim.setSize(victim.getSize() - 1);
 					}
 				} else {
 					sg.l("Ultravores devour the final inhabitants of " + a.p.name + ".");
 					a.p.deCiv(sg.year, null, "through predation by ultravores");
 				}
-				if (sg.p(3) && a.p.owner != null) {
-					lp: for (Planet p : a.p.owner.fullColonies()) {
+				if (sg.p(3) && a.p.getOwner() != null) {
+					lp: for (Planet p : a.p.getOwner().fullColonies()) {
 						for (Agent ag : sg.agents) {
 							if (ag.type == AgentType.ULTRAVORES && ag.p == p) { continue lp; }
 						}
@@ -598,12 +598,12 @@ public enum AgentType {
 			}
 			if (sg.p(8) && a.p.population() > 2) {
 				Population t = sg.pick(a.p.inhabitants);
-				if (t.size == 1) {
+				if (t.getSize() == 1) {
 					sg.l("The " + a.name + " devours the last of the local " + t.type.name + " on " + a.p.name + ".");
 					a.p.dePop(t, sg.year, null, "due to predation by a " + a.name, null);
 				} else {
 					sg.l("The " + a.name + " devours one billion " + t.type.name + " on " + a.p.name + ".");
-					t.size--;
+					t.setSize(t.getSize() - 1);
 				}
 				return;
 			}
@@ -626,7 +626,7 @@ public enum AgentType {
 				if (a.timer == 0) {
 					a.p = a.target;
 					sg.l("The space probe " + a.name + " returns to " + a.p.name + ".");
-					if (a.p.owner == a.originator) {
+					if (a.p.getOwner() == a.originator) {
 						sg.l("The " + a.originator.name + " gains a wealth of new knowledge as a result.");
 						a.originator.techLevel += 3;
 						sg.agents.remove(a);
@@ -639,12 +639,12 @@ public enum AgentType {
 			}
 			if (sg.p(8) && a.p.population() > 2) {
 				Population t = sg.pick(a.p.inhabitants);
-				if (t.size == 1) {
+				if (t.getSize() == 1) {
 					sg.l("The insane space probe " + a.name + " bombards " + a.p.name + ", wiping out the local " + t.type.name + ".");
 					a.p.dePop(t, sg.year, null, "due to bombardment by the insane space probe " + a.name, null);
 				} else {
 					sg.l("The insane space probe " + a.name + " bombards " + a.p.name + ", killing one billion " + t.type.name + ".");
-					t.size--;
+					t.setSize(t.getSize() - 1);
 				}
 				return;
 			}
@@ -728,25 +728,25 @@ public enum AgentType {
 			}
 			
 			// Random mischief!
-			if (a.p.owner != null) {
+			if (a.p.getOwner() != null) {
 				if (sg.p(60)) {
-					SentientType st = sg.pick(a.p.owner.fullMembers);
+					SentientType st = sg.pick(a.p.getOwner().fullMembers);
 					String name = sg.pick(st.base.nameStarts) + sg.pick(st.base.nameEnds);
 					String title = null;
-					switch (a.p.owner.govt) {
+					switch (a.p.getOwner().getGovt()) {
 						case DICTATORSHIP: title = "Emperor"; break;
 						case FEUDAL_STATE: title = "King"; break;
 						case REPUBLIC: title = "President"; break;
 						case THEOCRACY: title = "Autarch"; break;
 					}
-					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.owner.name + ", in a block of time ice.");
+					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.getOwner().name + ", in a block of time ice.");
 					a.p.artefacts.add(new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
-									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.owner.name));
+									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.getOwner().name));
 					return;
 				}
 				if (sg.p(60)) {
 					sg.l("The rogue AI " + a.name + " crashes the " + a.p.name + " stock exchange.");
-					a.p.owner.resources /= 2;
+					a.p.getOwner().resources /= 2;
 					return;
 				}
 				if (sg.p(30)) {
@@ -782,14 +782,9 @@ public enum AgentType {
 				}
 				if (a.p.population() > 2 && sg.p(25)) {
 					for (Planet t : sg.planets) {
-						if (t.habitable && t.owner == null) {
+						if (t.habitable && t.getOwner() == null) {
 							Population victim = sg.pick(a.p.inhabitants);
-							if (victim.size == 1) {
-								t.inhabitants.add(victim);
-							} else {
-								t.inhabitants.add(new Population(victim.type, 1));
-								victim.size--;
-							}
+							victim.send(t);
 							sg.l("The rogue AI " + a.name + " abducts a billion " + victim.type.name + " from " + a.p.name + " and dumps them on " + t.name + ".");
 							return;
 						}
@@ -797,17 +792,17 @@ public enum AgentType {
 				}
 			}
 			
-			if (a.p.habitable && sg.p(200) && a.p.owner == null) {
+			if (a.p.habitable && sg.p(200) && a.p.getOwner() == null) {
 				SentientType st = SentientType.invent(sg, null, a.p, "They were created by the rogue AI " + a.name + " in " + sg.year + ".");
 				sg.l("The rogue AI " + a.name + " uplifts the local " + st.name + " on " + a.p.name + ".");
-				a.p.inhabitants.add(new Population(st, 3 + sg.d(3)));
+				new Population(st, 3 + sg.d(3), a.p);
 				return;
 			}
 			
-			if (a.p.habitable && sg.p(250) && a.p.owner == null) {
+			if (a.p.habitable && sg.p(250) && a.p.getOwner() == null) {
 				SentientType st = SentientType.genRobots(sg, null, a.p, "They were created by the rogue AI " + a.name + " in " + sg.year + ".");
 				sg.l("The rogue AI " + a.name + " creates " + st.name + " on " + a.p.name + ".");
-				a.p.inhabitants.add(new Population(st, 3 + sg.d(3)));
+				new Population(st, 3 + sg.d(3), a.p);
 				return;
 			}
 			

@@ -81,13 +81,13 @@ public class Diplomacy {
 		{
 			return WAR;
 		}
-		if (a.govt.ordinal() > b.govt.ordinal()) {
+		if (a.getGovt().ordinal() > b.getGovt().ordinal()) {
 			Civ tmp = a;
 			a = b;
 			b = tmp;
 		}
 		
-		Outcome o = sg.pick(TABLE[a.govt.ordinal()][b.govt.ordinal()]);
+		Outcome o = sg.pick(TABLE[a.getGovt().ordinal()][b.getGovt().ordinal()]);
 		if (o == Outcome.WAR && a.has(ArtefactType.Device.MIND_READER) && sg.coin()) {
 			o = Outcome.PEACE;
 		}
