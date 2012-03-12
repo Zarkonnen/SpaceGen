@@ -24,7 +24,7 @@ public class Science {
 			case 1:
 				// Develop new weapons systems.
 				sg.l("The $name develop powerful new weapons.", actor);
-				actor.weapLevel++;
+				actor.setWeapLevel(actor.getWeapLevel() + 1);
 				confirm();
 				break;
 			case 2:

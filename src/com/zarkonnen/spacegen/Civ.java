@@ -15,13 +15,14 @@ public class Civ {
 	private Government govt;
 	ArrayList<Planet> colonies = new ArrayList<Planet>();
 	HashMap<Civ, Diplomacy.Outcome> relations = new HashMap<Civ, Diplomacy.Outcome>();
+	int number = 0;
 	
 	ArrayList<CivSprite> sprites = new ArrayList<CivSprite>();
 	
 	private int resources = 0;
 	private int science = 0;
 	private int military = 0;
-	int weapLevel = 0;
+	private int weapLevel = 0;
 	private int techLevel = 0;
 	String name;
 	int birthYear;
@@ -46,9 +47,10 @@ public class Civ {
 	}
 
 	public void setScience(int science) {
+		int oldSci = this.science;
 		this.science = science;
 		for (CivSprite cs : sprites) {
-			cs.changeScience(science);
+			cs.changeScience(oldSci, science);
 		}
 		animate();
 	}
@@ -74,6 +76,18 @@ public class Civ {
 		this.techLevel = techLevel;
 		for (CivSprite cs : sprites) {
 			cs.changeTech(techLevel);
+		}
+		animate();
+	}
+	
+	public int getWeapLevel() {
+		return weapLevel;
+	}
+
+	public void setWeapLevel(int weapLevel) {
+		this.weapLevel = weapLevel;
+		for (CivSprite cs : sprites) {
+			cs.changeMilTech(weapLevel);
 		}
 		animate();
 	}
@@ -199,10 +213,10 @@ public class Civ {
 	}
 
 	final void updateName(ArrayList<String> historicals) {
-		int nth = 0;
+		number = 0;
 		while (true) {
-			nth++;
-			String n = genName(nth);
+			number++;
+			String n = genName(number);
 			if (historicals.contains(n)) { continue; }
 			name = n;
 			break;

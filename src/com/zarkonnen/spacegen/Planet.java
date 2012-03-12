@@ -40,6 +40,7 @@ public class Planet {
 
 	public void setPollution(int pollution) {
 		this.pollution = pollution;
+		animate(change(sprite, Imager.get(this)));
 	}
 	
 	public void addPlague(Plague p) {
@@ -102,7 +103,7 @@ public class Planet {
 		animate(tracking(sprite, delay()));
 		animate(remove(as));
 		for (int i = aIndex + 1; i < artefacts.size(); i++) {
-			add(move(sprite.artefactSprites.get(artefacts.get(i)), i * 36, 36));
+			add(move(sprite.artefactSprites.get(artefacts.get(i)), (i - 1) * 36, 36));
 		}
 		animate();
 		artefacts.remove(a);
@@ -132,7 +133,7 @@ public class Planet {
 		animate(tracking(sprite, delay()));
 		animate(remove(ss));
 		for (int i = sIndex + 1; i < structures.size(); i++) {
-			add(move(sprite.structureSprites.get(structures.get(i)), i * 36, 36 * 2));
+			add(move(sprite.structureSprites.get(structures.get(i)), (i - 1) * 36, 36 * 2));
 		}
 		animate();
 		structures.remove(s);
@@ -162,7 +163,7 @@ public class Planet {
 		animate(tracking(sprite, delay()));
 		animate(remove(slfs));
 		for (int i = lfIndex + 1; i < lifeforms.size(); i++) {
-			add(move(sprite.lifeformSprites.get(lifeforms.get(i)), i * 36, 36 * 3));
+			add(move(sprite.lifeformSprites.get(lifeforms.get(i)), (i - 1) * 36, 36 * 3));
 		}
 		animate();
 		lifeforms.remove(slf);
@@ -187,10 +188,11 @@ public class Planet {
 			this.owner.sprites.remove(sprite.ownerSprite);
 			animate(tracking(sprite, remove(sprite.ownerSprite)));
 			sprite.ownerSprite = null;
+			this.owner.colonies.remove(this);
 		}
 		this.owner = owner;
 		if (owner != null) {
-			sprite.ownerSprite = new CivSprite(owner);
+			sprite.ownerSprite = new CivSprite(owner, false);
 			owner.sprites.add(sprite.ownerSprite);
 			sprite.ownerSprite.init();
 			animate(tracking(sprite, add(sprite.ownerSprite, sprite)));

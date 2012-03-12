@@ -28,11 +28,17 @@ public class Imager {
 	
 	static final Color BORDER = new Color(20, 20, 20);
 	
-	public static BufferedImage get(SentientType st) {
-		return get(st, false, null);
+	public static BufferedImage get(Population pop) {
+		return get(pop.type, false, null, pop.p.getOwner() != null && !pop.p.getOwner().fullMembers.contains(pop.type), pop.p.getOwner() == null);
 	}
 	
-	public static BufferedImage get(SentientType st, boolean eyepatch, String specialColor) {		
+	public static BufferedImage get(SentientType st, boolean cage, boolean spear) {
+		return get(st, false, null, cage, spear);
+	}
+	
+	public static BufferedImage get(SentientType st, boolean eyepatch, String specialColor,
+			boolean cage, boolean spear)
+	{		
 		if (st.base == SentientType.Base.PARASITES) {
 			return M.border(M.getImage("sentients/parasites"), BORDER);
 		}
@@ -71,8 +77,8 @@ public class Imager {
 			g.drawImage(M.getImage("sentients/feathers"), 0, 0, null);
 		}
 		if (st.prefixes.contains(SentientType.Prefix.TWO_HEADED)) {
-			g.drawImage(M.getImage("sentients/" + st.base.name().toLowerCase()), -7, 0, null);
-			g.drawImage(M.getImage("sentients/" + st.base.name().toLowerCase()), 7, 0, null);
+			g.drawImage(M.getImage("sentients/" + st.base.name().toLowerCase()), -6, 0, null);
+			g.drawImage(M.getImage("sentients/" + st.base.name().toLowerCase()), 6, 0, null);
 		} else {
 			g.drawImage(M.getImage("sentients/" + st.base.name().toLowerCase()), 0, 0, null);
 		}
@@ -104,6 +110,16 @@ public class Imager {
 				g2.drawImage(img, 0, 0, null);
 			}
 			img = img2;
+		}
+		
+		if (spear) {
+			g = img.createGraphics();
+			g.drawImage(M.getImage("sentients/spear"), 0, 0, null);
+		}
+		
+		if (cage) {
+			g = img.createGraphics();
+			g.drawImage(M.getImage("sentients/cage"), 0, 0, null);
 		}
 		
 		if (st.prefixes.contains(SentientType.Prefix.GIANT)) {
@@ -148,9 +164,9 @@ public class Imager {
 	static BufferedImage get(Agent a) {
 		switch (a.type) {
 			case ADVENTURER:
-				return get(a.st);
+				return get(a.st, false, false);
 			case PIRATE:
-				return get(a.st, true, a.color);
+				return get(a.st, true, a.color, false, false);
 			case SPACE_MONSTER:
 				return M.border(M.tint(M.getImage("agents/" + a.type.name().toLowerCase()), TINTS.get(a.color)), BORDER);
 			default:
@@ -185,6 +201,8 @@ public class Imager {
 		BufferedImage img2 = img;
 		if (p.habitable) {
 			img2 = M.tint(img, new Color(0, 255, 0, 32));
+		} else {
+			img2 = scale(img, 32); // just copies really
 		}
 		if (p.getPollution() > 0) {
 			BufferedImage pollImg = M.tint(img, new Color(111, 88, 63, 220));
@@ -206,6 +224,10 @@ public class Imager {
 		boolean monochrome = true;
 		for (int i = 0; i < civ.fullMembers.size(); i++) {
 			BufferedImage slice = M.getImage("misc/" + civ.getGovt().name().toLowerCase());
+			if (civ.number > 0) {
+				Graphics2D sg = slice.createGraphics();
+				Draw.text(sg, "[aaaaaa]" + civ.number, 5, 5);
+			}
 			if (civ.fullMembers.get(i).color != null) {
 				slice = M.tint(slice, TINTS.get(civ.fullMembers.get(i).color));
 				monochrome = false;

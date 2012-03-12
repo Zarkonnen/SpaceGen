@@ -171,11 +171,11 @@ public class SpaceGen {
 				}
 				if (pop.type.base == SentientType.Base.KOBOLDOIDS && p(10) && planet.has(SentientType.Base.KOBOLDOIDS.specialStructure)) {
 					pop.setSize(pop.getSize() + 1);
-					l("The skull pile on $pname excites the local $sname into a sexual frenzy.", pop.type, planet);
+					l("The skull pit on $pname excites the local $sname into a sexual frenzy.", pop.type, planet);
 				}
 				if (pop.getSize() > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
 					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
-					if (planet.getOwner() != null) {
+					if (planet.getOwner() != null && !planet.has(StructureType.Standard.SKULL_PILE)) {
 						planet.addStructure(new Structure(StructureType.Standard.SKULL_PILE, planet.getOwner(), year));
 						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
 						confirm();

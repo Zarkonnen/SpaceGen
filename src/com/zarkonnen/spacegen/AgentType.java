@@ -39,7 +39,7 @@ public enum AgentType {
 					sg.l("The pirate " + a.name + " receives tribute from " + a.p.name + " of the " + a.p.getOwner().name + ".");
 				} else {
 					int attack = a.fleet * 4;
-					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.getOwner().getTechLevel() + 2 * a.p.getOwner().weapLevel) : 0);
+					int defence = a.p.population() + (a.p.has(StructureType.Standard.MILITARY_BASE) ? 5 * (a.p.getOwner().getTechLevel() + 2 * a.p.getOwner().getWeapLevel()) : 0);
 					if (a.p.has(SentientType.Base.URSOIDS.specialStructure)) {
 						defence += 4;
 					}

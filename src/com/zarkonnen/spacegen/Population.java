@@ -29,7 +29,7 @@ public class Population {
 		p.sprite.rearrangePopulation();
 		for (int i = 0; i < amt; i++) {
 			Sprite s = new Sprite();
-			s.img = Imager.get(type);
+			s.img = Imager.get(this);
 			s.y = 0;
 			s.x = p.sprite.popX(this, size - amt + i);
 			sprites.add(s);
@@ -97,6 +97,7 @@ public class Population {
 		}
 		
 		p.sprite.rearrangePopulation();
+		addUpdateImgs();
 	}
 	
 	public final void create() {
@@ -108,7 +109,7 @@ public class Population {
 		p.sprite.rearrangePopulation();
 		for (int i = 0; i < getSize(); i++) {
 			Sprite s = new Sprite();
-			s.img = Imager.get(type);
+			s.img = Imager.get(this);
 			s.y = 0;
 			s.x = p.sprite.popX(this, i);
 			sprites.add(s);
@@ -120,8 +121,12 @@ public class Population {
 	
 	public void update() {
 		animate(tracking(p.sprite, delay()));
-		for (Sprite s : sprites) { add(change(s, Imager.get(this.type))); }
+		for (Sprite s : sprites) { add(change(s, Imager.get(this))); }
 		animate();
+	}
+	
+	public void addUpdateImgs() {
+		for (Sprite s : sprites) { add(change(s, Imager.get(this))); }
 	}
 
 	public int getSize() {

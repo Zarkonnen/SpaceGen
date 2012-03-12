@@ -56,14 +56,15 @@ public class War {
 		}
 		
 		Planet srcP = actor.largestColony();
-		Sprite expedition = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
-		animate(add(expedition));
-		animate(tracking(expedition, move(expedition, target.sprite.x - 48, target.sprite.y + 160 / 2 - 32 / 2)));
-		animate(track(target.sprite), remove(expedition));
+		Sprite fleet = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
+		fleet.children.add(new CivSprite(actor, true));
+		animate(add(fleet));
+		animate(tracking(fleet, move(fleet, target.sprite.x - 48, target.sprite.y + 160 / 2 - 32 / 2)));
+		animate(track(target.sprite), remove(fleet));
 		Civ enemy = target.getOwner();
 		
-		int attack = actor.getMilitary() * (2 + (actor.getTechLevel() + 2 * actor.weapLevel));
-		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.getOwner().getTechLevel() + 2 * target.getOwner().weapLevel) : 0);
+		int attack = actor.getMilitary() * (2 + (actor.getTechLevel() + 2 * actor.getWeapLevel()));
+		int defence = target.population() + (target.has(StructureType.Standard.MILITARY_BASE) ? 5 * (target.getOwner().getTechLevel() + 2 * target.getOwner().getWeapLevel()) : 0);
 		if (target.has(SentientType.Base.URSOIDS.specialStructure)) {
 			defence += 4;
 		}
@@ -154,6 +155,9 @@ public class War {
 				target.getOwner().colonies.remove(target);
 				target.setOwner(actor);
 				actor.colonies.add(target);
+				
+				for (Population pop : target.inhabitants) { pop.addUpdateImgs(); }
+				animate();
 			}
 		} else {
 			for (Structure st : new ArrayList<Structure>(target.structures)) {

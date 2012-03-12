@@ -51,6 +51,8 @@ public enum GoodCivEvent {
 			}}
 			actor.setGovt(Government.REPUBLIC, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
+			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			animate();
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
 		}
 	},

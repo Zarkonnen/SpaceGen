@@ -19,6 +19,7 @@ public enum CivAction {
 			} else {
 				animate(track(srcP.sprite));
 				expedition = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
+				expedition.children.add(new CivSprite(actor, true));
 				animate(add(expedition));
 				animate(tracking(expedition, move(expedition, p.sprite.x - 48, p.sprite.y + 160 / 2 - 32 / 2)));
 				animate(track(p.sprite));
@@ -294,9 +295,9 @@ public enum CivAction {
 					}
 				}
 				
-				if (!major || rep.toString().equals(base)) {
+				/*if (!major || rep.toString().equals(base)) {
 					rep.delete(0, rep.length());
-				}
+				}*/ // qqDPS Show all reports, even boring ones.
 			}
 			
 			return;
@@ -428,13 +429,14 @@ public enum CivAction {
 		for (int tries = 0; tries < 20; tries++) {
 			// Pick a planet.
 			Planet p = sg.pick(actor.reachables(sg));
-			if ((p.getOwner() != null || !p.inhabitants.isEmpty()) && p.getOwner() != actor) { continue; }
+			if ((p.getOwner() != null || (!p.inhabitants.isEmpty()) && p.getOwner() != actor)) { continue; }
 			if (p.has(st)) { continue; }
 			
 			Planet srcP = actor.closestColony(p);
 			animate(track(srcP.sprite));
-			if (srcP != p) {
+			if (p.getOwner() != actor) {
 				Sprite expedition = new Sprite(Imager.EXPEDITION, srcP.sprite.x - 48, srcP.sprite.y + 160 / 2 - 32 / 2);
+				expedition.children.add(new CivSprite(actor, true));
 				animate(add(expedition));
 				animate(tracking(expedition, move(expedition, p.sprite.x - 48, p.sprite.y + 160 / 2 - 32 / 2)));
 				animate(track(p.sprite), remove(expedition));

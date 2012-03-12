@@ -53,6 +53,8 @@ public enum BadCivEvent {
 					}
 					sg.civs.add(newCiv);
 					sg.historicalCivNames.add(newCiv.name);
+					for (Planet p : newCiv.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+					animate();
 					rep.append("Slaves on ").append(col.name).append(" revolt, killing their oppressors and declaring the Free ").append(newCiv.name).append(".");
 					return;
 				}
@@ -88,6 +90,8 @@ public enum BadCivEvent {
 			actor.fullMembers.add(rulers);
 			actor.setGovt(Government.DICTATORSHIP, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
+			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			animate();
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
 		}
 	},
@@ -96,6 +100,8 @@ public enum BadCivEvent {
 			String oldName = actor.name;
 			actor.setGovt(Government.THEOCRACY, sg.historicalCivNames);
 			sg.historicalCivNames.add(actor.name);
+			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			animate();
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
 		}
 	},
@@ -113,7 +119,7 @@ public enum BadCivEvent {
 				if (actor.fullMembers.size() > 1) {
 					rep.append(" With the knowledge of faster-than-light travel lost, each planet in the empire has to fend for itself.");
 				}
-				for (Planet c : actor.colonies) {
+				for (Planet c : new ArrayList<Planet>(actor.colonies)) {
 					c.darkAge(sg.year);
 				}
 				actor.colonies.clear();
@@ -168,9 +174,12 @@ public enum BadCivEvent {
 						newCiv.fullMembers.add(pop.type);
 					}
 				}
-				for (Planet c : actor.colonies) {
+				for (Planet c : new ArrayList<Planet>(actor.colonies)) {
 					if (bigPlanets.contains(c)) { continue; }
-					if (sg.coin()) { newCiv.colonies.add(c); c.setOwner(newCiv); }
+					if (sg.coin()) {
+						newCiv.colonies.add(c);
+						c.setOwner(newCiv);
+					}
 				}
 				actor.colonies.removeAll(newCiv.colonies);
 				newCiv.updateName(sg.historicalCivNames);
@@ -178,8 +187,9 @@ public enum BadCivEvent {
 				actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 				sg.civs.add(newCiv);
 				sg.historicalCivNames.add(newCiv.name);
+				for (Planet p : newCiv.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+				animate();
 				rep.append("The ").append(newCiv.name).append(" secedes from the ").append(actor.name).append(", leading to a civil war!");
-				confirm();
 			}
 		}
 	},
@@ -198,7 +208,6 @@ public enum BadCivEvent {
 			plague.affects.add(sg.pick(is).type);
 			p.addPlague(plague);
 			rep.append("The deadly ").append(plague.desc()).append(", arises on ").append(p.name).append(".");
-			confirm();
 		}
 	},
 	STARVATION() {

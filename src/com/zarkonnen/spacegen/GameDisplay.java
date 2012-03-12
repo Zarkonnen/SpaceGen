@@ -11,27 +11,48 @@ public class GameDisplay {
 	final GameWorld w;
 	final int width;
 	final int height;
-	ArrayList<Point> stars = new ArrayList<Point>();
+	ArrayList<Star> stars = new ArrayList<Star>();
 	
-	BufferedImage star = MediaProvider.it.getImage("misc/star");
+	static final BufferedImage[] STAR_IMGS = new BufferedImage[4];
+	static {
+		BufferedImage img = MediaProvider.it.getImage("misc/star");
+		STAR_IMGS[0] = img;
+		STAR_IMGS[1] = Imager.scale(img, 1);
+		STAR_IMGS[2] = img;
+		STAR_IMGS[3] = Imager.scale(img, 3);
+	}
+	
+	class Star {
+		int x;
+		int y;
+		int scale;
+		int size;
+
+		public Star(int x, int y, int scale, int size) {
+			this.x = x;
+			this.y = y;
+			this.scale = scale;
+			this.size = size;
+		}
+	}
 
 	GameDisplay(GameWorld w, int width, int height) {
 		this.w = w;
 		this.width = width;
 		this.height = height;
 		Random r = new Random();
-		for (int i = 0; i < 1000; i++) {
-			stars.add(new Point(r.nextInt(2000) - 300, r.nextInt(2000) - 300));
+		for (int i = 0; i < 1200; i++) {
+			stars.add(new Star(r.nextInt(2300) - 300, r.nextInt(2300) - 300, r.nextInt(10) + 1, r.nextInt(2) + r.nextInt(2) + 1));
 		}
 	}
 
 	void draw(Graphics2D g) {
 		g.setColor(Color.BLACK);
 		g.fillRect(0, 0, width, height);
-		g.translate(-w.stage.camX + width / 2, -w.stage.camY + height / 2);
-		for (Point p : stars) {
-			g.drawImage(star, p.x, p.y, null);
+		for (Star p : stars) {
+			g.drawImage(STAR_IMGS[p.size], p.x + (-w.stage.camX + width / 2) / p.scale, p.y + (-w.stage.camY + height / 2) / p.scale, null);
 		}
+		g.translate(-w.stage.camX + width / 2, -w.stage.camY + height / 2);
 		w.stage.draw(g);
 		g.translate(w.stage.camX - width / 2, w.stage.camY - height / 2);
 		StringBuilder info = new StringBuilder();
@@ -67,7 +88,7 @@ public class GameDisplay {
 				int step = 128 / p.population();
 				for (Population pop : p.inhabitants) {
 					for (int i = 0; i < pop.getSize(); i++) {
-						g.drawImage(Imager.get(pop.type), offs, 128 / 2 - 32 / 2, null);
+						//g.drawImage(Imager.get(pop.type), offs, 128 / 2 - 32 / 2, null);
 						offs += step;
 					}
 				}
