@@ -18,7 +18,7 @@ public class Population {
 	
 	@Override
 	public String toString() {
-		return getSize() + " billion " + type.getName();
+		return getSize() + " billion " + (p.getOwner() != null && !p.getOwner().fullMembers.contains(type) ? "enslaved " : "") + type.getName();
 	}
 	
 	public ArrayList<Sprite> sprites = new ArrayList<Sprite>();

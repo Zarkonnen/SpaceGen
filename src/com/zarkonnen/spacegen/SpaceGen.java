@@ -300,7 +300,7 @@ public class SpaceGen {
 			if (c.getScience() > c.nextBreakthrough) {
 				c.setScience(c.getScience() - c.nextBreakthrough);
 				if (Science.advance(c, this)) { continue; }
-				c.nextBreakthrough *= 2;
+				c.nextBreakthrough = Math.min(500, c.nextBreakthrough * 3 / 2);
 			}
 			
 			int cAge = year - c.birthYear;

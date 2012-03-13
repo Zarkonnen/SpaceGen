@@ -21,10 +21,10 @@ public class GameControls {
 
 	public void processInput() {
 		d.ptr = input.mouse;
-		if (input.keyDown(VK_UP)) { w.stage.camY -= 40; }
-		if (input.keyDown(VK_DOWN)) { w.stage.camY += 40; }
-		if (input.keyDown(VK_LEFT)) { w.stage.camX -= 40; }
-		if (input.keyDown(VK_RIGHT)) { w.stage.camX += 40; }
+		if (input.keyDown(VK_UP)) { w.stage.camY -= 40; if (w.stage.camY < - 500) { w.stage.camY = -500; } }
+		if (input.keyDown(VK_DOWN)) { w.stage.camY += 40; if (w.stage.camY > 2180) { w.stage.camY = 2180; } }
+		if (input.keyDown(VK_LEFT)) { w.stage.camX -= 40; if (w.stage.camX < - 500) { w.stage.camX = -500; } }
+		if (input.keyDown(VK_RIGHT)) { w.stage.camX += 40; if (w.stage.camX > 2180) { w.stage.camX = 2180; } }
 		
 		if (input.keyDown(VK_SPACE) && w.cooldown == 0) {
 			w.confirm = true;
