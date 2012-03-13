@@ -14,6 +14,12 @@ public interface ArtefactType {
 		public String getName() { return name().toLowerCase(); }
 
 		public Artefact create(Civ actor, SpaceGen sg) {
+			Artefact art = create2(actor, sg);
+			art.setImg();
+			return art;
+		}
+		
+		public Artefact create2(Civ actor, SpaceGen sg) {
 			Artefact art = new Artefact(sg.year, actor, this, "");
 			String ret = "";
 			switch (this) {
@@ -87,7 +93,7 @@ public interface ArtefactType {
 					art.desc = ret + " " + art.containedST.getName();
 					return art;
 				default:
-					return art;
+					return create(actor, sg);
 			}
 		}
 	}

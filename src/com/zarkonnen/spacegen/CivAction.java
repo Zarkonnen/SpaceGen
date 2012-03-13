@@ -107,8 +107,8 @@ public enum CivAction {
 								major = true;
 								victimP = sg.pick(actor.colonies);
 								rep.append("Shape-shifters impersonate the crew of the expedition. Upon their return to ").append(victimP.name).append(" they merge into the population.");
-								Agent ag = new Agent(AgentType.SHAPE_SHIFTER, sg.year, "Pack of Shape-Shifters");
-								ag.p = victimP;
+								Agent ag = new Agent(AgentType.SHAPE_SHIFTER, sg.year, "Pack of Shape-Shifters", sg);
+								ag.setLocation(victimP);
 								sg.agents.add(ag);
 							}
 							return;
@@ -123,8 +123,8 @@ public enum CivAction {
 							} else {
 								major = true;
 								rep.append("An ultravore stows away on the expedition's ship. Upon their return to ").append(victimP.name).append(" it escapes and multiplies.");
-								Agent ag = new Agent(AgentType.ULTRAVORES, sg.year, "Hunting Pack of Ultravores");
-								ag.p = victimP;
+								Agent ag = new Agent(AgentType.ULTRAVORES, sg.year, "Hunting Pack of Ultravores", sg);
+								ag.setLocation(victimP);
 								sg.agents.add(ag);
 								return;
 							}
@@ -452,7 +452,7 @@ public enum CivAction {
 			}
 			actor.setResources(actor.getResources() - 5);
 			p.addStructure(new Structure(st, actor, sg.year));
-			//rep.append("The ").append(actor.name).append(" build a ").append(st.name).append(" on ").append(p.name).append(".");
+			rep.append("The ").append(actor.name).append(" build a ").append(st.getName()).append(" on ").append(p.name).append(".");
 			return;
 		}
 	}

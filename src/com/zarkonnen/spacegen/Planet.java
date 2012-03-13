@@ -334,7 +334,7 @@ public class Planet {
 		}
 		sb.append(".\n");
 		for (Agent ag : sg.agents) {
-			if (ag.p == this) {
+			if (ag.getLocation() == this) {
 				sb.append(ag.type.describe(ag, sg)).append("\n");
 			}
 		}

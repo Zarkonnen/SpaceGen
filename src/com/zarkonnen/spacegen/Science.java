@@ -87,7 +87,7 @@ public class Science {
 				if (target == null) { return false; }
 				Agent probe = new Agent(AgentType.SPACE_PROBE, sg.year, sg.pick(new String[] {
 					"Soj'r", "Monad", "Lun'hod", "Mar'er", "P'neer", "Dyad", "Triad"
-				}));
+				}), sg);
 				probe.target = target;
 				probe.timer = 8 + sg.d(25);
 				probe.originator = actor;

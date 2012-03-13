@@ -246,24 +246,26 @@ public enum BadCivEvent {
 			String name = color + st.base.pSuffix;
 			Planet p = sg.pick(actor.colonies);
 			rep.append("The pirate ").append(name).append(" establishes ").append(sg.coin() ? "himself" : "herself").append(" on ").append(p.name).append(".");
-			Agent ag = new Agent(AgentType.PIRATE, sg.year, name);
+			Agent ag = new Agent(AgentType.PIRATE, sg.year, name, sg);
 			ag.color = color;
 			ag.fleet = 2 + sg.d(6);
 			ag.resources = sg.d(6);
 			ag.originator = actor;
 			ag.st = st;
 			sg.agents.add(ag);
+			confirm();
 		}
 	},
 	ROGUE_AI() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			Planet p = sg.pick(actor.colonies);
 			String pref = sg.pick(new String[] { "Experiment ", "System ", "Mind ", "Simulation " });
-			Agent ag = new Agent(AgentType.ROGUE_AI, sg.year, pref + sg.r.nextInt(500));
-			ag.p = p;
+			Agent ag = new Agent(AgentType.ROGUE_AI, sg.year, pref + sg.r.nextInt(500), sg);
+			ag.setLocation(p);
 			rep.append("The ").append(actor.name).append(" accidentally create the rogue AI ").append(ag.name).append(" on ").append(p.name).append(".");
 			ag.originator = actor;
 			sg.agents.add(ag);
+			confirm();
 		}
 	},
 	;

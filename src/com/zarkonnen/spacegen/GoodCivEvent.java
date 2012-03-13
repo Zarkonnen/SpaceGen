@@ -34,7 +34,7 @@ public enum GoodCivEvent {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" experiences a population boom! ");
 			for (Planet col : actor.colonies) {
-				for (Population p : col.inhabitants) { p.setSize(p.getSize() + 1); }
+				for (Population p : col.inhabitants) { p.setSize(p.getSize() + 2); }
 			}
 		}
 	},
@@ -54,6 +54,7 @@ public enum GoodCivEvent {
 			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 			animate();
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
+			confirm();
 		}
 	},
 	SPAWN_ADVENTURER() {
@@ -62,13 +63,15 @@ public enum GoodCivEvent {
 			SentientType st = sg.pick(actor.fullMembers);
 			String name = "Captain " + sg.pick(st.base.nameStarts) + sg.pick(st.base.nameEnds);
 			Planet p = sg.pick(actor.colonies);
-			rep.append(name).append(", space adventurer, blasts off from ").append(p.name).append(".");
-			Agent ag = new Agent(AgentType.ADVENTURER, sg.year, name);
+			Agent ag = new Agent(AgentType.ADVENTURER, sg.year, name, sg);
 			ag.fleet = 2 + sg.d(6);
 			ag.resources = sg.d(6);
 			ag.originator = actor;
 			ag.st = st;
+			ag.setLocation(p);
 			sg.agents.add(ag);
+			rep.append(name).append(", space adventurer, blasts off from ").append(p.name).append(".");
+			confirm();
 		}
 	},;
 	// SPAWN_ADVENTURER

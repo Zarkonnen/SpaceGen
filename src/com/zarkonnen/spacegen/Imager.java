@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
 import java.awt.image.BufferedImage;
+import java.awt.image.WritableRaster;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
@@ -142,8 +143,12 @@ public class Imager {
 	
 	static BufferedImage hologrize(BufferedImage img) {
 		BufferedImage hol = M.createImage(32, 32, Transparency.BITMASK);
+		BufferedImage src = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+		src.createGraphics().drawImage(img, 0, 0, null);
+		WritableRaster ar = src.getAlphaRaster();
 		for (int y = 0; y < 32; y++) { for (int x = 0; x < 32; x++) {
-			Color c = new Color(img.getRGB(x, y));
+			if (ar.getSample(x, y, 0) == 0) { continue; }
+			Color c = new Color(src.getRGB(x, y));
 			if (y % 2 == 1) {
 				c = new Color(c.getRed() / 2, c.getGreen() / 2, c.getBlue() / 2, c.getAlpha());
 			}
@@ -155,8 +160,12 @@ public class Imager {
 	static BufferedImage statuize(BufferedImage img) {
 		Random r = new Random();
 		BufferedImage stat = M.createImage(32, 32, Transparency.BITMASK);
+		BufferedImage src = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+		src.createGraphics().drawImage(img, 0, 0, null);
+		WritableRaster ar = src.getAlphaRaster();
 		for (int y = 0; y < 32; y++) { for (int x = 0; x < 32; x++) {
-			Color c = new Color(img.getRGB(x, y));
+			if (ar.getSample(x, y, 0) == 0) { continue; }
+			Color c = new Color(src.getRGB(x, y));
 			int intensity = c.getRed() + c.getGreen() + c.getBlue() + r.nextInt(100) - 50;
 			intensity /= 3;
 			if (intensity < 0) { intensity = 0; }
@@ -306,7 +315,7 @@ public class Imager {
 			case PIRATE:
 				return get(a.st, true, a.color, false, false);
 			case SPACE_MONSTER:
-				return M.border(M.tint(M.getImage("agents/" + a.type.name().toLowerCase()), TINTS.get(a.color)), BORDER);
+				return M.border(M.tint(M.getImage("agents/" + a.mType), TINTS.get(a.color)), BORDER);
 			default:
 				return M.border(M.getImage("agents/" + a.type.name().toLowerCase()), BORDER);
 		}
@@ -338,7 +347,7 @@ public class Imager {
 		
 		BufferedImage img2 = img;
 		if (p.habitable) {
-			img2 = M.tint(img, new Color(0, 255, 0, 32));
+			img2 = M.tint(img, new Color(0, 255, 0, 63));
 		} else {
 			img2 = scale(img, 32); // just copies really
 		}
@@ -362,9 +371,9 @@ public class Imager {
 		boolean monochrome = true;
 		for (int i = 0; i < civ.fullMembers.size(); i++) {
 			BufferedImage slice = M.getImage("misc/" + civ.getGovt().name().toLowerCase());
-			if (civ.number > 0) {
+			if (civ.number > 1) {
 				Graphics2D sg = slice.createGraphics();
-				Draw.text(sg, "[aaaaaa]" + civ.number, 5, 5);
+				Draw.text(sg, "[333333]" + civ.number, 8, 6);
 			}
 			if (civ.fullMembers.get(i).color != null) {
 				slice = M.tint(slice, TINTS.get(civ.fullMembers.get(i).color));

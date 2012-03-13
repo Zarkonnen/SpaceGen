@@ -24,7 +24,7 @@ public class Artefact {
 			st = creator.fullMembers.get(0);
 			creatorTechLevel = creator.getTechLevel();
 		}
-		this.sprite = new Sprite(Imager.get(this), 0, 0);
+		try { this.sprite = new Sprite(Imager.get(this), 0, 0); } catch (Exception e) {}
 	}
 	
 	public Artefact(int created, String creatorName, ArtefactType type, String desc) {
@@ -32,7 +32,7 @@ public class Artefact {
 		this.creatorName = creatorName;
 		this.type = type;
 		this.desc = desc;
-		this.sprite = new Sprite(Imager.get(this), 0, 0);
+		try { this.sprite = new Sprite(Imager.get(this), 0, 0); } catch (Exception e) {}
 	}
 	
 	@Override
@@ -41,5 +41,9 @@ public class Artefact {
 		if (creator == null) { return desc; }
 		if (type == ArtefactType.WRECK) { return desc; }
 		return desc + " created by the " + creator.name + " in " + created;
+	}
+
+	void setImg() {
+		this.sprite = new Sprite(Imager.get(this), 0, 0);
 	}
 }

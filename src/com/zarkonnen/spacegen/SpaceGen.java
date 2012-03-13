@@ -29,7 +29,7 @@ public class SpaceGen {
 		}
 		sg.l("");
 		sg.l("");
-		sg.describe();
+		sg.l(sg.describe());
 		
 		for (String le : sg.log) {
 			System.out.println(le);
@@ -128,11 +128,13 @@ public class SpaceGen {
 		planets: for (Planet planet : planets) {
 			if (p(2500)) {
 				String col = pick(Names.COLORS);
-				String mName = "giant spaceborne " + col.toLowerCase() + " " + pick(AgentType.MONSTER_TYPES);
+				String mType = pick(AgentType.MONSTER_TYPES);
+				String mName = "giant spaceborne " + col.toLowerCase() + " " + mType;
 				l("A " + mName + " appears from the depths of space and menaces the skies of $name.", planet);
-				Agent m = new Agent(AgentType.SPACE_MONSTER, year, mName);
+				Agent m = new Agent(AgentType.SPACE_MONSTER, year, mName, this);
+				m.mType = mType;
 				m.color = col;
-				m.p = planet;
+				m.setLocation(planet);
 				agents.add(m);
 				confirm();
 			}
@@ -384,7 +386,7 @@ public class SpaceGen {
 					if (p.specials.size() == 1) { animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));	confirm(); }
 				}
 			}
-			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * d(6) * (6 - p.getPollution());
+			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * 3 * (6 - p.getPollution());
 			if (p.evoPoints > p.evoNeeded && p(30) && p.getPollution() < 2) {
 				p.evoPoints -= p.evoNeeded;
 				if (!p.habitable) {
@@ -403,6 +405,10 @@ public class SpaceGen {
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + ", the " + c.name + ".", starter.type, p);
 							historicalCivNames.add(c.name);
 							civs.add(c);
+							for (Population pop : p.inhabitants) {
+								pop.addUpdateImgs();
+							}
+							animate();
 							confirm();
 						}
 					} else {
@@ -483,31 +489,35 @@ public class SpaceGen {
 		}*/
 	}
 	
-	public void describe() {
+	public String describe() {
+		StringBuilder sb = new StringBuilder();
+		
 		// Critters
 		HashSet<SentientType> sts = new HashSet<SentientType>();
 		for (Planet p : planets) { for (Population pop : p.inhabitants) {
 			sts.add(pop.type);
 		}}
 		
-		if (sts.size() > 0) { l("SENTIENT SPECIES:"); }
+		if (sts.size() > 0) { sb.append("SENTIENT SPECIES:\n"); }
 		
 		for (SentientType st : sts) {
-			l(st.getName() + ": " + st.getDesc());
-			l("");
+			sb.append(st.getName()).append(": ").append(st.getDesc());
+			sb.append("\n");
 		}
 		
-		if (civs.size() > 0) { l("CIVILISATIONS:"); }
+		if (civs.size() > 0) { sb.append("\nCIVILISATIONS:\n"); }
 		for (Civ c : civs) {
-			l(c.fullDesc(this));
-			l("");
+			sb.append(c.fullDesc(this));
+			sb.append("\n");
 		}
 		
-		l("PLANETS:");
+		sb.append("PLANETS:\n");
 		for (Planet p : planets) {
-			l(p.fullDesc(this));
-			l("");
+			sb.append(p.fullDesc(this));
+			sb.append("\n");
 		}
+		
+		return sb.toString();
 	}
 	
 	final <T> T pick(ArrayList<T> ts) {
