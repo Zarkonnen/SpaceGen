@@ -79,6 +79,13 @@ public class Agent {
 		} else {
 			add(tracking(sprite, move(sprite, location.sprite.x + locOffset * 36, location.sprite.y - 64)));
 		}
+		boolean passedMe = false;
+		for (Agent ag : sg.agents) {
+			if (ag == this) { passedMe = true; }
+			if (ag.location == this.location && passedMe) {
+				add(move(ag.sprite, ag.sprite.x + 36, ag.sprite.y));
+			}
+		}
 		animate();
 	}
 }

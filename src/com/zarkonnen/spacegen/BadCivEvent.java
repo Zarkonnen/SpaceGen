@@ -19,7 +19,6 @@ package com.zarkonnen.spacegen;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import static com.zarkonnen.spacegen.Stage.*;
 import static com.zarkonnen.spacegen.Main.*;
 
 public enum BadCivEvent {
@@ -198,7 +197,7 @@ public enum BadCivEvent {
 					}
 				}
 				actor.colonies.removeAll(newCiv.colonies);
-				newCiv.updateName(sg.historicalCivNames);
+				newCiv.setGovt(newCiv.getGovt(), sg.historicalCivNames);
 				newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 				actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 				sg.civs.add(newCiv);

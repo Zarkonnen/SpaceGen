@@ -138,7 +138,7 @@ public class CivSprite extends Sprite {
 		
 		for (int i = 0; i < Math.min(oldSize, newTotal); i++) {
 			boolean goldThen = i < old100;
-			boolean goldNow = i < old10;
+			boolean goldNow = i < new100;
 			boolean silverThen = i < old10 && i >= old100;
 			boolean silverNow = i < new10 && i >= new100;
 			boolean copperThen = !goldThen && !silverThen;
@@ -194,7 +194,7 @@ public class CivSprite extends Sprite {
 		
 		for (int i = 0; i < Math.min(oldSize, newTotal); i++) {
 			boolean goldThen = i < oldGold;
-			boolean goldNow = i < oldSilver;
+			boolean goldNow = i < newGold;
 			boolean silverThen = i < oldSilver && i >= oldGold;
 			boolean silverNow = i < newSilver && i >= newGold;
 			boolean copperThen = !goldThen && !silverThen;
@@ -254,7 +254,7 @@ public class CivSprite extends Sprite {
 		
 		for (int i = 0; i < Math.min(oldSize, newTotal); i++) {
 			boolean goldThen = i < old100;
-			boolean goldNow = i < old10;
+			boolean goldNow = i < new100;
 			boolean silverThen = i < old10 && i >= old100;
 			boolean silverNow = i < new10 && i >= new100;
 			boolean copperThen = !goldThen && !silverThen;
