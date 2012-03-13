@@ -387,8 +387,8 @@ public class SpaceGen {
 				}
 			}
 			p.evoPoints += d(6) * d(6) * d(6) * d(6) * d(6) * 3 * (6 - p.getPollution());
-			if (p.evoPoints > p.evoNeeded && p(30) && p.getPollution() < 2) {
-				p.evoPoints -= p.evoNeeded;
+			if (p.evoPoints > p.evoNeeded && p(12) && p.getPollution() < 2) {
+				p.evoPoints = 0;
 				if (!p.habitable) {
 					p.habitable = true;
 					animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));

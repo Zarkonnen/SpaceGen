@@ -28,7 +28,7 @@ public class GameThread implements Runnable {
 				display.draw(g);
 				bs.show();
 
-				Thread.sleep(30);
+				Thread.sleep(25);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -46,7 +46,7 @@ public class GameThread implements Runnable {
 				display.draw(g);
 				bs.show();
 				
-				Thread.sleep(30);
+				Thread.sleep(25);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
