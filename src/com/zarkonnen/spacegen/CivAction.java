@@ -41,7 +41,7 @@ public enum CivAction {
 					sg.civs.remove(other);
 					Government newGovt = sg.pick(new Government[] { actor.getGovt(), other.getGovt()});
 					actor.colonies.addAll(other.colonies);
-					for (Planet c : other.colonies) {
+					for (Planet c : new ArrayList<Planet>(other.colonies)) {
 						c.setOwner(actor);
 					}
 					actor.setResources(actor.getResources() + other.getResources());
@@ -317,6 +317,9 @@ public enum CivAction {
 				if (p.getOwner() != null) { continue; }
 				// Who shall the colonists be?
 				
+				actor.setResources(actor.getResources() - 6);
+				p.setOwner(actor);
+				actor.colonies.add(p);
 				rep.append("The ").append(actor.name).append(" colonise ").append(p.name).append(". ");
 				boolean ne = false;
 				if (!p.inhabitants.isEmpty()) { rep.append("Of the natives of that planet, "); ne = true; }
@@ -341,6 +344,7 @@ public enum CivAction {
 						case IGNORE:
 						case SUBJUGATE:
 							rep.append(" are enslaved");
+							nativeP.addUpdateImgs();
 							break;
 						case GIVE_FULL_MEMBERSHIP:
 							rep.append(" are given full membership in the ").append(actor.name);
@@ -348,19 +352,18 @@ public enum CivAction {
 								actor.fullMembers.add(nativeP.type);
 								updNeeded = true;
 							}
+							nativeP.addUpdateImgs();
 							break;
 					}
 
 					first = false;
 				}
+				animate();
 				if (ne) { rep.append(". "); }
 				if (updNeeded) {
 					actor.updateName(sg.historicalCivNames);
 					rep.append(" They now call themselves the ").append(actor.name).append(".");
 				}
-				actor.setResources(actor.getResources() - 6);
-				p.setOwner(actor);
-				actor.colonies.add(p);
 				Population srcPop = null;
 				for (Population pop : srcP.inhabitants) {
 					if (actor.fullMembers.contains(pop.type) && pop.getSize() > 1) {
@@ -431,6 +434,7 @@ public enum CivAction {
 			Planet p = sg.pick(actor.reachables(sg));
 			if ((p.getOwner() != null || (!p.inhabitants.isEmpty()) && p.getOwner() != actor)) { continue; }
 			if (p.has(st)) { continue; }
+			if (p.structures.size() >= 5) { continue; }
 			
 			Planet srcP = actor.closestColony(p);
 			animate(track(srcP.sprite));
@@ -463,6 +467,7 @@ public enum CivAction {
 			Planet p = sg.pick(actor.colonies);
 			if (p.isOutpost()) { continue; }
 			if (p.has(st)) { continue; }
+			if (p.structures.size() >= 5) { continue; }
 			
 			animate(track(p.sprite));
 			

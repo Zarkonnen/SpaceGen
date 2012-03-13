@@ -8,7 +8,7 @@ import static com.zarkonnen.spacegen.Main.*;
 public class Science {
 	static boolean advance(Civ actor, SpaceGen sg) {
 		ArrayList<Planet> cands;
-		switch (sg.d(8)) {
+		switch (sg.d(9)) {
 			case 0:
 				actor.setTechLevel(actor.getTechLevel() + 1);
 				if (actor.getTechLevel() == 10) {
@@ -97,6 +97,7 @@ public class Science {
 				break;
 			case 6:
 			case 7:
+			case 8:
 				cands = new ArrayList<Planet>();
 				for (Planet p : actor.colonies) {
 					if (p.has(StructureType.Standard.SCIENCE_LAB)) {

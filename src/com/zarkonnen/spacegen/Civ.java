@@ -34,6 +34,7 @@ public class Civ {
 	}
 
 	public final void setResources(int resources) {
+		resources = Math.max(0, resources);
 		int oldRes = this.resources;
 		this.resources = resources;
 		for (CivSprite cs : sprites) {
@@ -47,6 +48,7 @@ public class Civ {
 	}
 
 	public void setScience(int science) {
+		science = Math.max(0, science);
 		int oldSci = this.science;
 		this.science = science;
 		for (CivSprite cs : sprites) {
@@ -60,6 +62,7 @@ public class Civ {
 	}
 
 	public void setMilitary(int military) {
+		military = Math.max(0, military);
 		int oldMil = this.military;
 		this.military = military;
 		for (CivSprite cs : sprites) {
@@ -73,6 +76,7 @@ public class Civ {
 	}
 
 	public final void setTechLevel(int techLevel) {
+		techLevel = Math.max(0, techLevel);
 		this.techLevel = techLevel;
 		for (CivSprite cs : sprites) {
 			cs.changeTech(techLevel);
@@ -85,11 +89,24 @@ public class Civ {
 	}
 
 	public void setWeapLevel(int weapLevel) {
+		weapLevel = Math.max(0, weapLevel);
 		this.weapLevel = weapLevel;
 		for (CivSprite cs : sprites) {
 			cs.changeMilTech(weapLevel);
 		}
 		animate();
+	}
+	
+	Planet leastPopulousFullColony() {
+		Planet c = null;
+		int pop = 0;
+		for (Planet p : fullColonies()) {
+			if (c == null || p.population() < pop) {
+				c = p;
+				pop = p.population();
+			}
+		}
+		return c;
 	}
 	
 	public Planet closestColony(Planet p) {

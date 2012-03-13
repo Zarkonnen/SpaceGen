@@ -1,5 +1,7 @@
 package com.zarkonnen.spacegen;
 
+import java.util.ArrayList;
+
 public interface ArtefactType {
 	public static enum Art implements ArtefactType {
 		STATUE,
@@ -11,7 +13,8 @@ public interface ArtefactType {
 		@Override
 		public String getName() { return name().toLowerCase(); }
 
-		String create(Civ actor, SpaceGen sg) {
+		public Artefact create(Civ actor, SpaceGen sg) {
+			Artefact art = new Artefact(sg.year, actor, this, "");
 			String ret = "";
 			switch (this) {
 				case STATUE:
@@ -25,42 +28,66 @@ public interface ArtefactType {
 				case HYMN:
 					ret = "hymn about"; break;
 			}
-			switch (sg.d(6)) {
+			switch (sg.d(7)) {
 				case 0:
 				case 1:
 					if (!sg.agents.isEmpty()) {
 						Agent a = sg.pick(sg.agents);
-						return ret + " " + a.name;
+						art.containedAgent = a;
+						art.desc = ret + " " + a.name;
+						return art;
 					}
 					// fallthru!
 				case 2:
+					art.containedST = sg.pick(actor.fullMembers);
 					switch (actor.getGovt()) {
 						case DICTATORSHIP:
-							return ret + " the Emperor of the " + actor.name;
+							art.desc = ret + " the Emperor of the " + actor.name;
+							return art;
 						case FEUDAL_STATE:
-							return ret + " the King of the " + actor.name;
+							art.desc = ret + " the King of the " + actor.name;
+							return art;
 						case REPUBLIC:
-							return ret + " the President of the " + actor.name;
+							art.desc = ret + " the President of the " + actor.name;
+							return art;
 						case THEOCRACY:
-							return ret + " the Autarch of the " + actor.name;
+							art.desc = ret + " the Autarch of the " + actor.name;
+							return art;
 					}
 				case 3:
+					art.containedST = sg.pick(actor.fullMembers);
 					switch (actor.getGovt()) {
 						case DICTATORSHIP:
-							return ret + " the Empress of the " + actor.name;
+							art.desc = ret + " the Empress of the " + actor.name;
+							return art;
 						case FEUDAL_STATE:
-							return ret + " the King of the " + actor.name;
+							art.desc = ret + " the Queen of the " + actor.name;
+							return art;
 						case REPUBLIC:
-							return ret + " the President of the " + actor.name;
+							art.desc = ret + " the President of the " + actor.name;
+							return art;
 						case THEOCRACY:
-							return ret + " the Autarch of the " + actor.name;
+							art.desc = ret + " the Grand Matron of the " + actor.name;
+							return art;
 					}
 				case 4:
-					return ret + " cheese";
 				case 5:
-					return ret + " " + sg.pick(actor.fullMembers).getName();
+					ArrayList<Artefact> arts = new ArrayList<Artefact>();
+					for (Planet p : actor.colonies) {
+						arts.addAll(p.artefacts);
+					}
+					if (!arts.isEmpty()) {
+						art.containedArtefact = sg.pick(arts);
+						art.desc = ret + " " + art.containedArtefact;
+						return art;
+					}
+					// INTENTIONAL FALLTHROUGH!
+				case 6:
+					art.containedST = sg.pick(actor.fullMembers);
+					art.desc = ret + " " + art.containedST.getName();
+					return art;
 				default:
-					return ret + " space kittens";
+					return art;
 			}
 		}
 	}

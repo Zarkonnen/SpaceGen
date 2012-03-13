@@ -29,7 +29,7 @@ public class GameWorld {
 		if (confirmNeeded) {
 			if (confirm || (autorun && confirmWait++ > 5)) {
 				confirmNeeded = false;
-				sg.turnLog.clear();
+				if (autorun) { sg.clearTurnLogOnNewEntry = true; } else { sg.turnLog.clear(); }
 				confirmWait = 0;
 			}
 			return false;

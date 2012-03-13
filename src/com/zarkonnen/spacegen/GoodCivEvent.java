@@ -24,10 +24,10 @@ public enum GoodCivEvent {
 	GOLDEN_AGE_OF_ART() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			Planet col = sg.pick(actor.fullColonies());
-			ArtefactType.Art art = sg.pick(ArtefactType.Art.values());
-			String artDesc = art.create(actor, sg);
-			rep.append("Artists on ").append(col.name).append(" create a ").append(artDesc).append(". ");
-			col.addArtefact(new Artefact(sg.year, actor, art, artDesc));
+			ArtefactType.Art artT = sg.pick(ArtefactType.Art.values());
+			Artefact art = artT.create(actor, sg);
+			rep.append("Artists on ").append(col.name).append(" create a ").append(art.desc).append(". ");
+			col.addArtefact(art);
 		}
 	},
 	POPULATION_BOOM() {

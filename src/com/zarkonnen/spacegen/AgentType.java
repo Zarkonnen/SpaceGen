@@ -724,6 +724,7 @@ public enum AgentType {
 							return;
 					}
 					if (art != null) {
+						art.containedAgent = ag;
 						a.p.addArtefact(art);
 						sg.agents.remove(ag);
 						confirm();
@@ -744,8 +745,10 @@ public enum AgentType {
 						case REPUBLIC: title = "President"; break;
 						case THEOCRACY: title = "Autarch"; break;
 					}
-					a.p.addArtefact(new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
-									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.getOwner().name));
+					Artefact ar = new Artefact(sg.year, "the rogue AI " + a.name, ArtefactType.TIME_ICE,
+									"block of time ice, encasing " + name + ", " + title + " of the " + a.p.getOwner().name);
+					ar.containedST = st;
+					a.p.addArtefact(ar);
 					sg.l("The rogue AI " + a.name + " encases " + name + ", " + title + " of the " + a.p.getOwner().name + ", in a block of time ice.");
 					confirm();
 					return;

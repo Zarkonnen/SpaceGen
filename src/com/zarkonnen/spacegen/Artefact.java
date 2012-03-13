@@ -10,6 +10,10 @@ public class Artefact {
 	int specialValue;
 	String creatorName;
 	Sprite sprite;
+	
+	SentientType containedST;
+	Artefact containedArtefact;
+	Agent containedAgent;
 
 	public Artefact(int created, Civ creator, ArtefactType type, String desc) {
 		this.created = created;

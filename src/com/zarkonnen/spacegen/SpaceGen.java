@@ -15,7 +15,7 @@ public class SpaceGen {
 	ArrayList<String> historicalCivNames = new ArrayList<String>();
 	ArrayList<Agent> agents = new ArrayList<Agent>();
 	ArrayList<String> historicalSentientNames = new ArrayList<String>();
-	ArrayList<String> turnLog = new ArrayList<String>();
+	ArrayList<String> turnLog = new ArrayList<String>(); boolean clearTurnLogOnNewEntry = false;
 	boolean hadCivs = false;
 	boolean yearAnnounced = false;
 	int year = 0;
@@ -175,7 +175,7 @@ public class SpaceGen {
 				}
 				if (pop.getSize() > 3 && pop.type.base == SentientType.Base.KOBOLDOIDS && p(20)) {
 					l("The $sname on $pname devour one billion of their own kind in a mad frenzy of cannibalism!", pop.type, planet);
-					if (planet.getOwner() != null && !planet.has(StructureType.Standard.SKULL_PILE)) {
+					if (planet.getOwner() != null && !planet.has(StructureType.Standard.SKULL_PILE) && planet.structures.size() < 5) {
 						planet.addStructure(new Structure(StructureType.Standard.SKULL_PILE, planet.getOwner(), year));
 						l("The $sname erect a pile of skulls on $pname!", pop.type, planet);
 						confirm();
@@ -249,6 +249,14 @@ public class SpaceGen {
 					col.evoPoints = 0;
 					col.setPollution(col.getPollution() + 1);
 					//l("Overcrowding on $name leads to increased pollution.", col);
+				}
+				if (p(6) && col.population() > 4 && col != c.leastPopulousFullColony() && c.leastPopulousFullColony().population() < col.population() - 1) {
+					for (Population pop : col.inhabitants) {
+						if (pop.getSize() > 1) {
+							pop.send(c.leastPopulousFullColony());
+							break;
+						}
+					}
 				}
 				if (c.has(ArtefactType.Device.MIND_READER) && p(4)) {
 					for (Population pop : col.inhabitants) { 
@@ -398,7 +406,7 @@ public class SpaceGen {
 							confirm();
 						}
 					} else {
-						if (p(3)) {
+						if (p(3) || p.lifeforms.size() >= 3) {
 							// Sentient!
 							SentientType st = SentientType.invent(this, null, p, null);
 							new Population(st, 2 + d(1), p);
@@ -535,6 +543,7 @@ public class SpaceGen {
 	}
 	
 	final void l(String s) {
+		if (clearTurnLogOnNewEntry) { turnLog.clear(); clearTurnLogOnNewEntry = false; }
 		if (!yearAnnounced) {
 			yearAnnounced = true;
 			l(year + ":");

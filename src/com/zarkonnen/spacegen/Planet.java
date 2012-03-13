@@ -45,7 +45,7 @@ public class Planet {
 	
 	public void addPlague(Plague p) {
 		plagues.add(p);
-		Sprite ps = new Sprite(Imager.get(p), (structures.size() - 1) * 36, 36 * 4);
+		Sprite ps = new Sprite(Imager.get(p), (plagues.size() - 1) * 36, 36 * 4);
 		sprite.plagueSprites.put(p, ps);
 		animate(tracking(sprite, delay()));
 		animate(add(ps, sprite));
@@ -57,7 +57,7 @@ public class Planet {
 		animate(tracking(sprite, delay()));
 		animate(remove(ss));
 		for (int i = sIndex + 1; i < plagues.size(); i++) {
-			add(move(sprite.plagueSprites.get(plagues.get(i)), i * 36, 36 * 2));
+			add(move(sprite.plagueSprites.get(plagues.get(i)), (i - 1) * 36, 36 * 2));
 		}
 		animate();
 		plagues.remove(p);
@@ -90,7 +90,7 @@ public class Planet {
 		dst.artefacts.add(a);
 		int aIndex = artefacts.indexOf(a);
 		for (int i = aIndex + 1; i < artefacts.size(); i++) {
-			add(move(sprite.artefactSprites.get(artefacts.get(i)), i * 36, 36));
+			add(move(sprite.artefactSprites.get(artefacts.get(i)), (i - 1) * 36, 36));
 		}
 		animate();
 		artefacts.remove(a);

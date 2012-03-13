@@ -7,6 +7,7 @@ import java.awt.Transparency;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 public class Imager {
 	static final HashMap<String, Color> TINTS = new HashMap<String, Color>();
@@ -139,7 +140,144 @@ public class Imager {
 		return s2;
 	}
 	
+	static BufferedImage hologrize(BufferedImage img) {
+		BufferedImage hol = M.createImage(32, 32, Transparency.BITMASK);
+		for (int y = 0; y < 32; y++) { for (int x = 0; x < 32; x++) {
+			Color c = new Color(img.getRGB(x, y));
+			if (y % 2 == 1) {
+				c = new Color(c.getRed() / 2, c.getGreen() / 2, c.getBlue() / 2, c.getAlpha());
+			}
+			hol.setRGB(x, y, c.getRGB());
+		}}
+		return M.tint(hol, new Color(100, 220, 180, 200));
+	}
+	
+	static BufferedImage statuize(BufferedImage img) {
+		Random r = new Random();
+		BufferedImage stat = M.createImage(32, 32, Transparency.BITMASK);
+		for (int y = 0; y < 32; y++) { for (int x = 0; x < 32; x++) {
+			Color c = new Color(img.getRGB(x, y));
+			int intensity = c.getRed() + c.getGreen() + c.getBlue() + r.nextInt(100) - 50;
+			intensity /= 3;
+			if (intensity < 0) { intensity = 0; }
+			if (intensity > 255) { intensity = 255; }
+			c = new Color(intensity, intensity, intensity, c.getAlpha());
+			stat.setRGB(x, y, c.getRGB());
+		}}
+		return stat;
+	}
+	
+	static BufferedImage getTimeIce(Artefact a) {
+		BufferedImage img = scale(M.getImage("artefacts/time_ice"), 32);
+		Graphics2D g = img.createGraphics(); 
+		if (a.containedST != null) {
+			BufferedImage port = get(a.containedST, false, false);
+			g.drawImage(port, 2, 2, 28, 28, 2, 2, 28, 28, null);
+		} else if (a.containedAgent != null) {
+			BufferedImage port = get(a.containedAgent);
+			g.drawImage(port, 2, 2, 28, 28, 2, 2, 28, 28, null);
+		} else if (a.containedArtefact != null) {
+			BufferedImage port = get(a.containedArtefact);
+			g.drawImage(port, 2, 2, 28, 28, 2, 2, 28, 28, null);
+		}
+		g.drawImage(M.getImage("artefacts/time_ice_overlay", Transparency.TRANSLUCENT), 0, 0, null);
+		return img;
+	}
+	
+	static BufferedImage getArt(Artefact a) {
+		ArtefactType.Art artType = (ArtefactType.Art) a.type;
+		BufferedImage img;
+		Graphics2D g;
+		switch (artType) {
+			case FILM:
+				img = scale(M.getImage("artefacts/film"), 32);
+				g = img.createGraphics(); 
+				if (a.containedST != null) {
+					BufferedImage port = get(a.containedST, false, false);
+					g.drawImage(port, 8, 2, 24, 14, 8, 2, 24, 14, null);
+					g.drawImage(port, 8, 16, 24, 28, 8, 2, 24, 14, null);
+					return img;
+				}
+				if (a.containedAgent != null) {
+					BufferedImage port = get(a.containedAgent);
+					g.drawImage(port, 10, 2, 22, 14, 0, 0, 32, 32, null);
+					g.drawImage(port, 10, 16, 22, 28, 0, 0, 32, 32, null);
+					return img;
+				}
+				if (a.containedArtefact != null) {
+					BufferedImage port = get(a.containedArtefact);
+					g.drawImage(port, 10, 2, 22, 14, 0, 0, 32, 32, null);
+					g.drawImage(port, 10, 16, 22, 28, 0, 0, 32, 32, null);
+					return img;
+				}
+			case PAINTING:
+				img = scale(M.getImage("artefacts/painting"), 32);
+				g = img.createGraphics(); 
+				if (a.containedST != null) {
+					BufferedImage port = get(a.containedST, false, false);
+					g.drawImage(port, 3, 5, 29, 27, 3, 0, 29, 22, null);
+					return img;
+				}
+				if (a.containedAgent != null) {
+					BufferedImage port = get(a.containedAgent);
+					g.drawImage(port, 3, 5, 29, 27, 3, 0, 29, 22, null);
+					return img;
+				}
+				if (a.containedArtefact != null) {
+					BufferedImage port = get(a.containedArtefact);
+					g.drawImage(port, 3, 5, 29, 27, 3, 0, 29, 22, null);
+					return img;
+				}
+			case HYMN:
+				return M.getImage("artefacts/hymn");
+			case HOLOGRAM:
+				if (a.containedST != null) {
+					return hologrize(get(a.containedST, false, false));
+				}
+				if (a.containedAgent != null) {
+					return hologrize(get(a.containedAgent));
+				}
+				if (a.containedArtefact != null) {
+					return hologrize(get(a.containedArtefact));
+				}
+			case STATUE:
+				if (a.containedST != null) {
+					return statuize(get(a.containedST, false, false));
+				}
+				if (a.containedAgent != null) {
+					return statuize(get(a.containedAgent));
+				}
+				if (a.containedArtefact != null) {
+					return statuize(get(a.containedArtefact));
+				}
+		}
+		return M.getImage("artefacts/" + ((ArtefactType.Art) a.type).getName().toLowerCase());
+	}
+	
 	static BufferedImage get(Artefact a) {
+		if (a.type instanceof ArtefactType.Device) {
+			return M.border(M.getImage("artefacts/" + ((ArtefactType.Device) a.type).name().toLowerCase()), BORDER);
+		}
+		if (a.type instanceof ArtefactType.Art) {
+			return M.border(getArt(a), BORDER);
+		}
+		
+		if (a.type == ArtefactType.TIME_ICE) {
+			return M.border(getTimeIce(a), BORDER);
+		}
+		
+		if (a.type == ArtefactType.ADVENTURER_TOMB || a.type == ArtefactType.PIRATE_TOMB) {
+			return M.border(M.getImage("artefacts/tomb"), BORDER);
+		}
+		
+		if (a.type == ArtefactType.PIRATE_HOARD) {
+			return M.border(M.getImage("artefacts/hoard"), BORDER);
+		}
+		
+		if (a.type == ArtefactType.WRECK) {
+			return M.border(M.getImage("artefacts/wreck"), BORDER);
+		}
+		
 		return M.getImage("artefacts/artefact");
 	}
 	
