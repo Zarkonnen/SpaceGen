@@ -208,6 +208,7 @@ public enum AgentType {
 				a.getLocation().strata.add(new LostArtefact("buried", sg.year, art));
 				art.specialValue = a.resources / 3 + a.fleet / 5 + 1;
 				sg.agents.remove(a);
+				a.setLocation(null);
 				confirm();
 				return;
 			}

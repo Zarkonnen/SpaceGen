@@ -29,11 +29,13 @@ public class GameControls {
 		if (input.keyDown(VK_SPACE) && w.cooldown == 0) {
 			w.confirm = true;
 			w.cooldown = 2;
+			return;
 		}
 		if (input.keyDown(VK_R) && w.cooldown == 0) {
 			w.autorun = !w.autorun;
 			w.cooldown = 2;
 			w.confirm = true;
+			return;
 		}
 		
 		if (input.keyDown(VK_S) && w.cooldown == 0) {
