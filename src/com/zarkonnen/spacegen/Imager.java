@@ -370,7 +370,7 @@ public class Imager {
 		if (p.getPollution() > 0) {
 			BufferedImage pollImg = M.tint(img, new Color(111, 88, 63, 220));
 			Graphics2D g = img2.createGraphics();
-			int amt = Math.min(32, p.getPollution() * 3);
+			int amt = Math.max(0, 32 - p.getPollution() * 3);
 			g.drawImage(pollImg, 0, amt, 32, 32, 0, amt, 32, 32, null);
 		}
 		

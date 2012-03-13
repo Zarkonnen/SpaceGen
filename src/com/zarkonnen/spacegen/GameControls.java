@@ -43,21 +43,25 @@ public class GameControls {
 		if (input.keyDown(VK_RIGHT)) { w.stage.camX += 40; if (w.stage.camX > 2180) { w.stage.camX = 2180; } }
 		
 		if (input.keyDown(VK_SPACE) && w.cooldown == 0) {
+			w.stage.doTrack = true;
 			w.confirm = true;
-			w.cooldown = 2;
+			w.cooldown = 8;
 			return;
 		}
 		if (input.keyDown(VK_R) && w.cooldown == 0) {
 			w.autorun = !w.autorun;
-			w.cooldown = 2;
-			w.confirm = true;
+			w.cooldown = 10;
+			if (w.autorun) {
+				w.confirm = true;
+				w.stage.doTrack = false;
+			}
 			return;
 		}
 		
 		if (input.keyDown(VK_S) && w.cooldown == 0) {
 			JFileChooser jfc = new JFileChooser();
 			input.keys[VK_S] = false;
-			w.cooldown = 2;
+			w.cooldown = 6;
 			if (jfc.showSaveDialog(Main.frame) == JFileChooser.APPROVE_OPTION) {
 				try {
 					BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(jfc.getSelectedFile()), "UTF-8"));

@@ -106,7 +106,7 @@ public class CivSprite extends Sprite {
 		
 		int new100   = to / 100;
 		int new10 = (to - new100 * 100) / 10;
-		int new1 = to - new10 * 10 - old100 * 100;
+		int new1 = to - new10 * 10 - new100 * 100;
 		int newTotal = new100 + new10 + new1;
 		int oldSize = sciSprites.size();
 		if (oldSize > newTotal) {
@@ -162,7 +162,7 @@ public class CivSprite extends Sprite {
 		
 		int newGold   = to / 100;
 		int newSilver = (to - newGold * 100) / 10;
-		int newCopper = to - newSilver * 10 - oldGold * 100;
+		int newCopper = to - newSilver * 10 - newGold * 100;
 		int newTotal = newGold + newSilver + newCopper;
 		int oldSize = resSprites.size();
 		if (oldSize > newTotal) {
@@ -218,7 +218,7 @@ public class CivSprite extends Sprite {
 		
 		int new100   = to / 100;
 		int new10 = (to - new100 * 100) / 10;
-		int new1 = to - new10 * 10 - old100 * 100;
+		int new1 = to - new10 * 10 - new100 * 100;
 		int newTotal = new100 + new10 + new1;
 		int oldSize = fleetSprites.size();
 		if (oldSize > newTotal) {

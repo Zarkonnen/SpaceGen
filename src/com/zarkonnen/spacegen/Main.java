@@ -32,6 +32,7 @@ public class Main {
 	public static void confirm() {
 		w.confirmNeeded = true;
 		w.confirm = false;
+		w.stage.doTrack = !w.autorun;
 		gt.subRun();
 	}
 	

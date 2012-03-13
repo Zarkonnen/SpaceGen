@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 public class Stage {
+	public boolean doTrack = true;
 	public ArrayList<Sprite> sprites = new ArrayList<Sprite>();
 	public ArrayList<Animation> animations = new ArrayList<Animation>();
 	public static final Color FLASH = new Color(255, 255, 180);
@@ -98,6 +99,9 @@ public class Stage {
 
 		@Override
 		public boolean tick(Stage stage) {
+			if (!stage.doTrack) {
+				return a == null ? true : a.tick(stage);
+			}
 			int tx = s.globalX() + s.img.getWidth() / 2;
 			int ty = s.globalY() + s.img.getHeight() / 2;
 			if (tick == 0) {

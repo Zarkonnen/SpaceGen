@@ -188,6 +188,10 @@ public enum CivAction {
 							case SUBJUGATE:
 								p.setOwner(actor);
 								if (!actor.colonies.contains(p)) { actor.colonies.add(p); }
+								for (Population p2 : p.inhabitants) {
+									p2.addUpdateImgs();
+								}
+								animate();
 								break;
 						}
 						rep.append(" ");
