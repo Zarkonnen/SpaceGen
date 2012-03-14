@@ -51,7 +51,7 @@ public class Agent {
 		if (this.location != null) {
 			boolean passedMe = false;
 			for (Agent ag : sg.agents) {
-				if (ag == this) { passedMe = true; }
+				if (ag == this) { passedMe = true; continue; }
 				if (ag.location == this.location && passedMe) {
 					add(move(ag.sprite, ag.sprite.x - 36, ag.sprite.y));
 				}
@@ -81,7 +81,7 @@ public class Agent {
 		}
 		boolean passedMe = false;
 		for (Agent ag : sg.agents) {
-			if (ag == this) { passedMe = true; }
+			if (ag == this) { passedMe = true; continue; }
 			if (ag.location == this.location && passedMe) {
 				add(move(ag.sprite, ag.sprite.x + 36, ag.sprite.y));
 			}

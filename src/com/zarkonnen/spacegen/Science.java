@@ -29,7 +29,7 @@ public class Science {
 				actor.setTechLevel(actor.getTechLevel() + 1);
 				if (actor.getTechLevel() == 10) {
 					sg.l("The highly advanced technology of the $name allows them to transcend the bounds of this universe. They vanish instantly.");
-					for (Planet col : new ArrayList<Planet>(actor.colonies)) {
+					for (Planet col : new ArrayList<Planet>(actor.getColonies())) {
 						col.transcend(sg.year);
 					}
 					sg.civs.remove(actor);
@@ -61,7 +61,6 @@ public class Science {
 							srcPop.send(p);
 
 							p.setOwner(actor);
-							actor.colonies.add(p);
 							animate(tracking(p.sprite, change(p.sprite, Imager.get(p))));
 							sg.l("The $cname terraform and colonise $pname.", actor, p);
 							confirm();
@@ -74,9 +73,8 @@ public class Science {
 				for (Planet p : actor.reachables(sg)) {
 					if (p.habitable && p.getOwner() == null && p.inhabitants.isEmpty()) {
 						SentientType st = SentientType.invent(sg, actor, p, null);
-						new Population(st, 3, p);
 						p.setOwner(actor);
-						actor.colonies.add(p);
+						new Population(st, 3, p);
 						sg.l("The $cname uplift the local " + st.getName() + " on $pname and incorporate the planet into their civilisation.", actor, p);
 						confirm();
 						return false;
@@ -115,7 +113,7 @@ public class Science {
 			case 7:
 			case 8:
 				cands = new ArrayList<Planet>();
-				for (Planet p : actor.colonies) {
+				for (Planet p : actor.getColonies()) {
 					if (p.has(StructureType.Standard.SCIENCE_LAB)) {
 						cands.add(p);
 					}

@@ -353,10 +353,7 @@ public enum AgentType {
 									if (p.getOwner() != null) {
 										p.getOwner().relations.put(la.artefact.creator, Diplomacy.Outcome.WAR);
 										la.artefact.creator.relations.put(p.getOwner(), Diplomacy.Outcome.WAR);
-										p.getOwner().colonies.remove(p);
 									}
-									la.artefact.creator.colonies.clear();
-									la.artefact.creator.colonies.add(p);
 									p.setOwner(la.artefact.creator);
 									boolean inserted = false;
 									for (Population pop : p.inhabitants) {
@@ -394,17 +391,17 @@ public enum AgentType {
 							major = true;
 							p.strata.remove(stratum);
 							a.resources++;
-							sg.pick(a.originator.colonies).addArtefact(la.artefact);
+							sg.pick(a.originator.getColonies()).addArtefact(la.artefact);
 							stratNum--;
 						}
 					}
 				}
 				
-				//if (major) {
+				if (rep.length() > 0) {
 					sg.l(rep.toString());
 					confirm();
-					/*return;
-				}*/
+					return;
+				}
 				
 				return;
 			}
@@ -535,7 +532,7 @@ public enum AgentType {
 				
 				// Steal U
 				if (enemy != null) {
-					for (Planet p : enemy.colonies) {
+					for (Planet p : enemy.getColonies()) {
 						if (!p.artefacts.isEmpty()) {
 							Artefact art = p.artefacts.get(0);
 							sg.l("The " + a.originator.name + " send " + a.name + " on a mission to steal the " + art.type.getName() + " on " + p.name + ".");

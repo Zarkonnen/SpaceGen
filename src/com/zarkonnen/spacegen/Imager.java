@@ -370,7 +370,7 @@ public class Imager {
 		if (p.getPollution() > 0) {
 			BufferedImage pollImg = M.tint(img, new Color(111, 88, 63, 220));
 			Graphics2D g = img2.createGraphics();
-			int amt = Math.max(0, 32 - p.getPollution() * 3);
+			int amt = Math.max(0, 32 - p.getPollution() * 5);
 			g.drawImage(pollImg, 0, amt, 32, 32, 0, amt, 32, 32, null);
 		}
 		
@@ -388,6 +388,7 @@ public class Imager {
 		for (int i = 0; i < civ.fullMembers.size(); i++) {
 			BufferedImage slice = M.getImage("misc/" + civ.getGovt().name().toLowerCase());
 			if (civ.number > 1) {
+				slice = scale(slice, 32);
 				Graphics2D sg = slice.createGraphics();
 				Draw.text(sg, "[333333]" + civ.number, 8, 6);
 			}

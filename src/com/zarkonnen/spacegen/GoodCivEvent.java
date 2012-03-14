@@ -49,7 +49,7 @@ public enum GoodCivEvent {
 	POPULATION_BOOM() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			rep.append("The ").append(actor.name).append(" experiences a population boom! ");
-			for (Planet col : actor.colonies) {
+			for (Planet col : actor.getColonies()) {
 				for (Population p : col.inhabitants) { p.setSize(p.getSize() + 2); }
 			}
 		}
@@ -60,25 +60,23 @@ public enum GoodCivEvent {
 				return;
 			}
 			String oldName = actor.name;
-			for (Planet c : actor.colonies) { for (Population p : c.inhabitants) {
+			for (Planet c : actor.getColonies()) { for (Population p : c.inhabitants) {
 				if (!actor.fullMembers.contains(p.type)) {
 					actor.fullMembers.add(p.type);
 				}
 			}}
 			actor.setGovt(Government.REPUBLIC, sg.historicalCivNames);
-			sg.historicalCivNames.add(actor.name);
-			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			for (Planet p : actor.getColonies()) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 			animate();
 			rep.append("A popular movement overthrows the old guard of the ").append(oldName).append(" and declares the ").append(actor.name).append(".");
-			confirm();
 		}
 	},
 	SPAWN_ADVENTURER() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			if (actor.colonies.isEmpty()) { return; }
+			if (actor.getColonies().isEmpty()) { return; }
 			SentientType st = sg.pick(actor.fullMembers);
 			String name = "Captain " + sg.pick(st.base.nameStarts) + sg.pick(st.base.nameEnds);
-			Planet p = sg.pick(actor.colonies);
+			Planet p = sg.pick(actor.getColonies());
 			Agent ag = new Agent(AgentType.ADVENTURER, sg.year, name, sg);
 			ag.fleet = 2 + sg.d(6);
 			ag.resources = sg.d(6);
@@ -87,7 +85,6 @@ public enum GoodCivEvent {
 			ag.setLocation(p);
 			sg.agents.add(ag);
 			rep.append(name).append(", space adventurer, blasts off from ").append(p.name).append(".");
-			confirm();
 		}
 	},;
 	// SPAWN_ADVENTURER

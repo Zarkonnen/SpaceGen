@@ -95,7 +95,7 @@ public interface ArtefactType {
 				case 4:
 				case 5:
 					ArrayList<Artefact> arts = new ArrayList<Artefact>();
-					for (Planet p : actor.colonies) {
+					for (Planet p : actor.getColonies()) {
 						arts.addAll(p.artefacts);
 					}
 					if (!arts.isEmpty()) {

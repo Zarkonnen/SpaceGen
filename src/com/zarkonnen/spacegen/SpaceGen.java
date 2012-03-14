@@ -109,17 +109,16 @@ public class SpaceGen {
 	public boolean checkCivDoom(Civ c) {
 		if (c.fullColonies().isEmpty()) {
 			l("The $name collapses.", c);
-			for (Planet out : new ArrayList<Planet>(c.colonies)) {
+			for (Planet out : new ArrayList<Planet>(c.getColonies())) {
 				out.deCiv(year, null, "during the collapse of the " + c.name);
 			}
 			confirm();
 			return true;
 		}
-		if (c.colonies.size() == 1 && c.colonies.get(0).population() == 1) {
-			Planet remnant = c.colonies.get(0);
+		if (c.getColonies().size() == 1 && c.getColonies().get(0).population() == 1) {
+			Planet remnant = c.getColonies().get(0);
 			l("The $cname collapses, leaving only a few survivors on $pname.", c, remnant);
 			remnant.setOwner(null);
-			c.colonies.clear();
 			confirm();
 			return true;
 		}
@@ -256,7 +255,7 @@ public class SpaceGen {
 			if (checkCivDoom(c)) { civs.remove(c); continue; }
 			int newRes = 0;
 			int newSci = 1;
-			for (Planet col : new ArrayList<Planet>(c.colonies)) {
+			for (Planet col : new ArrayList<Planet>(c.getColonies())) {
 				if (c.has(ArtefactType.Device.UNIVERSAL_ANTIDOTE)) {
 					for (Plague p : col.plagues) {
 						l("The " + p.name + " on $name is cured by the universal antidote.", col);
@@ -356,7 +355,7 @@ public class SpaceGen {
 				if (checkCivDoom(c)) { civs.remove(c); continue; }
 			}
 			
-			War.doWar(c, this);
+			War.doWar(c, this);			
 		}
 		
 		
@@ -411,13 +410,13 @@ public class SpaceGen {
 					l("Life arises on $name", p);
 					confirm();
 				} else {
-					if (!p.inhabitants.isEmpty()) {
+					if (!p.inhabitants.isEmpty() && coin()) {
 						if (p.getOwner() == null) {
 							// Do the civ thing.
 							Government g = pick(Government.values());
 							Population starter = pick(p.inhabitants);
 							starter.setSize(starter.getSize() + 1);
-							Civ c = new Civ(year, starter.type, p, g, d(3), historicalCivNames);
+							Civ c = new Civ(year, starter.type, p, g, d(3), this);
 							l("The $sname on $pname achieve spaceflight and organise as a " + g.typeName + ", the " + c.name + ".", starter.type, p);
 							historicalCivNames.add(c.name);
 							civs.add(c);

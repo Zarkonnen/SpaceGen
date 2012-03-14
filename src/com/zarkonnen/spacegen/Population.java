@@ -37,6 +37,10 @@ public class Population {
 		return getSize() + " billion " + (p.getOwner() != null && !p.getOwner().fullMembers.contains(type) ? "enslaved " : "") + type.getName();
 	}
 	
+	public String toUnenslavedString() {
+		return getSize() + " billion " + type.getName();
+	}
+	
 	public ArrayList<Sprite> sprites = new ArrayList<Sprite>();
 	
 	public void increase(int amt) {

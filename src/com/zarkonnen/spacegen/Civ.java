@@ -29,7 +29,6 @@ import static com.zarkonnen.spacegen.Main.*;
 public class Civ {	
 	ArrayList<SentientType> fullMembers = new ArrayList<SentientType>();
 	private Government govt;
-	ArrayList<Planet> colonies = new ArrayList<Planet>();
 	HashMap<Civ, Diplomacy.Outcome> relations = new HashMap<Civ, Diplomacy.Outcome>();
 	int number = 0;
 	
@@ -44,6 +43,15 @@ public class Civ {
 	int birthYear;
 	int nextBreakthrough = 6;
 	int decrepitude = 0;
+	private final SpaceGen sg;
+	
+	public ArrayList<Planet> getColonies() {
+		ArrayList<Planet> cols = new ArrayList<Planet>();
+		for (Planet p : sg.planets) {
+			if (p.getOwner() == this) { cols.add(p); }
+		}
+		return cols;
+	}
 	
 	public int getResources() {
 		return resources;
@@ -136,7 +144,7 @@ public class Civ {
 			}
 		}
 		if (c == null) {
-			return colonies.get(0);
+			return getColonies().get(0);
 		} else {
 			return c;
 		}
@@ -148,7 +156,7 @@ public class Civ {
 		ArrayList<Planet> ir = new ArrayList<Planet>();
 		for (Planet p : sg.planets) {
 			int closestR = 100000;
-			for (Planet c : colonies) {
+			for (Planet c : getColonies()) {
 				int dist = (p.x - c.x) * (p.x - c.x) + (p.y - c.y) * (p.y - c.y);
 				closestR = Math.min(dist, closestR);
 			}
@@ -160,7 +168,7 @@ public class Civ {
 	}
 	
 	public boolean has(ArtefactType at) {
-		for (Planet c : colonies) {
+		for (Planet c : getColonies()) {
 			for (Artefact a : c.artefacts) {
 				if (a.type == at) { return true; }
 			}
@@ -169,7 +177,7 @@ public class Civ {
 	}
 	
 	Artefact use(ArtefactType at) {
-		for (Planet c : colonies) {
+		for (Planet c : getColonies()) {
 			for (Artefact a : c.artefacts) {
 				if (a.type == at) {
 					c.artefacts.remove(a);
@@ -185,28 +193,28 @@ public class Civ {
 		return relations.get(c);
 	}
 
-	public Civ(int year, SentientType st, Planet home, Government govt, int resources, ArrayList<String> historicals) {
+	public Civ(int year, SentientType st, Planet home, Government govt, int resources, SpaceGen sg) {
 		this.govt = govt;
+		this.sg = sg;
 		if (st != null) {
 			this.fullMembers.add(st);
 		}
-		this.colonies.add(home);
 		setResources(resources);
 		this.birthYear = year;
-		updateName(historicals);
+		updateName(sg.historicalCivNames);
 		home.setOwner(this);
 		setTechLevel(1);
 	}
 	
 	public int population() {
 		int sum = 0;
-		for (Planet col : colonies) { sum += col.population(); }
+		for (Planet col : getColonies()) { sum += col.population(); }
 		return sum;
 	}
 	
 	public ArrayList<Planet> fullColonies() {
 		ArrayList<Planet> fcs = new ArrayList<Planet>();
-		for (Planet col : colonies) {
+		for (Planet col : getColonies()) {
 			if (col.population() > 0) { fcs.add(col); }
 		}
 		return fcs;
@@ -215,7 +223,7 @@ public class Civ {
 	public Planet largestColony() {
 		int sz = -1;
 		Planet largest = null;
-		for (Planet col : colonies) {
+		for (Planet col : getColonies()) {
 			if (col.population() > sz) { largest = col; sz = col.population(); }
 		}
 		return largest;
@@ -254,6 +262,7 @@ public class Civ {
 			name = n;
 			break;
 		}
+		historicals.add(name);
 	}
 	
 	public String fullDesc(SpaceGen sg) {
@@ -299,15 +308,15 @@ public class Civ {
 		}
 		
 		sb.append(" ").append(getGovt().title).append(" of ");
-		if (colonies.size() == 1) {
-			sb.append("a single planet, ").append(colonies.get(0).name);
+		if (getColonies().size() == 1) {
+			sb.append("a single planet, ").append(getColonies().get(0).name);
 		} else {
-			sb.append(colonies.size()).append(" planets");
+			sb.append(getColonies().size()).append(" planets");
 		}
 		sb.append(", with ").append(population()).append(" billion inhabitants.\n");
 		sb.append("Major populations:\n");
 		HashMap<SentientType, Integer> pops = new HashMap<SentientType, Integer>();
-		for (Planet c : colonies) { for (Population pop : c.inhabitants) {
+		for (Planet c : getColonies()) { for (Population pop : c.inhabitants) {
 			if (!pops.containsKey(pop.type)) {
 				pops.put(pop.type, pop.getSize());
 			} else {
@@ -323,7 +332,7 @@ public class Civ {
 			sb.append(e.getValue()).append(" billion enslaved ").append(e.getKey().getName()).append(".\n");
 		}
 		HashSet<Device> devices = new HashSet<Device>();
-		for (Planet c : colonies) { for (Artefact a : c.artefacts) {
+		for (Planet c : getColonies()) { for (Artefact a : c.artefacts) {
 			if (a.type instanceof Device) {
 				devices.add((Device) a.type);
 			}

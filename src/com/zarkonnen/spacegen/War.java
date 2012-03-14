@@ -34,7 +34,7 @@ public class War {
 		Planet target = sg.pick(targets);
 		Civ victim = target.getOwner();
 		if (actor.has(ArtefactType.Device.TIME_MACHINE)) {
-			for (Planet p : new ArrayList<Planet>(victim.colonies)) {
+			for (Planet p : new ArrayList<Planet>(victim.getColonies())) {
 				p.deCiv(sg.year / 2, null, "by a time vortex");
 				p.setOwner(null);
 			}
@@ -129,8 +129,8 @@ public class War {
 					sg.l("The $cname attack $pname, a colony of the " + enemy.name + ", and subject it to orbital bombardment, killing " + deaths + " billion.", actor, target);
 				}
 			} else {
-				actor.setResources(actor.getResources() + enemy.getResources() / enemy.colonies.size() / 2 + 1);
-				enemy.setResources(enemy.getResources() - enemy.getResources() / enemy.colonies.size() + 1);
+				actor.setResources(actor.getResources() + enemy.getResources() / enemy.getColonies().size() / 2 + 1);
+				enemy.setResources(enemy.getResources() - enemy.getResources() / enemy.getColonies().size() + 1);
 				if (actor.has(ArtefactType.Device.MIND_CONTROL_DEVICE)) {
 					sg.l("The $cname conquer $pname, a colony of the " + enemy.name + ", using their mind control device to gain control of the planet from orbit.", actor, target);
 				} else {
@@ -168,9 +168,7 @@ public class War {
 					sg.l("The $cname gain control of the " + a.type.getName() + " on $pname.", actor, target);
 				}
 				
-				target.getOwner().colonies.remove(target);
 				target.setOwner(actor);
-				actor.colonies.add(target);
 				
 				for (Population pop : target.inhabitants) { pop.addUpdateImgs(); }
 				animate();

@@ -51,10 +51,9 @@ public enum BadCivEvent {
 						rep.append("A slave revolt on ").append(col.name).append(" falters from fear of torture pits of the ").append(actor.name).append(".");
 						return;
 					}
-					int resTaken = actor.getResources() / actor.colonies.size();
-					int milTaken = actor.getMilitary() / actor.colonies.size();
-					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg.historicalCivNames);
-					actor.colonies.remove(col);
+					int resTaken = actor.getResources() / actor.getColonies().size();
+					int milTaken = actor.getMilitary() / actor.getColonies().size();
+					Civ newCiv = new Civ(sg.year, rebels.get(0).type, col, Government.REPUBLIC, resTaken, sg);
 					actor.setResources(actor.getResources() - resTaken);
 					actor.setMilitary(actor.getMilitary() - milTaken);
 					newCiv.setMilitary(milTaken);
@@ -68,7 +67,7 @@ public enum BadCivEvent {
 					}
 					sg.civs.add(newCiv);
 					sg.historicalCivNames.add(newCiv.name);
-					for (Planet p : newCiv.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+					for (Planet p : newCiv.getColonies()) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 					animate();
 					rep.append("Slaves on ").append(col.name).append(" revolt, killing their oppressors and declaring the Free ").append(newCiv.name).append(".");
 					return;
@@ -79,13 +78,13 @@ public enum BadCivEvent {
 	THEFT() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			ArrayList<Artefact> cands = new ArrayList<Artefact>();
-			for (Planet p : actor.colonies) {
+			for (Planet p : actor.getColonies()) {
 				cands.addAll(p.artefacts);
 			}
 			if (cands.isEmpty()) { return; }
 			Artefact a = sg.pick(cands);
 			Planet p = null;
-			for (Planet p2 : actor.colonies) { if (p2.artefacts.contains(a)) { p = p2; } }
+			for (Planet p2 : actor.getColonies()) { if (p2.artefacts.contains(a)) { p = p2; } }
 			Planet newP = sg.pick(sg.planets);
 			//p.artefacts.remove(a);
 			// qqDPS
@@ -104,8 +103,7 @@ public enum BadCivEvent {
 			actor.fullMembers.clear();
 			actor.fullMembers.add(rulers);
 			actor.setGovt(Government.DICTATORSHIP, sg.historicalCivNames);
-			sg.historicalCivNames.add(actor.name);
-			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			for (Planet p : actor.getColonies()) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 			animate();
 			rep.append("A military putsch turns the ").append(oldName).append(" into the ").append(actor.name).append(".");
 		}
@@ -114,8 +112,7 @@ public enum BadCivEvent {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			String oldName = actor.name;
 			actor.setGovt(Government.THEOCRACY, sg.historicalCivNames);
-			sg.historicalCivNames.add(actor.name);
-			for (Planet p : actor.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+			for (Planet p : actor.getColonies()) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 			animate();
 			rep.append("Religious fanatics sieze power in the ").append(oldName).append(" and declare the ").append(actor.name).append(".");
 		}
@@ -134,10 +131,13 @@ public enum BadCivEvent {
 				if (actor.fullMembers.size() > 1) {
 					rep.append(" With the knowledge of faster-than-light travel lost, each planet in the empire has to fend for itself.");
 				}
-				for (Planet c : new ArrayList<Planet>(actor.colonies)) {
+				for (Planet c : new ArrayList<Planet>(actor.getColonies())) {
 					c.darkAge(sg.year);
+					for (Population pop : c.inhabitants) {
+						pop.addUpdateImgs();
+					}
 				}
-				actor.colonies.clear();
+				animate();
 			}
 		}
 	},
@@ -165,18 +165,19 @@ public enum BadCivEvent {
 	CIVIL_WAR() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
 			ArrayList<Planet> bigPlanets = new ArrayList<Planet>();
-			for (Planet c : actor.colonies) {
+			for (Planet c : actor.getColonies()) {
 				if (c.population() > 2) { bigPlanets.add(c); }
 			}
 			if (bigPlanets.size() > 1) {
 				Collections.shuffle(bigPlanets, sg.r);
-				Civ newCiv = new Civ(sg.year, null, bigPlanets.get(0), sg.pick(Government.values()), actor.getResources() / 2, sg.historicalCivNames);
+				Civ newCiv = new Civ(sg.year, null, bigPlanets.get(0), sg.pick(Government.values()), actor.getResources() / 2, sg);
 				newCiv.fullMembers.clear();
 				newCiv.setMilitary(actor.getMilitary() / 2);
+				newCiv.setTechLevel(actor.getTechLevel());
+				newCiv.setWeapLevel(actor.getWeapLevel());
 				actor.setMilitary(actor.getMilitary() - newCiv.getMilitary());
 				actor.setResources(actor.getResources() - newCiv.getResources());
 				for (int i = 1; i < bigPlanets.size() / 2; i++) {
-					newCiv.colonies.add(bigPlanets.get(i));
 					bigPlanets.get(i).setOwner(newCiv);
 					for (Population pop : bigPlanets.get(i).inhabitants) {
 						if (!newCiv.fullMembers.contains(pop.type)) {
@@ -189,20 +190,18 @@ public enum BadCivEvent {
 						newCiv.fullMembers.add(pop.type);
 					}
 				}
-				for (Planet c : new ArrayList<Planet>(actor.colonies)) {
+				for (Planet c : new ArrayList<Planet>(actor.getColonies())) {
 					if (bigPlanets.contains(c)) { continue; }
 					if (sg.coin()) {
-						newCiv.colonies.add(c);
 						c.setOwner(newCiv);
 					}
 				}
-				actor.colonies.removeAll(newCiv.colonies);
 				newCiv.setGovt(newCiv.getGovt(), sg.historicalCivNames);
 				newCiv.relations.put(actor, Diplomacy.Outcome.WAR);
 				actor.relations.put(newCiv, Diplomacy.Outcome.WAR);
 				sg.civs.add(newCiv);
 				sg.historicalCivNames.add(newCiv.name);
-				for (Planet p : newCiv.colonies) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
+				for (Planet p : newCiv.getColonies()) { for (Population pop : p.inhabitants) { pop.addUpdateImgs(); } }
 				animate();
 				rep.append("The ").append(newCiv.name).append(" secedes from the ").append(actor.name).append(", leading to a civil war!");
 			}
@@ -259,7 +258,7 @@ public enum BadCivEvent {
 			SentientType st = sg.pick(actor.fullMembers);
 			String color = sg.pick(Names.COLORS);
 			String name = color + st.base.pSuffix;
-			Planet p = sg.pick(actor.colonies);
+			Planet p = sg.pick(actor.getColonies());
 			rep.append("The pirate ").append(name).append(" establishes ").append(sg.coin() ? "himself" : "herself").append(" on ").append(p.name).append(".");
 			Agent ag = new Agent(AgentType.PIRATE, sg.year, name, sg);
 			ag.color = color;
@@ -273,7 +272,7 @@ public enum BadCivEvent {
 	},
 	ROGUE_AI() {
 		@Override public void i(Civ actor, SpaceGen sg, StringBuilder rep) {
-			Planet p = sg.pick(actor.colonies);
+			Planet p = sg.pick(actor.getColonies());
 			String pref = sg.pick(new String[] { "Experiment ", "System ", "Mind ", "Simulation " });
 			Agent ag = new Agent(AgentType.ROGUE_AI, sg.year, pref + sg.r.nextInt(500), sg);
 			ag.setLocation(p);

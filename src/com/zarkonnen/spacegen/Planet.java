@@ -204,7 +204,6 @@ public class Planet {
 			this.owner.sprites.remove(sprite.ownerSprite);
 			animate(tracking(sprite, remove(sprite.ownerSprite)));
 			sprite.ownerSprite = null;
-			this.owner.colonies.remove(this);
 		}
 		this.owner = owner;
 		if (owner != null) {
@@ -257,13 +256,11 @@ public class Planet {
 		}
 		clearArtefacts();
 		clearPlagues();
-		getOwner().colonies.remove(this);
 		setOwner(null);
 	}
 	
 	public void deCiv(int time, Cataclysm cat, String reason) {
 		if (getOwner() != null) {
-			getOwner().colonies.remove(this);
 			setOwner(null);
 		}
 		for (Population p : new ArrayList<Population>(inhabitants)) {
